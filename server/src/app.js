@@ -7,6 +7,10 @@ import cookieParser from "cookie-parser";
 
 import routes from "./routes/index.js";
 
+import notFound from "./middleware/notFound.middleware.js";
+
+import errorHandler from "./middleware/error.middleware.js";
+
 app.use(process.env.API_PREFIX, routes);
 
 const app = express();
@@ -43,6 +47,10 @@ app.get("/", (req, res) => {
     message: "E-Commerce API is running 🚀",
   });
 });
+
+app.use(notFound);
+
+app.use(errorHandler);
 
 export default app;
 
