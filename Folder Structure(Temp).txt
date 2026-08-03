@@ -1,0 +1,123 @@
+server/
+│
+├── src/
+│
+├── config/
+│   ├── database.js
+│   ├── cloudinary.js
+│   ├── stripe.js
+│   ├── mail.js
+│   └── swagger.js
+│
+├── routes/
+│   ├── auth.routes.js
+│   ├── user.routes.js
+│   ├── category.routes.js
+│   ├── brand.routes.js
+│   ├── product.routes.js
+│   ├── cart.routes.js
+│   ├── wishlist.routes.js
+│   ├── order.routes.js
+│   ├── payment.routes.js
+│   ├── coupon.routes.js
+│   ├── review.routes.js
+│   └── index.js
+│
+├── controllers/
+│   ├── auth.controller.js
+│   ├── user.controller.js
+│   ├── category.controller.js
+│   ├── brand.controller.js
+│   ├── product.controller.js
+│   ├── cart.controller.js
+│   ├── wishlist.controller.js
+│   ├── order.controller.js
+│   ├── payment.controller.js
+│   ├── coupon.controller.js
+│   └── review.controller.js
+│
+├── services/
+│   ├── auth.service.js
+│   ├── user.service.js
+│   ├── category.service.js
+│   ├── brand.service.js
+│   ├── product.service.js
+│   ├── cart.service.js
+│   ├── wishlist.service.js
+│   ├── order.service.js
+│   ├── payment.service.js
+│   ├── coupon.service.js
+│   ├── review.service.js
+│   ├── inventory.service.js
+│   ├── email.service.js
+│   └── file.service.js
+│
+├── repositories/
+│   ├── auth.repository.js
+│   ├── user.repository.js
+│   ├── category.repository.js
+│   ├── brand.repository.js
+│   ├── product.repository.js
+│   ├── cart.repository.js
+│   ├── wishlist.repository.js
+│   ├── order.repository.js
+│   ├── payment.repository.js
+│   ├── coupon.repository.js
+│   ├── review.repository.js
+│   └── inventory.repository.js
+│
+├── middleware/
+│   ├── auth.middleware.js
+│   ├── role.middleware.js
+│   ├── validation.middleware.js
+│   ├── upload.middleware.js
+│   ├── error.middleware.js
+│   ├── notFound.middleware.js
+│   └── rateLimit.middleware.js
+│
+├── validations/
+│   ├── auth.validation.js
+│   ├── user.validation.js
+│   ├── category.validation.js
+│   ├── brand.validation.js
+│   ├── product.validation.js
+│   ├── order.validation.js
+│   ├── review.validation.js
+│   └── coupon.validation.js
+│
+├── models/
+│   ├── User.js
+│   ├── Product.js
+│   ├── Order.js
+│   └── ...
+│
+├── database/
+│   ├── schema/
+│   ├── seeds/
+│   ├── migrations/
+│   └── queries/
+│
+├── utils/
+│   ├── ApiError.js
+│   ├── ApiResponse.js
+│   ├── logger.js
+│   ├── jwt.js
+│   ├── bcrypt.js
+│   ├── pagination.js
+│   ├── generateSlug.js
+│   ├── calculateTax.js
+│   ├── calculateDiscount.js
+│   ├── uploadImage.js
+│   └── constants.js
+│
+├── docs/
+│   └── swagger.yaml
+│
+├── uploads/
+│
+├── tests/
+│   ├── unit/
+│   └── integration/
+│
+├── app.js
+└── server.js
