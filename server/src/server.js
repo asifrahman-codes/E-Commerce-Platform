@@ -1,16 +1,16 @@
-import dotenv from "dotenv";
-dotenv.config();
+import "./config/env.js";
 
-import express from "express";
-
-const app = express();
+import app from "./app.js";
 
 const PORT = process.env.PORT || 5000;
 
-app.get("/", (req, res) => {
-  res.send("E-Commerce backend running...");
-});
-
 app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
+  console.log(`
+=========================================
+🚀 Server Started Successfully
+=========================================
+Environment : ${process.env.NODE_ENV}
+Port        : ${PORT}
+=========================================
+`);
 });

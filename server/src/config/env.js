@@ -1,3 +1,6 @@
+import dotenv from "dotenv";
+dotenv.config();
+
 const requiredEnv = [
   "DB_HOST",
   "DB_NAME",
