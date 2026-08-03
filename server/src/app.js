@@ -5,6 +5,10 @@ import compression from "compression";
 import morgan from "morgan";
 import cookieParser from "cookie-parser";
 
+import routes from "./routes/index.js";
+
+app.use(process.env.API_PREFIX, routes);
+
 const app = express();
 
 /*
