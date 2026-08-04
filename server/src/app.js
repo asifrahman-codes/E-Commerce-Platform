@@ -6,14 +6,10 @@ import morgan from "morgan";
 import cookieParser from "cookie-parser";
 
 import routes from "./routes/index.js";
-
 import notFound from "./middleware/notFound.middleware.js";
-
 import errorHandler from "./middleware/error.middleware.js";
 
 const app = express();
-
-app.use(process.env.API_PREFIX, routes);
 
 /*
 |--------------------------------------------------------------------------
@@ -42,34 +38,30 @@ app.use(morgan("dev"));
 */
 
 app.get("/", (req, res) => {
-  res.status(200).json({
-    success: true,
-    message: "E-Commerce API is running 🚀",
-  });
+    res.status(200).json({
+        success: true,
+        message: "E-Commerce API is running 🚀"
+    });
 });
+
+app.use("/api/v1", routes);
+
+/*
+|--------------------------------------------------------------------------
+| API Routes
+|--------------------------------------------------------------------------
+*/
+
+app.use(process.env.API_PREFIX, routes);
+
+/*
+|--------------------------------------------------------------------------
+| Error Middlewares
+|--------------------------------------------------------------------------
+*/
 
 app.use(notFound);
 
 app.use(errorHandler);
 
 export default app;
-
-
-
-
-// Browser / React
-//         │
-//         ▼
-// server.js
-//         │
-//         ▼
-// app.js
-//         │
-//         ▼
-// Middlewares
-//         │
-//         ▼
-// Routes
-//         │
-//         ▼
-// Response

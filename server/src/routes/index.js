@@ -15,6 +15,12 @@ import healthRoutes from "./health.routes.js";
 
 const router = Router();
 
+/*
+|--------------------------------------------------------------------------
+| API Routes
+|--------------------------------------------------------------------------
+*/
+
 router.use("/health", healthRoutes);
 
 router.use("/auth", authRoutes);
