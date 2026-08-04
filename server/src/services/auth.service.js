@@ -8,7 +8,7 @@ import {
 
 import {
     hashPassword
-} from "../helpers/bcrypt.helper.js";
+} from "../utils/security/bcrypt.helper.js";
 
 /**
  * Register User

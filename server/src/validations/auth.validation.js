@@ -50,3 +50,17 @@ export const registerSchema = Joi.object({
         .optional()
 
 });
+
+// Login schema
+export const loginSchema = Joi.object({
+
+    email: Joi.string()
+        .trim()
+        .lowercase()
+        .email()
+        .required(),
+
+    password: Joi.string()
+        .required()
+
+});
