@@ -10,6 +10,16 @@ import {
     hashPassword
 } from "../utils/security/bcrypt.helper.js";
 
+import {
+    comparePassword
+} from "../utils/security/bcrypt.helper.js";
+
+import {
+    generateAccessToken,
+    generateRefreshToken
+} from "../utils/security/jwt.helper.js";
+
+
 /**
  * Register User
  */
@@ -99,4 +109,101 @@ export const registerUser = async (userData) => {
 
     };
 
+};
+
+/**
+ * Login User
+ */
+export const loginUser = async ({ email, password }) => {
+
+    /*
+    -----------------------------------------
+    Find User
+    -----------------------------------------
+    */
+
+    const user = await findUserByEmail(email);
+
+    if (!user) {
+
+        throw new ApiError(
+            401,
+            "Invalid email or password"
+        );
+    }
+
+    /*
+    -----------------------------------------
+    Check User Status
+    -----------------------------------------
+    */
+
+    if (user.status !== "ACTIVE") {
+
+        throw new ApiError(
+            403,
+            "Account is not active"
+        );
+    }
+
+    /*
+    -----------------------------------------
+    Compare Password
+    -----------------------------------------
+    */
+
+    const passwordMatched = await comparePassword(
+        password,
+        user.password
+    );
+
+    if (!passwordMatched) {
+
+        throw new ApiError(
+            401,
+            "Invalid email or password"
+        );
+    }
+
+    /*
+    -----------------------------------------
+    JWT Payload
+    -----------------------------------------
+    */
+
+    const payload = {
+
+        userId: user.user_id,
+        roleId: user.role_id,
+        email: user.email
+    };
+
+    /*
+    -----------------------------------------
+    Generate Tokens
+    -----------------------------------------
+    */
+
+    const accessToken = generateAccessToken(payload);
+    const refreshToken = generateRefreshToken(payload);
+
+    /*
+    -----------------------------------------
+    Remove Password
+    -----------------------------------------
+    */
+
+    delete user.password;
+
+    /*
+    -----------------------------------------
+    Return
+    -----------------------------------------
+    */
+
+    return {
+        user,
+        accessToken,
+        refreshToken
+    };
 };

@@ -6,9 +6,22 @@ import { query } from "../database/index.js";
 export const findUserByEmail = async (email) => {
 
     const sql = `
-        SELECT *
-        FROM users
-        WHERE email = ?
+        SELECT
+            u.user_id,
+            u.role_id,
+            u.first_name,
+            u.last_name,
+            u.email,
+            u.password,
+            u.phone,
+            u.profile_image,
+            u.email_verified,
+            u.status,
+            r.name AS role
+        FROM users u
+        INNER JOIN roles r
+            ON u.role_id = r.role_id
+        WHERE u.email = ?
         LIMIT 1
     `;
 
