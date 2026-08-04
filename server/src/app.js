@@ -11,9 +11,9 @@ import notFound from "./middleware/notFound.middleware.js";
 
 import errorHandler from "./middleware/error.middleware.js";
 
-app.use(process.env.API_PREFIX, routes);
-
 const app = express();
+
+app.use(process.env.API_PREFIX, routes);
 
 /*
 |--------------------------------------------------------------------------
