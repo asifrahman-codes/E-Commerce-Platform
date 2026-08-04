@@ -89,3 +89,48 @@ export const createUser = async (userData) => {
     return result.insertId;
 
 };
+
+/**
+ * Save Refresh Token
+ */
+export const saveRefreshToken = async (
+
+    userId,
+    token,
+    expiresAt
+
+) => {
+
+    const sql = `
+        INSERT INTO user_refresh_tokens
+        (
+            user_id,
+            token,
+            expires_at
+        )
+        VALUES (?, ?, ?)
+    `;
+
+    await query(sql, [
+
+        userId,
+        token,
+        expiresAt
+
+    ]);
+
+};
+
+// ==================== updateLastLogin =========================
+
+export const updateLastLogin = async (userId) => {
+
+    const sql = `
+        UPDATE users
+        SET last_login = NOW()
+        WHERE user_id = ?
+    `;
+
+    await query(sql, [userId]);
+
+};

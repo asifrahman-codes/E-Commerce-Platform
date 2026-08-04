@@ -3,7 +3,9 @@ import ApiError from "../utils/ApiError.js";
 import {
     findUserByEmail,
     findRoleByName,
-    createUser
+    createUser,
+    updateLastLogin,
+    saveRefreshToken
 } from "../repositories/auth.repository.js";
 
 import {
@@ -18,7 +20,6 @@ import {
     generateAccessToken,
     generateRefreshToken
 } from "../utils/security/jwt.helper.js";
-
 
 /**
  * Register User
@@ -165,6 +166,9 @@ export const loginUser = async ({ email, password }) => {
         );
     }
 
+    // Password is correct
+    await updateLastLogin(user.user_id);
+
     /*
     -----------------------------------------
     JWT Payload
@@ -189,6 +193,20 @@ export const loginUser = async ({ email, password }) => {
 
     /*
     -----------------------------------------
+    Save Refresh Token
+    -----------------------------------------
+    */
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + 7);
+
+    await saveRefreshToken(
+    user.user_id,
+    refreshToken,
+    expiresAt
+    );
+
+    /*
+    -----------------------------------------
     Remove Password
     -----------------------------------------
     */
@@ -197,12 +215,40 @@ export const loginUser = async ({ email, password }) => {
 
     /*
     -----------------------------------------
+    change the database row names
+    -----------------------------------------
+    */
+
+    const responseUser = {
+
+    userId: user.user_id,
+
+    firstName: user.first_name,
+
+    lastName: user.last_name,
+
+    email: user.email,
+
+    phone: user.phone,
+
+    profileImage: user.profile_image,
+
+    role: user.role_name,
+
+    emailVerified: user.email_verified,
+
+    status: user.status
+
+};
+
+    /*
+    -----------------------------------------
     Return
     -----------------------------------------
     */
 
     return {
-        user,
+        user: responseUser,
         accessToken,
         refreshToken
     };
