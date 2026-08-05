@@ -4,9 +4,15 @@ import {
     findUserByEmail,
     findRoleByName,
     createUser,
-    updateLastLogin,
-    saveRefreshToken
 } from "../repositories/auth.repository.js";
+
+import {
+    saveRefreshToken
+} from "../repositories/token.repository.js";
+
+import {
+    updateLastLogin,
+} from "../repositories/user.repository.js";
 
 import {
     hashPassword
@@ -199,11 +205,11 @@ export const loginUser = async ({ email, password }) => {
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + 7);
 
-    await saveRefreshToken(
-    user.user_id,
-    refreshToken,
+    await saveRefreshToken({
+    userId: user.user_id,
+    token: refreshToken,
     expiresAt
-    );
+});
 
     /*
     -----------------------------------------

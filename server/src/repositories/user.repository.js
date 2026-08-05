@@ -26,3 +26,17 @@ export const findUserById = async (userId) => {
     return users[0] || null;
 
 };
+
+// ==================== updateLastLogin =========================
+
+export const updateLastLogin = async (userId) => {
+
+    const sql = `
+        UPDATE users
+        SET last_login = NOW()
+        WHERE user_id = ?
+    `;
+
+    await query(sql, [userId]);
+
+};

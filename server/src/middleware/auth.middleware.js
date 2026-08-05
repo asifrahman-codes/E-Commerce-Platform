@@ -2,9 +2,9 @@ import ApiError from "../utils/ApiError.js";
 
 import asyncHandler from "../utils/asyncHandler.js";
 
-import { verifyToken } from "../helpers/jwt.helper.js";
+import { verifyToken } from "../utils/security/jwt.helper.js";
 
-import { findUserById } from "../repositories/user.repository.js";
+import { getAuthenticatedUser } from "../services/user.service.js";
 
 const authMiddleware = asyncHandler(
 
@@ -76,38 +76,9 @@ const authMiddleware = asyncHandler(
         -----------------------------------------
         */
 
-        const user = await findUserById(
-
-            decoded.userId
-
-        );
-
-        if (!user) {
-
-            throw new ApiError(
-
-                401,
-
-                "User not found"
-
-            );
-
-        }
-
-        /*
-        -----------------------------------------
-        Check Status
-        -----------------------------------------
-        */
-
-        if (user.status !== "ACTIVE") {
-
-            throw new ApiError(
-              
-                403,
-                "Account is not active"
-            );
-        }
+       const user = await getAuthenticatedUser(
+        decoded.userId
+      );
 
         /*
         -----------------------------------------
