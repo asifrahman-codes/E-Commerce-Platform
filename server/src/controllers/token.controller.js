@@ -1,9 +1,9 @@
-import asyncHandler from "../utils/asyncHandler.js";
 import ApiResponse from "../utils/ApiResponse.js";
+import asyncHandler from "../utils/asyncHandler.js";
 
 import {
-    refreshAccessToken,
-    logout
+    logout,
+    refreshAccessToken
 } from "../services/token.service.js";
 
 /**
@@ -57,13 +57,8 @@ export const logoutUser = asyncHandler(
                 new ApiResponse(
 
                     200,
-
                     "Logout successful"
-
                 )
-
             );
-
     }
-
 );
