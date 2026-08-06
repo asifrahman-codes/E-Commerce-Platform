@@ -43,15 +43,10 @@ export const createCategoryService = async (data) => {
     }
 
     const categoryId = await createCategory({
-
         ...data,
-
         slug
-
     });
-
     return await findCategoryById(categoryId);
-
 };
 
 /*
