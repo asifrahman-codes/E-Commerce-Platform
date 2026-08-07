@@ -101,7 +101,7 @@ export const clearPrimaryImage = async(productId)=>{
 
     const sql=`
         UPDATE product_images
-        SET is_primary=false
+        SET is_primary=0
         WHERE product_id=?
     `;
 
@@ -119,7 +119,7 @@ export const setPrimaryImage = async(imageId)=>{
 
     const sql=`
         UPDATE product_images
-        SET is_primary=true
+        SET is_primary=1
         WHERE image_id=?
     `;
 

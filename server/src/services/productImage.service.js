@@ -124,20 +124,36 @@ export const getProductImagesService=async(productId)=>{
 |--------------------------------------------------------------------------
 */
 
-export const deleteProductImageService=async(imageId)=>{
+export const deleteProductImageService = async (imageId) => {
 
-    const image=await findImageById(imageId);
+    const image = await findImageById(imageId);
 
-    if(!image){
-
-        throw new ApiError(404,"Image not found");
-
+    if (!image) {
+        throw new ApiError(404, "Image not found");
     }
+
+    const wasPrimary = Number(image.is_primary) === 1;
 
     await cloudinary.uploader.destroy(image.public_id);
 
     await deleteImage(imageId);
 
+    if (wasPrimary) {
+
+        const remainingImages =
+            await getProductImages(image.product_id);
+
+        if (remainingImages.length > 0) {
+
+            const nextPrimaryImage = remainingImages[0];
+
+            await clearPrimaryImage(image.product_id);
+
+            await setPrimaryImage(
+                nextPrimaryImage.image_id
+            );
+        }
+    }
 };
 
 /*

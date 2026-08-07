@@ -43,10 +43,14 @@ export const createBrandService = async (data) => {
     }
 
     const brandId = await createBrand({
+        
+        name: data.name,
 
-        ...data,
+        slug,
 
-        slug
+        logo: data.logo ?? null,
+
+        status: data.status
 
     });
 

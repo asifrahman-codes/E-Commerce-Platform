@@ -29,7 +29,7 @@ export const createProductSchema = Joi.object({
         .allow("")
         .optional(),
 
-    price: Joi.number()
+    base_price: Joi.number()
         .positive()
         .precision(2)
         .required(),
@@ -68,7 +68,7 @@ export const updateProductSchema = Joi.object({
         .trim()
         .allow(""),
 
-    price: Joi.number()
+    base_price: Joi.number()
         .positive()
         .precision(2),
 

@@ -12,7 +12,7 @@ export const createProduct = async ({
     name,
     slug,
     description,
-    price,
+    base_price,
     status
 }) => {
 
@@ -24,7 +24,7 @@ export const createProduct = async ({
             name,
             slug,
             description,
-            price,
+            base_price,
             status
         )
         VALUES
@@ -45,7 +45,7 @@ export const createProduct = async ({
         name,
         slug,
         description,
-        price,
+        base_price,
         status
     ]);
 
@@ -70,7 +70,7 @@ export const findProductById = async (productId) => {
             p.name,
             p.slug,
             p.description,
-            p.price,
+            p.base_price,
             p.status,
             p.created_at
         FROM products p
@@ -122,7 +122,7 @@ export const getAllProducts = async () => {
             p.product_id,
             p.name,
             p.slug,
-            p.price,
+            p.base_price,
             p.status,
             c.name AS category_name,
             b.name AS brand_name,

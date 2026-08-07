@@ -33,7 +33,7 @@ export const createBrand = async ({
     const result = await query(sql, [
         name,
         slug,
-        logo,
+        logo ?? null,
         status
     ]);
 
