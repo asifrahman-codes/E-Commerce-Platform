@@ -46,5 +46,6 @@ router.use("/reviews", reviewRoutes);
 router.use(productImageRoutes); // Image routes already contain /products/...
 router.use("/", variantRoutes);
 router.use("/inventory", inventoryRoutes);
+router.use("/cart", cartRoutes);
 
 export default router;
