@@ -9,12 +9,6 @@ export const saveRefreshToken = async ({
     expiresAt
 }) => {
 
-  console.log("Repository values:", {
-    userId,
-    token,
-    expiresAt
-});
-
     const sql = `
         INSERT INTO user_refresh_tokens
         (

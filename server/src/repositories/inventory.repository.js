@@ -56,6 +56,12 @@ export const updateVariantStockWithTransaction = async (
     newStock
 ) => {
 
+    if (newStock < 0) {
+        throw new Error(
+            "Stock cannot be negative"
+        );
+    }
+
     const [result] = await connection.execute(
         `
             UPDATE product_variants
@@ -129,4 +135,32 @@ export const getInventoryTransactions = async (variantId) => {
     `;
 
     return await query(sql, [variantId]);
+};
+
+/*
+|--------------------------------------------------------------------------
+| Restore Variant Stock With Transaction
+|--------------------------------------------------------------------------
+*/
+
+export const restoreVariantStockWithTransaction = async (
+    connection,
+    variantId,
+    quantity
+) => {
+
+    const [result] =
+        await connection.execute(
+            `
+                UPDATE product_variants
+                SET stock = stock + ?
+                WHERE variant_id = ?
+            `,
+            [
+                quantity,
+                variantId
+            ]
+        );
+
+    return result.affectedRows;
 };

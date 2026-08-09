@@ -205,6 +205,27 @@ export const clearCart = async (cartId) => {
     return result.affectedRows;
 };
 
+/*
+|--------------------------------------------------------------------------
+| Clear Cart With Transaction
+|--------------------------------------------------------------------------
+*/
+
+export const clearCartWithTransaction = async (
+    connection,
+    cartId
+) => {
+
+    const [result] = await connection.execute(
+        `
+            DELETE FROM cart_items
+            WHERE cart_id = ?
+        `,
+        [cartId]
+    );
+
+    return result.affectedRows;
+};
 
 /*
 |--------------------------------------------------------------------------
