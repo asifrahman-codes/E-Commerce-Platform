@@ -116,7 +116,7 @@ export const refreshAccessToken = async (
 
     } catch {
 
-       console.log(error);
+       console.log("Refresh token verification failed:", error.message);
 
         throw new ApiError(
             401,

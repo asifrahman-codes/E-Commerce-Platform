@@ -1,5 +1,5 @@
 export default {
-  port: Number(process.env.PORT),
-  nodeEnv: process.env.NODE_ENV,
-  apiPrefix: process.env.API_PREFIX,
+  port: Number(process.env.PORT || 5000),
+  nodeEnv: process.env.NODE_ENV || "development",
+  apiPrefix: process.env.API_PREFIX || "/api/v1",
 };
