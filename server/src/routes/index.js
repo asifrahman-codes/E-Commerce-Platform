@@ -16,6 +16,7 @@ import reviewRoutes from "./review.routes.js";
 import healthRoutes from "./health.routes.js";
 import productImageRoutes from "./productImage.routes.js";
 import inventoryRoutes from "./inventory.routes.js";
+import pricingRoutes from "./routes/pricing.routes.js";
 
 const router = Router();
 
@@ -47,5 +48,6 @@ router.use(productImageRoutes); // Image routes already contain /products/...
 router.use("/", variantRoutes);
 router.use("/inventory", inventoryRoutes);
 router.use("/cart", cartRoutes);
+router.use("/pricing", pricingRoutes);
 
 export default router;

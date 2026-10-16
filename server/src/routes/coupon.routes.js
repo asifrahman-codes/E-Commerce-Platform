@@ -33,7 +33,7 @@ router.post(
 router.post(
     "/",
     authMiddleware,
-    // authorizeRoles("ADMIN"),
+    authorizeRoles("ADMIN"),
     validate(createCouponSchema),
     createCouponController
 );

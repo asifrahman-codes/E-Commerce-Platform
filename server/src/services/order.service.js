@@ -26,6 +26,22 @@ import {
     findAddressByUserId
 } from "../repositories/address.repository.js";
 
+import {
+    getPricingSettingsForUpdate
+} from "../repositories/pricing.repository.js";
+
+import {
+    calculateOrderPricing
+} from "../utils/pricing.js";
+
+import {
+    validateCouponForOrder
+} from "./coupon.service.js";
+
+import {
+    createCouponUsage
+} from "../repositories/coupon.repository.js";
+
 
 /*
 |--------------------------------------------------------------------------
@@ -227,18 +243,18 @@ export const createOrderService = async (
     |
     */
 
-    const discount = 0;
+    // const discount = 0;
 
-    const shipping = 0;
+    // const shipping = 0;
 
-    const tax = 0;
+    // const tax = 0;
 
 
-    const total =
-        subtotal -
-        discount +
-        shipping +
-        tax;
+    // const total =
+    //     subtotal -
+    //     discount +
+    //     shipping +
+    //     tax;
 
 
     /*
