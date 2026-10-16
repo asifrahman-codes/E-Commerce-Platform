@@ -5,6 +5,15 @@
 |--------------------------------------------------------------------------
 */
 
+import { query } from "../database/index.js";
+
+
+/*
+|--------------------------------------------------------------------------
+| Find Order For Payment
+|--------------------------------------------------------------------------
+*/
+
 export const findOrderForPayment = async (
     connection,
     orderId,
@@ -46,12 +55,15 @@ export const findPaymentByOrderId = async (
             SELECT
                 payment_id,
                 order_id,
+                transaction_id,
+                payment_gateway,
+                payment_method,
                 amount,
-                method,
+                currency,
                 status,
-                transaction_reference,
                 paid_at,
-                created_at
+                created_at,
+                updated_at
             FROM payments
             WHERE order_id = ?
             LIMIT 1
@@ -73,8 +85,10 @@ export const createPayment = async (
     connection,
     {
         order_id,
+        transaction_id,
+        payment_gateway,
+        payment_method = null,
         amount,
-        method,
         status = "PENDING"
     }
 ) => {
@@ -82,16 +96,20 @@ export const createPayment = async (
         `
             INSERT INTO payments (
                 order_id,
+                transaction_id,
+                payment_gateway,
+                payment_method,
                 amount,
-                method,
                 status
             )
-            VALUES (?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?)
         `,
         [
             order_id,
+            transaction_id,
+            payment_gateway,
+            payment_method,
             amount,
-            method,
             status
         ]
     );
@@ -110,19 +128,20 @@ export const findPaymentByIdForOwner = async (
     paymentId,
     userId
 ) => {
-    const { query } = await import("../database/index.js");
-
     const rows = await query(
         `
             SELECT
                 p.payment_id,
                 p.order_id,
+                p.transaction_id,
+                p.payment_gateway,
+                p.payment_method,
                 p.amount,
-                p.method,
+                p.currency,
                 p.status,
-                p.transaction_reference,
                 p.paid_at,
-                p.created_at
+                p.created_at,
+                p.updated_at
             FROM payments p
             INNER JOIN orders o
                 ON o.order_id = p.order_id
@@ -147,19 +166,20 @@ export const findPaymentByOrderIdForOwner = async (
     orderId,
     userId
 ) => {
-    const { query } = await import("../database/index.js");
-
     const rows = await query(
         `
             SELECT
                 p.payment_id,
                 p.order_id,
+                p.transaction_id,
+                p.payment_gateway,
+                p.payment_method,
                 p.amount,
-                p.method,
+                p.currency,
                 p.status,
-                p.transaction_reference,
                 p.paid_at,
-                p.created_at
+                p.created_at,
+                p.updated_at
             FROM payments p
             INNER JOIN orders o
                 ON o.order_id = p.order_id
@@ -181,19 +201,20 @@ export const findPaymentByOrderIdForOwner = async (
 */
 
 export const findPaymentsByUser = async (userId) => {
-    const { query } = await import("../database/index.js");
-
     return await query(
         `
             SELECT
                 p.payment_id,
                 p.order_id,
+                p.transaction_id,
+                p.payment_gateway,
+                p.payment_method,
                 p.amount,
-                p.method,
+                p.currency,
                 p.status,
-                p.transaction_reference,
                 p.paid_at,
-                p.created_at
+                p.created_at,
+                p.updated_at
             FROM payments p
             INNER JOIN orders o
                 ON o.order_id = p.order_id

@@ -1,6 +1,7 @@
 
 import ApiError from "../utils/ApiError.js";
 import withTransaction from "../utils/transaction.js";
+import { randomUUID } from "node:crypto";
 
 import {
     findOrderForPayment,
@@ -76,7 +77,7 @@ export const createPaymentService = async (
 
             if (existingPayment) {
                 if (
-                    existingPayment.method === "COD" &&
+                    existingPayment.payment_gateway === "COD" &&
                     existingPayment.status === "PENDING"
                 ) {
                     return existingPayment.payment_id;
@@ -88,15 +89,17 @@ export const createPaymentService = async (
                 );
             }
 
-            return await createPayment(
-                connection,
-                {
-                    order_id: order.order_id,
-                    amount: order.total,
-                    method: "COD",
-                    status: "PENDING"
-                }
-            );
+                return await createPayment(
+                    connection,
+                    {
+                        order_id: order.order_id,
+                        transaction_id: `COD-${order.order_id}-${randomUUID()}`,
+                        payment_gateway: "COD",
+                        payment_method: "Cash on Delivery",
+                        amount: order.total,
+                        status: "PENDING"
+                    }
+                );
         }
     );
 
