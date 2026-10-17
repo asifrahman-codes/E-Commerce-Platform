@@ -1,4 +1,5 @@
 import ApiError from "../utils/ApiError.js";
+
 import {
     getActivePricingSettings
 } from "../repositories/pricing.repository.js";
@@ -7,22 +8,39 @@ import {
     calculateOrderPricing
 } from "../utils/pricing.js";
 
+function parseAmount(value, fieldName) {
+    if (
+        value === null ||
+        value === undefined ||
+        (typeof value === "string" && value.trim() === "")
+    ) {
+        throw new ApiError(400, `Invalid ${fieldName}.`);
+    }
+
+    const amount = Number(value);
+
+    if (!Number.isFinite(amount)) {
+        throw new ApiError(400, `Invalid ${fieldName}.`);
+    }
+
+    return amount;
+}
+
 export const previewPricingService = async ({
     subtotal,
     discount = 0
 }) => {
-    const parsedSubtotal = Number(subtotal);
-    const parsedDiscount = Number(discount);
+    const parsedSubtotal = parseAmount(subtotal, "subtotal");
+    const parsedDiscount = parseAmount(discount, "discount");
 
-    if (
-        !Number.isFinite(parsedSubtotal) ||
-        parsedSubtotal <= 0
-    ) {
-        throw new ApiError(400, "Invalid subtotal.");
+    if (parsedSubtotal <= 0) {
+        throw new ApiError(
+            400,
+            "Subtotal must be greater than zero."
+        );
     }
 
     if (
-        !Number.isFinite(parsedDiscount) ||
         parsedDiscount < 0 ||
         parsedDiscount > parsedSubtotal
     ) {

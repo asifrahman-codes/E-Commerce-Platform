@@ -1,4 +1,5 @@
-import pool from "../database/index.js";
+import { pool } from "../database/index.js";
+import ApiError from "../utils/ApiError.js";
 
 export const getActivePricingSettings = async (connection = pool) => {
     const [rows] = await connection.execute(
@@ -17,7 +18,8 @@ export const getActivePricingSettings = async (connection = pool) => {
     );
 
     if (rows.length !== 1) {
-        throw new Error(
+        throw new ApiError(
+            500,
             "Exactly one active shipping and tax policy is required."
         );
     }
@@ -36,7 +38,8 @@ export const getPricingSettingsForUpdate = async (connection) => {
     );
 
     if (rows.length !== 1) {
-        throw new Error(
+        throw new ApiError(
+            500,
             "Exactly one active shipping and tax policy is required."
         );
     }
@@ -61,7 +64,10 @@ export const updatePricingSettings = async (
     const values = [];
 
     for (const [key, column] of Object.entries(allowedFields)) {
-        if (Object.hasOwn(data, key)) {
+        if (
+            Object.hasOwn(data, key) &&
+            data[key] !== undefined
+        ) {
             columns.push(`${column} = ?`);
             values.push(data[key]);
         }
