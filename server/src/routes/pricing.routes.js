@@ -11,16 +11,16 @@ import {
     previewPricingSchema
 } from "../validations/pricing.validation.js";
 
-import authenticate from "../middlewares/auth.middleware.js";
-import validate from "../middlewares/validate.middleware.js";
-import authorizeRoles from "../middlewares/authorizeRoles.middleware.js";
+import authMiddleware from "../middleware/auth.middleware.js";
+import validate from "../middleware/validation.middleware.js";
+import authorizeRoles from "../middleware/role.middleware.js";
 
 const router = Router();
 
 // Customer: estimate checkout pricing.
 router.post(
     "/preview",
-    authenticate,
+    authMiddleware,
     validate(previewPricingSchema),
     previewPricingController
 );
@@ -28,7 +28,7 @@ router.post(
 // Admin: view pricing policy.
 router.get(
     "/settings",
-    authenticate,
+    authMiddleware,
     authorizeRoles("ADMIN"),
     getPricingSettingsController
 );
@@ -36,7 +36,7 @@ router.get(
 // Admin: update pricing policy.
 router.patch(
     "/settings",
-    authenticate,
+    authMiddleware,
     authorizeRoles("ADMIN"),
     validate(updatePricingSettingsSchema),
     updatePricingSettingsController
