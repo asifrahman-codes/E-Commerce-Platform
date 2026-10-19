@@ -50,6 +50,6 @@ router.use("/", variantRoutes);
 router.use("/inventory", inventoryRoutes);
 router.use("/cart", cartRoutes);
 router.use("/pricing", pricingRoutes);
-router.use("/api/shipping", shippingRoutes);
+router.use("/shipping", shippingRoutes);
 
 export default router;
