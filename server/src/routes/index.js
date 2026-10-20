@@ -18,6 +18,7 @@ import productImageRoutes from "./productImage.routes.js";
 import inventoryRoutes from "./inventory.routes.js";
 import pricingRoutes from "./pricing.routes.js";
 import shippingRoutes from "./shipping.routes.js";
+import onlinePaymentRoutes from "./online-payment.routes.js";
 
 const router = Router();
 
@@ -48,8 +49,8 @@ router.use("/reviews", reviewRoutes);
 router.use(productImageRoutes); // Image routes already contain /products/...
 router.use("/", variantRoutes);
 router.use("/inventory", inventoryRoutes);
-router.use("/cart", cartRoutes);
 router.use("/pricing", pricingRoutes);
 router.use("/shipping", shippingRoutes);
+router.use("/payments/online", onlinePaymentRoutes);
 
 export default router;
