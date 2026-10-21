@@ -52,6 +52,5 @@ router.use("/inventory", inventoryRoutes);
 router.use("/pricing", pricingRoutes);
 router.use("/shipping", shippingRoutes);
 router.use("/payments/online", onlinePaymentRoutes);
-router.use("/api/reviews", reviewRoutes);
 
 export default router;

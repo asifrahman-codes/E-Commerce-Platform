@@ -178,8 +178,26 @@ export async function getProductRatingSummary(productId) {
 
 export async function getApprovedProductReviews(
   productId,
-  { limit, offset }
+  { limit = 10, offset = 0 } = {}
 ) {
+  const safeProductId = Number(productId);
+  const safeLimit = Number(limit);
+  const safeOffset = Number(offset);
+
+  if (!Number.isSafeInteger(safeProductId) || safeProductId <= 0) {
+    throw new Error("Invalid product ID");
+  }
+
+  const finalLimit =
+    Number.isInteger(safeLimit) && safeLimit > 0
+      ? Math.min(safeLimit, 50)
+      : 10;
+
+  const finalOffset =
+    Number.isSafeInteger(safeOffset) && safeOffset >= 0
+      ? safeOffset
+      : 0;
+
   const [rows] = await pool.execute(
     `
       SELECT
@@ -190,16 +208,20 @@ export async function getApprovedProductReviews(
         r.comment,
         r.created_at,
         u.user_id,
-        u.name AS reviewer_name
+        CONCAT_WS(
+          ' ',
+          u.first_name,
+          u.last_name
+        ) AS reviewer_name
       FROM reviews r
       INNER JOIN users u
         ON u.user_id = r.user_id
       WHERE r.product_id = ?
         AND r.status = 'APPROVED'
       ORDER BY r.created_at DESC, r.review_id DESC
-      LIMIT ? OFFSET ?
+      LIMIT ${finalLimit} OFFSET ${finalOffset}
     `,
-    [productId, limit, offset]
+    [safeProductId]
   );
 
   return rows;
@@ -263,7 +285,7 @@ export async function getAdminReviews({
         r.updated_at,
         r.moderation_reason,
         p.name AS product_name,
-        u.name AS reviewer_name
+        CONCAT_WS(' ', u.first_name, u.last_name) AS reviewer_name
       FROM reviews r
       INNER JOIN products p
         ON p.product_id = r.product_id
