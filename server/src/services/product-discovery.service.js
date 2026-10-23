@@ -1,6 +1,5 @@
 
-import * as productDiscoveryRepository
-  from "../repositories/product-discovery.repository.js";
+import * as productDiscoveryRepository from "../repositories/product-discovery.repository.js";
 
 function createError(statusCode, message) {
   const error = new Error(message);
