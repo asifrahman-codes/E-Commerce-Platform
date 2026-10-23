@@ -20,6 +20,7 @@ import pricingRoutes from "./pricing.routes.js";
 import shippingRoutes from "./shipping.routes.js";
 import onlinePaymentRoutes from "./online-payment.routes.js";
 import notificationRoutes from "./notification.routes.js";
+import productDiscoveryRoutes from "./product-discovery.routes.js";
 
 const router = Router();
 
@@ -40,6 +41,7 @@ router.use(
 router.use("/users", userRoutes);
 router.use("/categories", categoryRoutes);
 router.use("/brands", brandRoutes);
+router.use("/products", productDiscoveryRoutes);
 router.use("/products", productRoutes);
 router.use("/cart", cartRoutes);
 router.use("/wishlist", wishlistRoutes);

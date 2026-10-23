@@ -7,7 +7,7 @@ import {
 
 import {
   validateProductSearchQuery,
-} from "../validators/product-discovery.validator.js";
+} from "../validations/product-discovery.validation.js";
 
 const router = Router();
 
