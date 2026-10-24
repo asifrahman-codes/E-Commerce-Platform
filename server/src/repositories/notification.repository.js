@@ -102,34 +102,44 @@ export async function findNotificationById(
   return rows[0] ?? null;
 }
 
+
 export async function getNotifications(
   userId,
-  { limit, offset, unreadOnly }
+  { limit, offset, unreadOnly = false }
 ) {
-  const unreadClause = unreadOnly ? "AND is_read = FALSE" : "";
+  const unreadClause = unreadOnly
+    ? "AND is_read = FALSE"
+    : "";
 
-  const [rows] = await pool.execute(
-    `
-      SELECT
-        notification_id,
-        type,
-        title,
-        message,
-        data,
-        is_read,
-        read_at,
-        created_at
-      FROM notifications
-      WHERE user_id = ?
-        ${unreadClause}
-      ORDER BY created_at DESC, notification_id DESC
-      LIMIT ? OFFSET ?
-    `,
-    [userId, limit, offset]
-  );
+  const sql = `
+    SELECT
+      notification_id,
+      type,
+      title,
+      message,
+      data,
+      is_read,
+      read_at,
+      created_at
+    FROM notifications
+    WHERE user_id = ?
+      ${unreadClause}
+    ORDER BY created_at DESC, notification_id DESC
+    LIMIT ? OFFSET ?
+  `;
+
+  const params = [
+    Number(userId),
+    Number(limit),
+    Number(offset),
+  ];
+
+  // Use query() instead of execute() for this parameterized query.
+  const [rows] = await pool.query(sql, params);
 
   return rows;
 }
+
 
 export async function countNotifications(userId, unreadOnly = false) {
   const unreadClause = unreadOnly ? "AND is_read = FALSE" : "";

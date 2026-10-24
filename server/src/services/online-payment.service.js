@@ -1,5 +1,6 @@
+
 import crypto from "node:crypto";
-import {pool} from "../database/index.js";
+import { pool } from "../database/index.js";
 import paymentConfig from "../config/payment.config.js";
 import { getPaymentGateway } from "../utils/gateways/payment-gateway.factory.js";
 
@@ -14,6 +15,14 @@ import {
   findAttemptsByUser,
   findOrderAttempts,
 } from "../repositories/online-payment.repository.js";
+
+import {
+  notifyOrderConfirmed,
+} from "./notification.service.js";
+
+// --------------------------------------------------
+// Helpers
+// --------------------------------------------------
 
 function httpError(statusCode, message) {
   const error = new Error(message);
@@ -31,11 +40,16 @@ function isFinalStatus(status) {
   );
 }
 
+// --------------------------------------------------
+// Initiate Online Payment
+// --------------------------------------------------
+
 export async function initiateOnlinePaymentService({
   userId,
   orderId,
 }) {
   const connection = await pool.getConnection();
+
   let attempt;
   let createdNewAttempt = false;
 
@@ -79,7 +93,10 @@ export async function initiateOnlinePaymentService({
       const amount = normalizeAmount(order.total);
 
       if (!Number.isFinite(amount) || amount <= 0) {
-        throw httpError(400, "Order has an invalid payment amount");
+        throw httpError(
+          400,
+          "Order has an invalid payment amount"
+        );
       }
 
       const idempotencyKey = crypto.randomUUID();
@@ -116,7 +133,7 @@ export async function initiateOnlinePaymentService({
     connection.release();
   }
 
-  // Do not call the external gateway while holding database locks.
+  // Do not call the gateway while holding database locks.
   if (attempt.status === "PENDING" && attempt.checkout_url) {
     return {
       attemptId: attempt.attempt_id,
@@ -127,8 +144,6 @@ export async function initiateOnlinePaymentService({
   }
 
   if (!createdNewAttempt) {
-    // Another request may be creating the checkout session.
-    // Do not create a second active attempt.
     return {
       attemptId: attempt.attempt_id,
       status: attempt.status,
@@ -155,10 +170,15 @@ export async function initiateOnlinePaymentService({
       !checkout.checkoutUrl ||
       !checkout.gatewayReference
     ) {
-      throw new Error("Gateway returned an incomplete checkout session");
+      throw new Error(
+        "Gateway returned an incomplete checkout session"
+      );
     }
 
-    await updateAttemptCheckout(attempt.attempt_id, checkout);
+    await updateAttemptCheckout(
+      attempt.attempt_id,
+      checkout
+    );
 
     return {
       attemptId: attempt.attempt_id,
@@ -178,17 +198,23 @@ export async function initiateOnlinePaymentService({
   }
 }
 
+// --------------------------------------------------
+// Process Verified Gateway Event / Webhook
+// --------------------------------------------------
+
 export async function processVerifiedGatewayEvent({
   provider,
   event,
 }) {
   const connection = await pool.getConnection();
 
+  let orderConfirmationNotification = null;
+
   try {
     await connection.beginTransaction();
 
-    // Store the event inside the same transaction as its effects.
-    // A repeated provider event ID is rejected by the unique index.
+    // Record the event in the same transaction as its effects.
+    // A unique provider/event ID prevents duplicate processing.
     await connection.execute(
       `INSERT INTO payment_webhook_events (
          provider,
@@ -232,9 +258,13 @@ export async function processVerifiedGatewayEvent({
     const order = orderRows[0];
 
     if (!order) {
-      throw httpError(404, "Associated order not found");
+      throw httpError(
+        404,
+        "Associated order not found"
+      );
     }
 
+    // Verify amount and currency against both the attempt and order.
     if (
       normalizeAmount(event.amount) !==
         normalizeAmount(attempt.amount) ||
@@ -249,7 +279,7 @@ export async function processVerifiedGatewayEvent({
       );
     }
 
-    // A late failure/cancel event must never reverse a successful payment.
+    // Never allow a late event to reverse a final payment state.
     if (
       isFinalStatus(attempt.status) ||
       order.payment_status === "PAID"
@@ -258,7 +288,8 @@ export async function processVerifiedGatewayEvent({
         `UPDATE payment_webhook_events
          SET processing_status = 'IGNORED',
              processed_at = CURRENT_TIMESTAMP
-         WHERE provider = ? AND provider_event_id = ?`,
+         WHERE provider = ?
+           AND provider_event_id = ?`,
         [provider, event.eventId]
       );
 
@@ -272,12 +303,17 @@ export async function processVerifiedGatewayEvent({
     }
 
     if (
-      !["SUCCEEDED", "FAILED", "CANCELLED"].includes(event.status)
+      !["SUCCEEDED", "FAILED", "CANCELLED"].includes(
+        event.status
+      )
     ) {
-      throw httpError(400, "Unsupported payment event status");
+      throw httpError(
+        400,
+        "Unsupported payment event status"
+      );
     }
 
-    // Never accept a success event for an already cancelled order.
+    // Do not accept successful payment for cancelled orders.
     if (
       event.status === "SUCCEEDED" &&
       ["CANCELLED", "REFUNDED"].includes(order.status)
@@ -288,16 +324,20 @@ export async function processVerifiedGatewayEvent({
       );
     }
 
+    // Update the payment attempt.
     await connection.execute(
       `UPDATE online_payment_attempts
        SET status = ?,
-           gateway_reference = COALESCE(?, gateway_reference),
+           gateway_reference = COALESCE(
+             ?,
+             gateway_reference
+           ),
            failure_reason = ?,
            completed_at = CURRENT_TIMESTAMP
        WHERE attempt_id = ?`,
       [
         event.status,
-        event.gatewayReference,
+        event.gatewayReference ?? null,
         event.status === "FAILED"
           ? "Payment failed at gateway"
           : null,
@@ -305,8 +345,9 @@ export async function processVerifiedGatewayEvent({
       ]
     );
 
+    // Handle successful payment.
     if (event.status === "SUCCEEDED") {
-      await connection.execute(
+      const [updateResult] = await connection.execute(
         `UPDATE orders
          SET payment_status = 'PAID',
              status = CASE
@@ -317,8 +358,18 @@ export async function processVerifiedGatewayEvent({
            AND payment_status = 'PENDING'`,
         [order.order_id]
       );
+
+      // Prepare the notification only if this operation
+      // actually changed the order to PAID.
+      if (updateResult.affectedRows === 1) {
+        orderConfirmationNotification = {
+          userId: attempt.user_id,
+          orderId: order.order_id,
+          orderNumber: order.order_number,
+        };
+      }
     } else if (event.status === "FAILED") {
-      // A failed attempt does not overwrite an already paid order.
+      // A failed attempt must not overwrite an already-paid order.
       await connection.execute(
         `UPDATE orders
          SET payment_status = 'FAILED'
@@ -328,14 +379,34 @@ export async function processVerifiedGatewayEvent({
       );
     }
 
+    // CANCELLED attempts do not change the order here.
+    // Order cancellation should be handled by the order module.
+
     await connection.execute(
       `UPDATE payment_webhook_events
        SET processed_at = CURRENT_TIMESTAMP
-       WHERE provider = ? AND provider_event_id = ?`,
+       WHERE provider = ?
+         AND provider_event_id = ?`,
       [provider, event.eventId]
     );
 
+    // Commit payment and order changes first.
     await connection.commit();
+
+    // Notify after commit so notification failures cannot roll
+    // back a successful payment.
+    if (orderConfirmationNotification) {
+      try {
+        await notifyOrderConfirmed(
+          orderConfirmationNotification
+        );
+      } catch (error) {
+        console.error(
+          "Order confirmation notification failed:",
+          error.message
+        );
+      }
+    }
 
     return {
       processed: true,
@@ -345,8 +416,7 @@ export async function processVerifiedGatewayEvent({
   } catch (error) {
     await connection.rollback();
 
-    // If the same event was already committed, it is safe to acknowledge
-    // the retry without processing its effects again.
+    // A previously committed event may be retried by the gateway.
     if (error.code === "ER_DUP_ENTRY") {
       return {
         processed: false,
@@ -360,17 +430,29 @@ export async function processVerifiedGatewayEvent({
   }
 }
 
+// --------------------------------------------------
+// Mock Payment (Development Only)
+// --------------------------------------------------
+
 export async function completeMockPaymentService({
   userId,
   attemptId,
   status,
 }) {
   if (process.env.NODE_ENV === "production") {
-    throw httpError(403, "Mock payments are disabled in production");
+    throw httpError(
+      403,
+      "Mock payments are disabled in production"
+    );
   }
 
-  if (!["SUCCEEDED", "FAILED", "CANCELLED"].includes(status)) {
-    throw httpError(400, "Invalid mock payment status");
+  if (
+    !["SUCCEEDED", "FAILED", "CANCELLED"].includes(status)
+  ) {
+    throw httpError(
+      400,
+      "Invalid mock payment status"
+    );
   }
 
   const attempt = await findAttemptByIdForUser(
@@ -379,18 +461,23 @@ export async function completeMockPaymentService({
   );
 
   if (!attempt) {
-    throw httpError(404, "Payment attempt not found");
+    throw httpError(
+      404,
+      "Payment attempt not found"
+    );
   }
 
   if (attempt.provider !== "mock") {
-    throw httpError(400, "This is not a mock payment");
+    throw httpError(
+      400,
+      "This is not a mock payment"
+    );
   }
 
   const gateway = getPaymentGateway("mock");
 
-  // This development-only endpoint is authenticated and scoped to the
-  // owner's attempt. It simulates a provider result; it is not a real
-  // gateway callback.
+  // This authenticated development endpoint simulates a
+  // provider result; it is not a real gateway callback.
   const event = {
     eventId: `mock_event_${crypto.randomUUID()}`,
     eventType: `payment.${status.toLowerCase()}`,
@@ -406,7 +493,7 @@ export async function completeMockPaymentService({
     },
   };
 
-  // Keep the gateway reference available for later adapter expansion.
+  // Retained for future gateway adapter expansion.
   void gateway;
 
   return processVerifiedGatewayEvent({
@@ -415,9 +502,17 @@ export async function completeMockPaymentService({
   });
 }
 
+// --------------------------------------------------
+// Get Current User's Online Payments
+// --------------------------------------------------
+
 export async function getMyOnlinePaymentsService(userId) {
   return findAttemptsByUser(userId);
 }
+
+// --------------------------------------------------
+// Get One Online Payment
+// --------------------------------------------------
 
 export async function getOnlinePaymentByIdService({
   userId,
@@ -429,11 +524,18 @@ export async function getOnlinePaymentByIdService({
   );
 
   if (!attempt) {
-    throw httpError(404, "Payment attempt not found");
+    throw httpError(
+      404,
+      "Payment attempt not found"
+    );
   }
 
   return attempt;
 }
+
+// --------------------------------------------------
+// Get Payments for an Order
+// --------------------------------------------------
 
 export async function getOnlinePaymentsByOrderService({
   userId,
