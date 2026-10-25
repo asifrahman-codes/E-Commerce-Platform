@@ -6,8 +6,10 @@
   "type": "module",
   "scripts": {
     "start": "node src/server.js",
+    "worker:notifications": "node src/notification-worker.js",
     "dev": "nodemon src/server.js",
-    "test": "jest",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "lint": "eslint .",
     "format": "prettier --write ."
   },
