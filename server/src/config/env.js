@@ -1,63 +1,46 @@
-import "./config/env.js";
+import dotenv from "dotenv";
 
-import app from "./app.js";
-import { validateEnvironment } from "./config/env.js";
-import { pool } from "./database/index.js";
+dotenv.config();
 
-let server;
-let shuttingDown = false;
+const requiredEnv = [
+  "DB_HOST",
+  "DB_NAME",
+  "DB_USER",
+  "DB_PASSWORD",
+  "JWT_SECRET",
+];
 
-async function startServer() {
-  const { port } = validateEnvironment();
+export function validateEnvironment() {
+  const errors = [];
 
-  await pool.query("SELECT 1");
-
-  server = app.listen(port, () => {
-    console.log("=========================================");
-    console.log("Server Started Successfully");
-    console.log("Environment :", process.env.NODE_ENV || "development");
-    console.log("Port        :", port);
-    console.log("=========================================");
-  });
-}
-
-async function shutdown(signal) {
-  if (shuttingDown) return;
-  shuttingDown = true;
-
-  console.log(`Received ${signal}. Shutting down gracefully...`);
-
-  const timeout = setTimeout(() => {
-    console.error("Shutdown timed out.");
-    process.exit(1);
-  }, 15000);
-
-  timeout.unref();
-
-  try {
-    if (server) {
-      await new Promise((resolve, reject) => {
-        server.close((error) => {
-          if (error) reject(error);
-          else resolve();
-        });
-      });
+  for (const key of requiredEnv) {
+    if (!process.env[key]) {
+      errors.push(`Missing required environment variable: ${key}`);
     }
-
-    await pool.end();
-
-    clearTimeout(timeout);
-    process.exit(0);
-  } catch (error) {
-    console.error("Shutdown failed:", error.message);
-    process.exit(1);
   }
+
+  const port = Number(process.env.PORT || 5000);
+
+  if (!Number.isInteger(port) || port < 1 || port > 65535) {
+    errors.push("PORT must be a valid TCP port.");
+  }
+
+  if (
+    process.env.NODE_ENV === "production" &&
+    process.env.JWT_SECRET &&
+    process.env.JWT_SECRET.length < 32
+  ) {
+    errors.push("JWT_SECRET must be at least 32 characters in production.");
+  }
+
+  if (errors.length > 0) {
+    throw new Error(errors.join("\n"));
+  }
+
+  return { port };
 }
 
-process.on("SIGTERM", () => void shutdown("SIGTERM"));
-process.on("SIGINT", () => void shutdown("SIGINT"));
+// Preserve existing behavior: validate immediately on import.
+validateEnvironment();
 
-startServer().catch((error) => {
-  console.error("Server startup failed:", error.message);
-  process.exit(1);
-});
+export default process.env;
