@@ -11,7 +11,7 @@ import errorHandler from "./middleware/error.middleware.js";
 import {
   requestIdMiddleware,
   generalApiLimiter,
-} from "./middleware/rate-limit.middleware.js";
+} from "../middleware/rate-limit.middleware.js";
 import { pool } from "./database/index.js";
 
 const app = express();
