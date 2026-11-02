@@ -3,7 +3,7 @@ const API_ENDPOINTS = {
     REGISTER: "/auth/register",
     LOGIN: "/auth/login",
     LOGOUT: "/auth/logout",
-    PROFILE: "/auth/profile",
+    ME: "/auth/me",
   },
 
   PRODUCTS: {
@@ -17,7 +17,6 @@ const API_ENDPOINTS = {
 
   CART: {
     BASE: "/cart",
-    ADD: "/cart",
   },
 
   WISHLIST: {
@@ -28,13 +27,8 @@ const API_ENDPOINTS = {
     BASE: "/orders",
   },
 
-  PAYMENTS: {
-    BASE: "/payments",
-  },
-
   NOTIFICATIONS: {
     BASE: "/notifications",
-    UNREAD_COUNT: "/notifications/unread-count",
   },
 };
 
