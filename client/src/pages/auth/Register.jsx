@@ -100,7 +100,7 @@ const Register = () => {
         <FormInput
           label="First Name"
           placeholder="Enter your first name"
-          autoComplete="name"
+          autoComplete="fname"
           registration={register("firstName")}
           error={errors.firstName}
         />
@@ -108,7 +108,7 @@ const Register = () => {
         <FormInput
           label="Last Name"
           placeholder="Enter your last name"
-          autoComplete="name"
+          autoComplete="lname"
           registration={register("lastName")}
           error={errors.lastName}
         />

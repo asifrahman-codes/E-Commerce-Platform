@@ -98,7 +98,7 @@ export const registerUser = async (userData) => {
 
         password: hashedPassword,
 
-        phone: userData.phone
+        phone: userData.phone ?? null
 
     });
 
