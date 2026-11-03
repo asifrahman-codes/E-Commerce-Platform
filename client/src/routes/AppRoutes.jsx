@@ -6,11 +6,20 @@ import AuthLayout from "../layouts/AuthLayout";
 import Home from "../pages/home/Home";
 import Placeholder from "../pages/common/Placeholder";
 
+import Login from "../pages/auth/Login";
+import Register from "../pages/auth/Register";
+import ForgotPassword from "../pages/auth/ForgotPassword";
+
+import Profile from "../pages/account/Profile";
+
+import ProtectedRoute from "./ProtectedRoute";
+import GuestRoute from "./GuestRoute";
+
 const AppRoutes = () => {
   return (
     <Routes>
 
-      {/* Customer storefront */}
+      {/* Public storefront */}
       <Route element={<MainLayout />}>
 
         <Route path="/" element={<Home />} />
@@ -40,53 +49,70 @@ const AppRoutes = () => {
           element={<Placeholder title="My Wishlist" />}
         />
 
-        <Route
-          path="/checkout"
-          element={<Placeholder title="Checkout" />}
-        />
+        {/* Authenticated customer routes */}
+        <Route element={<ProtectedRoute />}>
 
-        <Route
-          path="/account"
-          element={<Placeholder title="My Account" />}
-        />
+          <Route
+            path="/account"
+            element={<Profile />}
+          />
 
-        <Route
-          path="/orders"
-          element={<Placeholder title="My Orders" />}
-        />
+          <Route
+            path="/checkout"
+            element={<Placeholder title="Checkout" />}
+          />
 
+          <Route
+            path="/orders"
+            element={<Placeholder title="My Orders" />}
+          />
+
+          <Route
+            path="/notifications"
+            element={<Placeholder title="Notifications" />}
+          />
+
+        </Route>
+
+        {/* Admin routes */}
         <Route
-          path="/notifications"
-          element={<Placeholder title="Notifications" />}
-        />
+          element={
+            <ProtectedRoute allowedRoles={["admin"]} />
+          }
+        >
+
+          <Route
+            path="/admin"
+            element={<Placeholder title="Admin Dashboard" />}
+          />
+
+        </Route>
 
       </Route>
 
-      {/* Authentication pages */}
-      <Route element={<AuthLayout />}>
+      {/* Guest-only authentication routes */}
+      <Route element={<GuestRoute />}>
 
-        <Route
-          path="/login"
-          element={<Placeholder title="Login" />}
-        />
+        <Route element={<AuthLayout />}>
 
-        <Route
-          path="/register"
-          element={<Placeholder title="Create Account" />}
-        />
+          <Route
+            path="/login"
+            element={<Login />}
+          />
 
-        <Route
-          path="/forgot-password"
-          element={<Placeholder title="Forgot Password" />}
-        />
+          <Route
+            path="/register"
+            element={<Register />}
+          />
+
+          <Route
+            path="/forgot-password"
+            element={<ForgotPassword />}
+          />
+
+        </Route>
 
       </Route>
-
-      {/* Admin dashboard */}
-      <Route
-        path="/admin"
-        element={<Placeholder title="Admin Dashboard" />}
-      />
 
       {/* 404 */}
       <Route
