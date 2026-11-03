@@ -8,10 +8,12 @@ import cookieParser from "cookie-parser";
 import routes from "./routes/index.js";
 import notFound from "./middleware/notFound.middleware.js";
 import errorHandler from "./middleware/error.middleware.js";
+
 import {
   requestIdMiddleware,
   generalApiLimiter,
-} from "../middleware/rate-limit.middleware.js";
+} from "./middleware/rate-Limit.middleware.js";
+
 import { pool } from "./database/index.js";
 
 const app = express();
