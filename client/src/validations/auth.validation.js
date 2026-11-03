@@ -13,11 +13,17 @@ export const loginSchema = z.object({
 
 export const registerSchema = z
   .object({
-    name: z
+    firstName: z
       .string()
       .trim()
       .min(2, "Name must contain at least 2 characters")
-      .max(100, "Name is too long"),
+      .max(100, "firstName is too long"),
+
+    lastName: z
+      .string()
+      .trim()
+      .min(2, "Name must contain at least 2 characters")
+      .max(100, "lastName is too long"),
 
     email: z
       .string()

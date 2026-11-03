@@ -31,7 +31,8 @@ const Register = () => {
     resolver: zodResolver(registerSchema),
 
     defaultValues: {
-      name: "",
+      firstName: "",
+      lastName: "",
       email: "",
       password: "",
       confirmPassword: "",
@@ -97,11 +98,19 @@ const Register = () => {
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
 
         <FormInput
-          label="Full Name"
-          placeholder="Enter your full name"
+          label="First Name"
+          placeholder="Enter your first name"
           autoComplete="name"
-          registration={register("name")}
-          error={errors.name}
+          registration={register("firstName")}
+          error={errors.firstName}
+        />
+
+        <FormInput
+          label="Last Name"
+          placeholder="Enter your last name"
+          autoComplete="name"
+          registration={register("lastName")}
+          error={errors.lastName}
         />
 
         <FormInput
