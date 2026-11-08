@@ -2,13 +2,16 @@ import { Link } from "react-router-dom";
 
 import {
   ShoppingBag,
-  Facebook,
-  Instagram,
-  Twitter,
   Mail,
   MapPin,
   Phone,
 } from "lucide-react";
+
+import {
+  FaFacebookF,
+  FaInstagram,
+  FaTwitter,
+} from "react-icons/fa";
 
 const Footer = () => {
   return (
@@ -35,7 +38,7 @@ const Footer = () => {
 
           <div className="mt-6 flex gap-3">
 
-            {[Facebook, Instagram, Twitter].map((Icon, index) => (
+            {[FaFacebookF, FaInstagram, FaTwitter].map((Icon, index) => (
               <a
                 key={index}
                 href="#"
