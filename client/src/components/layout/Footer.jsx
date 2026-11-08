@@ -1,70 +1,144 @@
 import { Link } from "react-router-dom";
-import { ShoppingBag } from "lucide-react";
+
+import {
+  ShoppingBag,
+  Facebook,
+  Instagram,
+  Twitter,
+  Mail,
+  MapPin,
+  Phone,
+} from "lucide-react";
 
 const Footer = () => {
   return (
-    <footer className="border-t border-gray-200 bg-gray-950 text-gray-300">
-      <div className="container-custom py-12">
+    <footer className="bg-gray-950 text-gray-300">
 
-        <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="container-custom grid gap-12 py-14 sm:grid-cols-2 lg:grid-cols-4">
 
-          <div>
-            <div className="mb-4 flex items-center gap-2 text-white">
-              <ShoppingBag size={25} className="text-indigo-400" />
+        {/* Brand */}
+        <div>
 
-              <span className="text-xl font-bold">
-                ShopSphere
-              </span>
-            </div>
+          <Link to="/" className="flex items-center gap-2">
 
-            <p className="max-w-xs text-sm leading-6 text-gray-400">
-              Your destination for quality products and a seamless
-              online shopping experience.
-            </p>
-          </div>
+            <ShoppingBag size={27} className="text-indigo-400" />
 
-          <div>
-            <h3 className="mb-4 font-semibold text-white">
-              Quick Links
-            </h3>
+            <span className="text-xl font-bold text-white">
+              Shop<span className="text-indigo-400">Sphere</span>
+            </span>
 
-            <div className="flex flex-col gap-3 text-sm">
-              <Link to="/">Home</Link>
-              <Link to="/products">Products</Link>
-              <Link to="/categories">Categories</Link>
-              <Link to="/cart">Shopping Cart</Link>
-            </div>
-          </div>
+          </Link>
 
-          <div>
-            <h3 className="mb-4 font-semibold text-white">
-              Customer Service
-            </h3>
+          <p className="mt-5 max-w-xs text-sm leading-7 text-gray-400">
+            Discover products and enjoy a convenient online shopping experience with ShopSphere.
+          </p>
 
-            <div className="flex flex-col gap-3 text-sm">
-              <Link to="/account">My Account</Link>
-              <Link to="/orders">My Orders</Link>
-              <Link to="/wishlist">Wishlist</Link>
-            </div>
-          </div>
+          <div className="mt-6 flex gap-3">
 
-          <div>
-            <h3 className="mb-4 font-semibold text-white">
-              Contact
-            </h3>
+            {[Facebook, Instagram, Twitter].map((Icon, index) => (
+              <a
+                key={index}
+                href="#"
+                aria-label={`Social media ${index + 1}`}
+                onClick={(event) => event.preventDefault()}
+                className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-800 transition hover:bg-indigo-600"
+              >
+                <Icon size={18} />
+              </a>
+            ))}
 
-            <p className="text-sm leading-6 text-gray-400">
-              We're here to help you with your shopping experience.
-            </p>
           </div>
 
         </div>
 
-        <div className="mt-12 border-t border-gray-800 pt-6 text-center text-sm text-gray-500">
-          © {new Date().getFullYear()} ShopSphere. All rights reserved.
+        {/* Shopping */}
+        <div>
+
+          <h3 className="font-semibold text-white">
+            Shopping
+          </h3>
+
+          <ul className="mt-5 space-y-3 text-sm">
+
+            <li><Link to="/products" className="hover:text-white">All Products</Link></li>
+
+            <li><Link to="/categories" className="hover:text-white">Categories</Link></li>
+
+            <li><Link to="/cart" className="hover:text-white">Shopping Cart</Link></li>
+
+            <li><Link to="/wishlist" className="hover:text-white">Wishlist</Link></li>
+
+          </ul>
+
+        </div>
+
+        {/* Account */}
+        <div>
+
+          <h3 className="font-semibold text-white">
+            My Account
+          </h3>
+
+          <ul className="mt-5 space-y-3 text-sm">
+
+            <li><Link to="/account" className="hover:text-white">My Profile</Link></li>
+
+            <li><Link to="/orders" className="hover:text-white">My Orders</Link></li>
+
+            <li><Link to="/login" className="hover:text-white">Login</Link></li>
+
+            <li><Link to="/register" className="hover:text-white">Register</Link></li>
+
+          </ul>
+
+        </div>
+
+        {/* Contact */}
+        <div>
+
+          <h3 className="font-semibold text-white">
+            Contact
+          </h3>
+
+          <ul className="mt-5 space-y-4 text-sm">
+
+            <li className="flex items-center gap-3">
+              <Mail size={17} className="text-indigo-400" />
+              Customer support
+            </li>
+
+            <li className="flex items-center gap-3">
+              <Phone size={17} className="text-indigo-400" />
+              Contact information coming soon
+            </li>
+
+            <li className="flex items-center gap-3">
+              <MapPin size={17} className="text-indigo-400" />
+              Online Store
+            </li>
+
+          </ul>
+
         </div>
 
       </div>
+
+      <div className="border-t border-gray-800">
+
+        <div className="container-custom flex flex-col items-center justify-between gap-3 py-6 text-xs text-gray-500 sm:flex-row">
+
+          <p>
+            © {new Date().getFullYear()} ShopSphere. All rights reserved.
+          </p>
+
+          <p>
+            Built with React, Node.js and MySQL.
+          </p>
+
+        </div>
+
+      </div>
+
     </footer>
   );
 };
