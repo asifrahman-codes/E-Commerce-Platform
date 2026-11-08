@@ -49,6 +49,11 @@ const AppRoutes = () => {
           element={<Placeholder title="My Wishlist" />}
         />
 
+        <Route
+          path="/search"
+          element={<Placeholder title="Search products" />}
+        />
+
         {/* Authenticated customer routes */}
         <Route element={<ProtectedRoute />}>
 

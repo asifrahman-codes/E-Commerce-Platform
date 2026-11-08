@@ -70,12 +70,9 @@ const Navbar = () => {
           {/* Actions */}
           <div className="flex items-center gap-4">
 
-            <button
-              className="hidden text-gray-600 hover:text-indigo-600 sm:block"
-              aria-label="Search"
-            >
+            <Link to="/search" aria-label="Search">
               <Search size={21} />
-            </button>
+            </Link>
 
             <Link
               to="/wishlist"
