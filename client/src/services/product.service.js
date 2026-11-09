@@ -1,4 +1,3 @@
-
 import api from "./api";
 import ENDPOINTS from "./endpoints";
 
@@ -74,6 +73,29 @@ const productService = {
     if (Array.isArray(data?.images)) return data.images;
 
     return [];
+  },
+
+  // Get product variants
+  async getProductVariants(productId) {
+    const response = await api.get(
+      `/products/${productId}/variants`
+    );
+
+    const body = response?.data ?? response;
+    const data = body?.data ?? body;
+
+    return Array.isArray(data) ? data : [];
+  },
+
+  // Get variant by ID
+  async getVariantById(variantId) {
+    const response = await api.get(
+      `/variants/${variantId}`
+    );
+
+    const body = response?.data ?? response;
+
+    return body?.data ?? body;
   },
 };
 

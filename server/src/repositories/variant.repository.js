@@ -150,6 +150,7 @@ export const findVariantsByProduct = async (productId) => {
             ON p.product_id = pv.product_id
 
         WHERE pv.product_id = ?
+          AND pv.status = 'ACTIVE'
 
         ORDER BY pv.variant_id DESC
     `;

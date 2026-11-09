@@ -20,12 +20,33 @@ export const normalizeProduct = (response) => {
 };
 
 export const normalizeImages = (response) => {
-  const data = unwrapResponse(response);
+  const body = response?.data ?? response;
+  const data = body?.data ?? body;
 
   if (Array.isArray(data)) return data;
   if (Array.isArray(data?.images)) return data.images;
 
   return [];
+};
+
+export const getImageUrl = (image) => {
+  if (typeof image === "string") return image;
+
+  return (
+    image?.image_url ??
+    image?.url ??
+    image?.image_path ??
+    image?.path ??
+    ""
+  );
+};
+
+export const getPrimaryImage = (images = []) => {
+  return (
+    images.find((image) => Number(image.is_primary) === 1) ??
+    images[0] ??
+    null
+  );
 };
 
 export const getProductId = (product) =>
@@ -50,17 +71,6 @@ export const getProductRating = (product) =>
 export const getProductReviewCount = (product) =>
   Number(product?.review_count ?? 0);
 
-export const getImageUrl = (image) => {
-  if (typeof image === "string") return image;
-
-  return (
-    image?.image_url ??
-    image?.url ??
-    image?.image_path ??
-    image?.path ??
-    ""
-  );
-};
 
 export const formatPrice = (price) =>
   new Intl.NumberFormat("en-PK", {
