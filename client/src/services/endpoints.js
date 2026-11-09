@@ -10,6 +10,7 @@ const API_ENDPOINTS = {
     BASE: "/products",
     SEARCH: "/products/search",
     DETAILS: (id) => `/products/${id}`,
+    IMAGES: (id) => `/products/${id}/images`,
   },
 
   CATEGORIES: {

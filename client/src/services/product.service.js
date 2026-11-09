@@ -43,7 +43,7 @@ export const getFeaturedProducts = async () => {
   const result = await getProducts({
     page: 1,
     limit: 8,
-    sort: "popular",
+    sort: "rating_desc",
   });
 
   return result.products;
