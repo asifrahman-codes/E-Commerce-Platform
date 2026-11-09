@@ -1,6 +1,7 @@
+
 import { useCallback, useEffect, useState } from "react";
 
-import { getFeaturedProducts } from "../../services/product.service";
+import productService from "../../services/product.service";
 
 import SectionHeading from "../common/SectionHeading";
 import ProductGrid from "../products/ProductGrid";
@@ -19,9 +20,12 @@ const FeaturedProducts = () => {
       setLoading(true);
       setError("");
 
-      const result = await getFeaturedProducts();
+      const result = await productService.getProducts({
+        page: 1,
+        limit: 8,
+      });
 
-      setProducts(result);
+      setProducts(result.products);
 
     } catch (error) {
       setError(error.message || "Unable to load products.");

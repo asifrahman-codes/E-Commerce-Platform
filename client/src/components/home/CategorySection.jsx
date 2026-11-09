@@ -1,10 +1,11 @@
+
 import { useEffect, useState } from "react";
 
 import { Link } from "react-router-dom";
 
 import { ArrowRight, Layers3 } from "lucide-react";
 
-import { getCategories } from "../../services/category.service";
+import categoryService from "../../services/category.service";
 
 import SectionHeading from "../common/SectionHeading";
 import LoadingSpinner from "../common/LoadingSpinner";
@@ -22,7 +23,7 @@ const CategorySection = () => {
       setLoading(true);
       setError("");
 
-      const result = await getCategories();
+      const result = await categoryService.getCategories();
 
       setCategories(result.slice(0, 8));
 

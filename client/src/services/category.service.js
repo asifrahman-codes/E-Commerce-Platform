@@ -1,9 +1,11 @@
+
 import api from "./api";
 import ENDPOINTS from "./endpoints";
 
 import { unwrapResponse } from "../utils/product.utils";
 
 const categoryService = {
+  // Get all categories
   async getCategories() {
     const response = await api.get(ENDPOINTS.CATEGORIES.BASE);
     const data = unwrapResponse(response);
@@ -15,6 +17,7 @@ const categoryService = {
     return [];
   },
 
+  // Get category by ID
   async getCategoryById(id) {
     const response = await api.get(
       ENDPOINTS.CATEGORIES.DETAILS(id)

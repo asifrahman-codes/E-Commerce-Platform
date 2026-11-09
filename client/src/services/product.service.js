@@ -1,3 +1,4 @@
+
 import api from "./api";
 import ENDPOINTS from "./endpoints";
 
@@ -20,20 +21,12 @@ const productService = {
 
       pagination: {
         page: Number(data?.pagination?.page ?? params.page ?? 1),
-
         limit: Number(data?.pagination?.limit ?? params.limit ?? 12),
-
         total: Number(data?.pagination?.total_items ?? 0),
-
         totalPages: Number(data?.pagination?.total_pages ?? 0),
 
-        hasNextPage: Boolean(
-          data?.pagination?.has_next_page
-        ),
-
-        hasPreviousPage: Boolean(
-          data?.pagination?.has_previous_page
-        ),
+        hasNextPage: Boolean(data?.pagination?.has_next_page),
+        hasPreviousPage: Boolean(data?.pagination?.has_previous_page),
       },
     };
   },
@@ -69,7 +62,6 @@ const productService = {
     const data = body?.data ?? body;
 
     if (Array.isArray(data)) return data;
-
     if (Array.isArray(data?.images)) return data.images;
 
     return [];
