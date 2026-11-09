@@ -12,28 +12,24 @@ import ForgotPassword from "../pages/auth/ForgotPassword";
 
 import Profile from "../pages/account/Profile";
 
+import ProductCatalog from "../pages/products/ProductCatalog";
+import ProductDetails from "../pages/products/ProductDetails";
+
 import ProtectedRoute from "./ProtectedRoute";
 import GuestRoute from "./GuestRoute";
 
 const AppRoutes = () => {
   return (
     <Routes>
-
       {/* Public storefront */}
       <Route element={<MainLayout />}>
-
         <Route path="/" element={<Home />} />
 
-        <Route
-          path="/products"
-          element={<Placeholder title="Products" />}
-        />
+        {/* Product routes */}
+        <Route path="/products" element={<ProductCatalog />} />
+        <Route path="/products/:id" element={<ProductDetails />} />
 
-        <Route
-          path="/products/:id"
-          element={<Placeholder title="Product Details" />}
-        />
-
+        {/* Other public routes */}
         <Route
           path="/categories"
           element={<Placeholder title="Categories" />}
@@ -51,16 +47,12 @@ const AppRoutes = () => {
 
         <Route
           path="/search"
-          element={<Placeholder title="Search products" />}
+          element={<Placeholder title="Search Products" />}
         />
 
         {/* Authenticated customer routes */}
         <Route element={<ProtectedRoute />}>
-
-          <Route
-            path="/account"
-            element={<Profile />}
-          />
+          <Route path="/account" element={<Profile />} />
 
           <Route
             path="/checkout"
@@ -76,47 +68,24 @@ const AppRoutes = () => {
             path="/notifications"
             element={<Placeholder title="Notifications" />}
           />
-
         </Route>
 
         {/* Admin routes */}
-        <Route
-          element={
-            <ProtectedRoute allowedRoles={["admin"]} />
-          }
-        >
-
+        <Route element={<ProtectedRoute allowedRoles={["admin"]} />}>
           <Route
             path="/admin"
             element={<Placeholder title="Admin Dashboard" />}
           />
-
         </Route>
-
       </Route>
 
       {/* Guest-only authentication routes */}
       <Route element={<GuestRoute />}>
-
         <Route element={<AuthLayout />}>
-
-          <Route
-            path="/login"
-            element={<Login />}
-          />
-
-          <Route
-            path="/register"
-            element={<Register />}
-          />
-
-          <Route
-            path="/forgot-password"
-            element={<ForgotPassword />}
-          />
-
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
         </Route>
-
       </Route>
 
       {/* 404 */}
@@ -124,7 +93,6 @@ const AppRoutes = () => {
         path="*"
         element={<Placeholder title="404 - Page Not Found" />}
       />
-
     </Routes>
   );
 };

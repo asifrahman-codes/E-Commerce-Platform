@@ -1,8 +1,7 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import {
   ChevronRight,
-  Check,
   Package,
   ShieldCheck,
   Truck,
@@ -14,12 +13,8 @@ import LoadingSpinner from "../../components/common/LoadingSpinner";
 import ErrorMessage from "../../components/common/ErrorMessage";
 
 import {
-  formatPrice,
   getImageUrl,
-  getProductImages,
-  getProductName,
-  getProductPrice,
-  getProductStock,
+  formatPrice,
 } from "../../utils/product.utils";
 
 export default function ProductDetails() {
@@ -28,7 +23,6 @@ export default function ProductDetails() {
   const [product, setProduct] = useState(null);
   const [images, setImages] = useState([]);
   const [selectedImage, setSelectedImage] = useState("");
-  const [selectedVariant, setSelectedVariant] = useState(null);
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -48,29 +42,28 @@ export default function ProductDetails() {
 
         if (!active) return;
 
-        if (!productData || productData?.success === false) {
+        if (!productData || productData.success === false) {
           throw new Error("Product not found.");
         }
 
         setProduct(productData);
 
-        const productImages = [
-          ...imageData.map(getImageUrl),
-          ...getProductImages(productData),
-        ].filter(Boolean);
+        const productImages = imageData
+          .map(getImageUrl)
+          .filter(Boolean);
 
         const uniqueImages = [...new Set(productImages)];
 
         setImages(uniqueImages);
-        setSelectedImage(uniqueImages[0] || "");
+        setSelectedImage(uniqueImages[0] ?? "");
       } catch (err) {
-        if (active) {
-          setError(
-            err?.response?.data?.message ||
-            err.message ||
-            "Unable to load product details."
-          );
-        }
+        if (!active) return;
+
+        setError(
+          err?.response?.data?.message ||
+          err.message ||
+          "Unable to load product details."
+        );
       } finally {
         if (active) setLoading(false);
       }
@@ -82,39 +75,6 @@ export default function ProductDetails() {
       active = false;
     };
   }, [id]);
-
-  const variants = useMemo(() => {
-    if (!Array.isArray(product?.variants)) return [];
-
-    return product.variants;
-  }, [product]);
-
-  const currentPrice = selectedVariant
-    ? Number(
-        selectedVariant.price ??
-        selectedVariant.sale_price ??
-        selectedVariant.variant_price ??
-        getProductPrice(product)
-      )
-    : getProductPrice(product);
-
-  const currentStock = selectedVariant
-    ? Number(
-        selectedVariant.stock_quantity ??
-        selectedVariant.quantity ??
-        selectedVariant.stock ??
-        0
-      )
-    : getProductStock(product);
-
-  const variantLabel = (variant) => {
-    return (
-      variant.name ??
-      variant.variant_name ??
-      variant.sku ??
-      `Variant ${variant.variant_id ?? ""}`
-    );
-  };
 
   if (loading) {
     return (
@@ -139,12 +99,9 @@ export default function ProductDetails() {
     );
   }
 
-  const name = getProductName(product);
+  const name = product.name ?? "Untitled Product";
 
-  const categoryName =
-    product.category_name ??
-    product.category?.name ??
-    "Products";
+  const basePrice = Number(product.base_price ?? 0);
 
   return (
     <div className="min-h-screen bg-white">
@@ -179,7 +136,10 @@ export default function ProductDetails() {
                   className="h-full w-full object-contain p-6"
                 />
               ) : (
-                <Package size={80} className="text-zinc-300" />
+                <Package
+                  size={80}
+                  className="text-zinc-300"
+                />
               )}
             </div>
 
@@ -198,7 +158,7 @@ export default function ProductDetails() {
                   >
                     <img
                       src={image}
-                      alt={`${name} ${index + 1}`}
+                      alt={`${name} image ${index + 1}`}
                       className="h-full w-full object-contain p-2"
                     />
                   </button>
@@ -210,32 +170,27 @@ export default function ProductDetails() {
           {/* Product information */}
           <div>
             <p className="mb-3 text-sm font-semibold uppercase tracking-wider text-indigo-600">
-              {categoryName}
+              {product.category_name ?? "Products"}
             </p>
 
             <h1 className="text-3xl font-bold leading-tight text-zinc-900 sm:text-4xl">
               {name}
             </h1>
 
-            {product.brand_name && (
-              <p className="mt-3 text-sm text-zinc-500">
-                Brand: {product.brand_name}
-              </p>
-            )}
+            <p className="mt-3 text-sm text-zinc-500">
+              Brand: {product.brand_name ?? "Not specified"}
+            </p>
 
             <div className="mt-6">
-              <p className="text-3xl font-bold text-zinc-900">
-                {formatPrice(currentPrice)}
+              <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">
+                Base price
               </p>
 
-              {selectedVariant && (
-                <p className="mt-1 text-sm text-zinc-500">
-                  Selected variant: {variantLabel(selectedVariant)}
-                </p>
-              )}
+              <p className="mt-1 text-3xl font-bold text-zinc-900">
+                {formatPrice(basePrice)}
+              </p>
             </div>
 
-            {/* Description */}
             <div className="mt-7 border-t border-zinc-100 pt-6">
               <h2 className="mb-3 font-semibold text-zinc-900">
                 Description
@@ -247,72 +202,23 @@ export default function ProductDetails() {
               </p>
             </div>
 
-            {/* Variants */}
-            {variants.length > 0 && (
-              <div className="mt-7">
-                <h2 className="mb-3 font-semibold text-zinc-900">
-                  Select Variant
-                </h2>
-
-                <div className="flex flex-wrap gap-3">
-                  {variants.map((variant, index) => {
-                    const variantId =
-                      variant.variant_id ??
-                      variant.id ??
-                      index;
-
-                    const selectedId =
-                      selectedVariant?.variant_id ??
-                      selectedVariant?.id;
-
-                    const isSelected =
-                      selectedVariant &&
-                      String(selectedId) === String(variantId);
-
-                    return (
-                      <button
-                        key={variantId}
-                        type="button"
-                        onClick={() => setSelectedVariant(variant)}
-                        className={`rounded-xl border px-4 py-3 text-sm font-medium transition ${
-                          isSelected
-                            ? "border-indigo-600 bg-indigo-50 text-indigo-700"
-                            : "border-zinc-200 text-zinc-700 hover:border-indigo-400"
-                        }`}
-                      >
-                        {variantLabel(variant)}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-
-            {/* Stock */}
-            <div className="mt-7">
-              {currentStock > 0 ? (
-                <p className="flex items-center gap-2 text-sm font-medium text-emerald-700">
-                  <Check size={17} />
-                  In stock ({currentStock} available)
-                </p>
-              ) : (
-                <p className="text-sm font-medium text-red-600">
-                  Out of stock
-                </p>
-              )}
+            <div className="mt-7 rounded-xl bg-zinc-50 p-4">
+              <p className="text-sm leading-6 text-zinc-600">
+                The displayed amount is the product's base price.
+                Available variant prices and stock will be shown
+                once the variant API is connected.
+              </p>
             </div>
 
-            {/* Cart integration comes in Phase 6.5 */}
+            {/* Cart functionality will be connected in Phase 6.5 */}
             <button
               type="button"
               disabled
               className="mt-8 w-full cursor-not-allowed rounded-xl bg-zinc-300 py-4 font-semibold text-zinc-600"
-              title="Cart functionality is implemented in Phase 6.5"
             >
               Add to Cart — Coming in Phase 6.5
             </button>
 
-            {/* Store information */}
             <div className="mt-8 space-y-4 border-t border-zinc-100 pt-6">
               <div className="flex items-center gap-3 text-sm text-zinc-600">
                 <Truck size={19} className="text-indigo-600" />
@@ -326,7 +232,7 @@ export default function ProductDetails() {
 
               <div className="flex items-center gap-3 text-sm text-zinc-600">
                 <Package size={19} className="text-indigo-600" />
-                Product availability shown above
+                Product information from ShopSphere
               </div>
             </div>
           </div>

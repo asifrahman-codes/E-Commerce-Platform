@@ -16,7 +16,7 @@ const initialFilters = {
   min_price: "",
   max_price: "",
   in_stock: false,
-  sort: "",
+  sort: "newest",
 };
 
 export default function ProductCatalog() {
@@ -43,7 +43,9 @@ export default function ProductCatalog() {
     page: 1,
     limit: 12,
     total: 0,
-    totalPages: 1,
+    totalPages: 0,
+    hasNextPage: false,
+    hasPreviousPage: false,
   });
 
   const [loading, setLoading] = useState(true);
@@ -122,6 +124,8 @@ export default function ProductCatalog() {
       ...previous,
       [key]: value,
     }));
+
+    setPage(1);
   };
 
   const applyFilters = (event) => {
@@ -333,19 +337,20 @@ export default function ProductCatalog() {
                   Sort By
                 </label>
 
-                <select
-                  value={filters.sort}
-                  onChange={(e) =>
-                    updateFilter("sort", e.target.value)
-                  }
-                  className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-indigo-500"
-                >
-                  <option value="">Default</option>
-                  <option value="newest">Newest</option>
-                  <option value="price_asc">Price: Low to High</option>
-                  <option value="price_desc">Price: High to Low</option>
-                  <option value="popular">Most Popular</option>
-                </select>
+               <select
+                    value={filters.sort || "newest"}
+                    onChange={(e) => updateFilter("sort", e.target.value)}
+                    className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-indigo-500"
+                  >
+                    <option value="newest">Newest First</option>
+                    <option value="oldest">Oldest First</option>
+                    <option value="name_asc">Name: A to Z</option>
+                    <option value="name_desc">Name: Z to A</option>
+                    <option value="price_asc">Price: Low to High</option>
+                    <option value="price_desc">Price: High to Low</option>
+                    <option value="rating_asc">Rating: Low to High</option>
+                    <option value="rating_desc">Rating: High to Low</option>
+                  </select>
               </div>
 
               <button

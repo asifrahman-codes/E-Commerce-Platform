@@ -1,69 +1,79 @@
+
 import api from "./api";
 import ENDPOINTS from "./endpoints";
 
-import {
-  normalizeProduct,
-  normalizeProductList,
-  normalizeImages,
-  unwrapResponse,
-} from "../utils/product.utils";
-
 const productService = {
+  // Search, filter, sort and paginate products
   async getProducts(params = {}) {
     const response = await api.get(ENDPOINTS.PRODUCTS.SEARCH, {
       params,
     });
 
-    const data = unwrapResponse(response);
+    const body = response?.data ?? response;
+    const data = body?.data ?? body;
 
     return {
-      products: normalizeProductList(data),
+      products: Array.isArray(data?.products)
+        ? data.products
+        : [],
+
+      filters: data?.filters ?? {},
+
       pagination: {
-        page: Number(data?.pagination?.page ?? data?.page ?? params.page ?? 1),
-        limit: Number(
-          data?.pagination?.limit ??
-          data?.limit ??
-          params.limit ??
-          12
+        page: Number(data?.pagination?.page ?? params.page ?? 1),
+
+        limit: Number(data?.pagination?.limit ?? params.limit ?? 12),
+
+        total: Number(data?.pagination?.total_items ?? 0),
+
+        totalPages: Number(data?.pagination?.total_pages ?? 0),
+
+        hasNextPage: Boolean(
+          data?.pagination?.has_next_page
         ),
-        total: Number(
-          data?.pagination?.total ??
-          data?.total ??
-          data?.totalItems ??
-          0
-        ),
-        totalPages: Number(
-          data?.pagination?.totalPages ??
-          data?.totalPages ??
-          1
+
+        hasPreviousPage: Boolean(
+          data?.pagination?.has_previous_page
         ),
       },
-      raw: data,
     };
   },
 
-  async getAllProducts(params = {}) {
-    const response = await api.get(ENDPOINTS.PRODUCTS.BASE, {
-      params,
-    });
+  // Get all products
+  async getAllProducts() {
+    const response = await api.get(ENDPOINTS.PRODUCTS.BASE);
 
-    return normalizeProductList(response);
+    const body = response?.data ?? response;
+    const data = body?.data ?? body;
+
+    return Array.isArray(data) ? data : [];
   },
 
+  // Get individual product
   async getProductById(id) {
     const response = await api.get(
       ENDPOINTS.PRODUCTS.DETAILS(id)
     );
 
-    return normalizeProduct(response);
+    const body = response?.data ?? response;
+
+    return body?.data ?? body;
   },
 
+  // Get product images
   async getProductImages(id) {
     const response = await api.get(
       ENDPOINTS.PRODUCTS.IMAGES(id)
     );
 
-    return normalizeImages(response);
+    const body = response?.data ?? response;
+    const data = body?.data ?? body;
+
+    if (Array.isArray(data)) return data;
+
+    if (Array.isArray(data?.images)) return data.images;
+
+    return [];
   },
 };
 

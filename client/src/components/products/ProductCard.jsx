@@ -1,153 +1,105 @@
 import { Link } from "react-router-dom";
-
 import {
-  ShoppingCart,
-  Heart,
   Star,
+  ShoppingBag,
+  Package,
 } from "lucide-react";
 
-const getProductId = (product) => {
-  return (
-    product.product_id ??
-    product.id ??
-    product.productId
-  );
-};
+import {
+  getProductId,
+  getProductName,
+  getProductPrice,
+  getProductStock,
+  getProductRating,
+  getProductReviewCount,
+  getImageUrl,
+  formatPrice,
+} from "../../utils/product.utils";
 
-const getProductName = (product) => {
-  return (
-    product.name ??
-    product.product_name ??
-    product.title ??
-    "Product"
-  );
-};
-
-const getProductImage = (product) => {
-  const images = product.images;
-
-  if (Array.isArray(images) && images.length > 0) {
-    const firstImage = images[0];
-
-    return typeof firstImage === "string"
-      ? firstImage
-      : firstImage?.image_url || firstImage?.url;
-  }
-
-  return (
-    product.image_url ??
-    product.image ??
-    product.thumbnail ??
-    ""
-  );
-};
-
-const getProductPrice = (product) => {
-  return (
-    product.min_price ??
-    product.sale_price ??
-    product.price ??
-    product.base_price ??
-    null
-  );
-};
-
-const ProductCard = ({ product }) => {
-  const id = getProductId(product);
-
+export default function ProductCard({ product }) {
+  const productId = getProductId(product);
   const name = getProductName(product);
-
-  const image = getProductImage(product);
-
   const price = getProductPrice(product);
+  const stock = getProductStock(product);
+  const rating = getProductRating(product);
+  const reviewCount = getProductReviewCount(product);
 
-  const rating = Number(product.rating ?? product.average_rating ?? 0);
+  const image = getImageUrl(
+    product?.primary_image ??
+    product?.image_url ??
+    product?.image
+  );
 
   return (
-    <article className="group overflow-hidden rounded-2xl border border-gray-100 bg-white transition duration-300 hover:-translate-y-1 hover:shadow-lg">
-
-      {/* Product Image */}
-      <div className="relative aspect-square overflow-hidden bg-gray-50">
-
-        <Link to={id ? `/products/${id}` : "/products"}>
-
+    <article className="group overflow-hidden rounded-2xl border border-zinc-200 bg-white transition hover:-translate-y-1 hover:shadow-lg">
+      <Link
+        to={`/products/${productId}`}
+        className="block"
+      >
+        <div className="relative flex aspect-square items-center justify-center overflow-hidden bg-zinc-50">
           {image ? (
             <img
               src={image}
               alt={name}
               loading="lazy"
-              className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+              className="h-full w-full object-contain p-5 transition duration-300 group-hover:scale-105"
             />
           ) : (
-            <div className="flex h-full items-center justify-center text-sm text-gray-400">
-              No Image Available
-            </div>
+            <Package
+              size={58}
+              className="text-zinc-300"
+            />
           )}
 
-        </Link>
-
-        {/* Wishlist */}
-        <button
-          type="button"
-          aria-label="Add to wishlist"
-          className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full bg-white text-gray-600 shadow-sm transition hover:text-red-500"
-        >
-          <Heart size={18} />
-        </button>
-
-        {product.is_new && (
-          <span className="absolute left-3 top-3 rounded-md bg-indigo-600 px-2.5 py-1 text-xs font-semibold text-white">
-            New
+          <span
+            className={`absolute left-3 top-3 rounded-full px-3 py-1 text-xs font-semibold ${
+              stock > 0
+                ? "bg-emerald-50 text-emerald-700"
+                : "bg-red-50 text-red-600"
+            }`}
+          >
+            {stock > 0 ? "In Stock" : "Out of Stock"}
           </span>
-        )}
+        </div>
+      </Link>
 
-      </div>
-
-      {/* Product Information */}
       <div className="p-4">
+        <p className="mb-1 text-xs font-medium text-indigo-600">
+          {product?.brand_name ?? "ShopSphere"}
+        </p>
 
-        <Link
-          to={id ? `/products/${id}` : "/products"}
-          className="line-clamp-2 min-h-12 text-sm font-semibold text-gray-900 transition hover:text-indigo-600"
-        >
-          {name}
+        <Link to={`/products/${productId}`}>
+          <h3 className="line-clamp-2 min-h-12 font-semibold text-zinc-900 transition hover:text-indigo-600">
+            {name}
+          </h3>
         </Link>
 
-        <div className="mt-2 flex items-center gap-1">
+        <div className="mt-2 flex items-center gap-1.5 text-sm text-amber-500">
+          <Star size={15} fill="currentColor" />
 
-          <Star
-            size={15}
-            className="fill-amber-400 text-amber-400"
-          />
-
-          <span className="text-xs font-medium text-gray-700">
-            {rating > 0 ? rating.toFixed(1) : "New"}
+          <span className="font-semibold text-zinc-700">
+            {rating.toFixed(1)}
           </span>
 
+          <span className="text-zinc-400">
+            ({reviewCount})
+          </span>
         </div>
 
         <div className="mt-4 flex items-center justify-between gap-2">
-
-          <span className="text-lg font-bold text-gray-900">
-            {price !== null
-              ? `Rs. ${Number(price).toLocaleString("en-PK")}`
-              : "View Price"}
-          </span>
+          <p className="font-bold text-zinc-900">
+            {formatPrice(price)}
+          </p>
 
           <Link
-            to={id ? `/products/${id}` : "/products"}
+            to={`/products/${productId}`}
             aria-label={`View ${name}`}
-            className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 transition hover:bg-indigo-600 hover:text-white"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-indigo-600 text-white transition hover:bg-indigo-700"
           >
-            <ShoppingCart size={19} />
+            <ShoppingBag size={18} />
           </Link>
-
         </div>
-
       </div>
-
     </article>
   );
-};
-
-export default ProductCard;
+}
