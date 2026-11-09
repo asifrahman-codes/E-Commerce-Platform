@@ -1,24 +1,29 @@
 import api from "./api";
-import API_ENDPOINTS from "./endpoints";
+import ENDPOINTS from "./endpoints";
 
-export const getCategories = async () => {
-  const response = await api.get(
-    API_ENDPOINTS.CATEGORIES.BASE
-  );
+import { unwrapResponse } from "../utils/product.utils";
 
-  const payload = response?.data ?? response;
+const categoryService = {
+  async getCategories() {
+    const response = await api.get(ENDPOINTS.CATEGORIES.BASE);
+    const data = unwrapResponse(response);
 
-  if (Array.isArray(payload)) {
-    return payload;
-  }
+    if (Array.isArray(data)) return data;
+    if (Array.isArray(data?.categories)) return data.categories;
+    if (Array.isArray(data?.items)) return data.items;
 
-  if (Array.isArray(payload?.categories)) {
-    return payload.categories;
-  }
+    return [];
+  },
 
-  if (Array.isArray(payload?.data)) {
-    return payload.data;
-  }
+  async getCategoryById(id) {
+    const response = await api.get(
+      ENDPOINTS.CATEGORIES.DETAILS(id)
+    );
 
-  return [];
+    const data = unwrapResponse(response);
+
+    return data?.category ?? data;
+  },
 };
+
+export default categoryService;

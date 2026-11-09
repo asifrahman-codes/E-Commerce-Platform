@@ -1,68 +1,70 @@
 import api from "./api";
-import API_ENDPOINTS from "./endpoints";
+import ENDPOINTS from "./endpoints";
 
-const getPayload = (response) => {
-  return response?.data ?? response;
+import {
+  normalizeProduct,
+  normalizeProductList,
+  normalizeImages,
+  unwrapResponse,
+} from "../utils/product.utils";
+
+const productService = {
+  async getProducts(params = {}) {
+    const response = await api.get(ENDPOINTS.PRODUCTS.SEARCH, {
+      params,
+    });
+
+    const data = unwrapResponse(response);
+
+    return {
+      products: normalizeProductList(data),
+      pagination: {
+        page: Number(data?.pagination?.page ?? data?.page ?? params.page ?? 1),
+        limit: Number(
+          data?.pagination?.limit ??
+          data?.limit ??
+          params.limit ??
+          12
+        ),
+        total: Number(
+          data?.pagination?.total ??
+          data?.total ??
+          data?.totalItems ??
+          0
+        ),
+        totalPages: Number(
+          data?.pagination?.totalPages ??
+          data?.totalPages ??
+          1
+        ),
+      },
+      raw: data,
+    };
+  },
+
+  async getAllProducts(params = {}) {
+    const response = await api.get(ENDPOINTS.PRODUCTS.BASE, {
+      params,
+    });
+
+    return normalizeProductList(response);
+  },
+
+  async getProductById(id) {
+    const response = await api.get(
+      ENDPOINTS.PRODUCTS.DETAILS(id)
+    );
+
+    return normalizeProduct(response);
+  },
+
+  async getProductImages(id) {
+    const response = await api.get(
+      ENDPOINTS.PRODUCTS.IMAGES(id)
+    );
+
+    return normalizeImages(response);
+  },
 };
 
-const normalizeProducts = (response) => {
-  const payload = getPayload(response);
-
-  if (Array.isArray(payload)) {
-    return payload;
-  }
-
-  if (Array.isArray(payload?.products)) {
-    return payload.products;
-  }
-
-  if (Array.isArray(payload?.items)) {
-    return payload.items;
-  }
-
-  if (Array.isArray(payload?.data)) {
-    return payload.data;
-  }
-
-  return [];
-};
-
-export const getProducts = async (params = {}) => {
-  const response = await api.get(
-    API_ENDPOINTS.PRODUCTS.SEARCH,
-    { params }
-  );
-
-  return {
-    products: normalizeProducts(response),
-    raw: getPayload(response),
-  };
-};
-
-export const getFeaturedProducts = async () => {
-  const result = await getProducts({
-    page: 1,
-    limit: 8,
-    sort: "rating_desc",
-  });
-
-  return result.products;
-};
-
-export const getNewArrivals = async () => {
-  const result = await getProducts({
-    page: 1,
-    limit: 8,
-    sort: "newest",
-  });
-
-  return result.products;
-};
-
-export const getProductById = async (id) => {
-  const response = await api.get(
-    API_ENDPOINTS.PRODUCTS.DETAILS(id)
-  );
-
-  return getPayload(response);
-};
+export default productService;
