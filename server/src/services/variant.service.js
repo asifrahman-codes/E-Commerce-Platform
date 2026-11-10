@@ -7,7 +7,8 @@ import {
     findVariantByCombination,
     findVariantsByProduct,
     updateVariant,
-    deleteVariant
+    deleteVariant,
+    findAllVariantsByProduct
 } from "../repositories/variant.repository.js";
 
 import {
@@ -239,4 +240,21 @@ export const deleteVariantService = async (variantId) => {
 
     return null;
 
+};
+
+export const getAllVariantsByProductAdminService = async (productId) => {
+    const product = await findProductById(productId);
+
+    if (!product) {
+        throw new ApiError(404, "Product not found");
+    }
+
+    const variants = await findAllVariantsByProduct(productId);
+
+    return variants.map((variant) => ({
+        ...variant,
+        final_price:
+            Number(variant.product_price) +
+            Number(variant.price_adjustment)
+    }));
 };

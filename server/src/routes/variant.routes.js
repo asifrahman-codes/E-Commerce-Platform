@@ -68,5 +68,14 @@ router.delete(
     deleteVariant
 );
 
+router.get(
+    "/admin/products/:productId/variants",
+
+    authMiddleware,
+
+    roleMiddleware("Admin"),
+
+    getAllVariantsByProductAdmin
+);
 
 export default router;

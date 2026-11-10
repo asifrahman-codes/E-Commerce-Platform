@@ -6,7 +6,8 @@ import {
     getVariantByIdService,
     getVariantsByProductService,
     updateVariantService,
-    deleteVariantService
+    deleteVariantService,
+    getAllVariantsByProductAdminService
 } from "../services/variant.service.js";
 
 
@@ -126,3 +127,19 @@ export const deleteVariant = asyncHandler(async (req, res) => {
     );
 
 });
+
+export const getAllVariantsByProductAdmin = asyncHandler(
+    async (req, res) => {
+        const variants = await getAllVariantsByProductAdminService(
+            req.params.productId
+        );
+
+        return res.status(200).json(
+            new ApiResponse(
+                200,
+                "All product variants fetched successfully",
+                variants
+            )
+        );
+    }
+);
