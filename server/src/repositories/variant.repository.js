@@ -286,3 +286,40 @@ export const findVariantByCombination = async (
 
     return rows[0] || null;
 };
+
+/*
+|--------------------------------------------------------------------------
+| Find All Variants By Product (Admin)
+|--------------------------------------------------------------------------
+*/
+
+export const findAllVariantsByProduct = async (productId) => {
+    const sql = `
+        SELECT
+            pv.variant_id,
+            pv.product_id,
+            pv.sku,
+            pv.size,
+            pv.color,
+            pv.price_adjustment,
+            pv.stock,
+            pv.status,
+            pv.created_at,
+            pv.updated_at,
+
+            p.name AS product_name,
+            p.slug AS product_slug,
+            p.base_price AS product_price
+
+        FROM product_variants pv
+
+        INNER JOIN products p
+            ON p.product_id = pv.product_id
+
+        WHERE pv.product_id = ?
+
+        ORDER BY pv.variant_id DESC
+    `;
+
+    return await query(sql, [productId]);
+};

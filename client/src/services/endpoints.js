@@ -11,6 +11,13 @@ const API_ENDPOINTS = {
     SEARCH: "/products/search",
     DETAILS: (id) => `/products/${id}`,
     IMAGES: (id) => `/products/${id}/images`,
+    VARIANTS: (id) => `/products/${id}/variants`,
+  },
+
+  VARIANTS: {
+    DETAILS: (id) => `/variants/${id}`,
+    UPDATE: (id) => `/variants/${id}`,
+    DELETE: (id) => `/variants/${id}`,
   },
 
   CATEGORIES: {
