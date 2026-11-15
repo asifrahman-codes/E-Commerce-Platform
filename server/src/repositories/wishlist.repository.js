@@ -42,6 +42,7 @@ export async function addWishlistItem(userId, productId) {
   return findWishlistItem(userId, productId);
 }
 
+
 export async function getWishlistByUserId(userId) {
   const [rows] = await pool.execute(
     `
@@ -50,7 +51,19 @@ export async function getWishlistByUserId(userId) {
         w.user_id,
         w.product_id,
         w.created_at,
-        p.name AS product_name
+
+        p.name AS product_name,
+        p.slug,
+        p.base_price,
+
+        (
+          SELECT pi.image_url
+          FROM product_images pi
+          WHERE pi.product_id = p.product_id
+          ORDER BY pi.is_primary DESC, pi.image_id ASC
+          LIMIT 1
+        ) AS primary_image_url
+
       FROM wishlists w
       INNER JOIN products p
         ON p.product_id = w.product_id
@@ -62,6 +75,7 @@ export async function getWishlistByUserId(userId) {
 
   return rows;
 }
+
 
 export async function removeWishlistItem(userId, productId) {
   const [result] = await pool.execute(

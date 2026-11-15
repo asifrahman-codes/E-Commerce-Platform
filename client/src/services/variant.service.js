@@ -1,63 +1,71 @@
 import api from "./api";
+import ENDPOINTS from "./endpoints";
+
+const unwrap = (response) => {
+    const body = response?.data ?? response;
+    return body?.data ?? body;
+};
 
 const variantService = {
-  // Get all variants belonging to a product
-  async getProductVariants(productId) {
-    const response = await api.get(
-      `/products/${productId}/variants`
-    );
+    // Get active variants for customers
+    async getProductVariants(productId) {
+        const response = await api.get(
+            ENDPOINTS.PRODUCTS.VARIANTS(productId)
+        );
 
-    const body = response?.data ?? response;
-    const data = body?.data ?? body;
+        const data = unwrap(response);
 
-    return Array.isArray(data) ? data : [];
-  },
+        return Array.isArray(data) ? data : [];
+    },
 
-  // Get a single variant
-  async getVariantById(variantId) {
-    const response = await api.get(
-      `/variants/${variantId}`
-    );
+    // Get all variants for Admin
+    async getAdminProductVariants(productId) {
+        const response = await api.get(
+            ENDPOINTS.VARIANTS.ADMIN_PRODUCT_VARIANTS(productId)
+        );
 
-    const body = response?.data ?? response;
+        const data = unwrap(response);
 
-    return body?.data ?? body;
-  },
+        return Array.isArray(data) ? data : [];
+    },
 
-  // Create a new variant
-  async createVariant(productId, variantData) {
-    const response = await api.post(
-      `/products/${productId}/variants`,
-      variantData
-    );
+    // Get one variant
+    async getVariantById(variantId) {
+        const response = await api.get(
+            ENDPOINTS.VARIANTS.DETAILS(variantId)
+        );
 
-    const body = response?.data ?? response;
+        return unwrap(response);
+    },
 
-    return body?.data ?? body;
-  },
+    // Create variant
+    async createVariant(productId, variantData) {
+        const response = await api.post(
+            ENDPOINTS.PRODUCTS.VARIANTS(productId),
+            variantData
+        );
 
-  // Update an existing variant
-  async updateVariant(variantId, variantData) {
-    const response = await api.patch(
-      `/variants/${variantId}`,
-      variantData
-    );
+        return unwrap(response);
+    },
 
-    const body = response?.data ?? response;
+    // Update variant
+    async updateVariant(variantId, variantData) {
+        const response = await api.patch(
+            ENDPOINTS.VARIANTS.UPDATE(variantId),
+            variantData
+        );
 
-    return body?.data ?? body;
-  },
+        return unwrap(response);
+    },
 
-  // Delete a variant
-  async deleteVariant(variantId) {
-    const response = await api.delete(
-      `/variants/${variantId}`
-    );
+    // Delete variant
+    async deleteVariant(variantId) {
+        const response = await api.delete(
+            ENDPOINTS.VARIANTS.DELETE(variantId)
+        );
 
-    const body = response?.data ?? response;
-
-    return body?.data ?? body;
-  },
+        return unwrap(response);
+    },
 };
 
 export default variantService;

@@ -5,7 +5,8 @@ import {
     getVariantById,
     getVariantsByProduct,
     updateVariant,
-    deleteVariant
+    deleteVariant,
+    getAllVariantsByProductAdmin
 } from "../controllers/variant.controller.js";
 
 import {

@@ -29,8 +29,8 @@ export const addItemToCart = async (req, res, next) => {
         return res.status(200).json(
             new ApiResponse(
                 200,
-                cart,
-                "Item added to cart successfully"
+                "Item added to cart successfully",
+                cart
             )
         );
 
@@ -54,8 +54,8 @@ export const getCart = async (req, res, next) => {
         return res.status(200).json(
             new ApiResponse(
                 200,
-                cart,
-                "Cart fetched successfully"
+                "Cart fetched successfully",
+                cart
             )
         );
 
@@ -95,8 +95,8 @@ export const updateCartItem = async (
         return res.status(200).json(
             new ApiResponse(
                 200,
-                cart,
-                "Cart item updated successfully"
+                "Cart item updated successfully",
+                cart
             )
         );
 
@@ -131,8 +131,8 @@ export const removeCartItem = async (
         return res.status(200).json(
             new ApiResponse(
                 200,
-                cart,
-                "Cart item removed successfully"
+                "Cart item removed successfully",
+                cart
             )
         );
 
@@ -161,8 +161,8 @@ export const clearCart = async (
         return res.status(200).json(
             new ApiResponse(
                 200,
-                cart,
-                "Cart cleared successfully"
+                "Cart cleared successfully",
+                cart
             )
         );
 

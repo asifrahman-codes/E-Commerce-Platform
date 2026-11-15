@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useContext, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 
 import {
@@ -6,7 +6,6 @@ import {
   Package,
   ShieldCheck,
   Truck,
-  Check,
   AlertCircle,
 } from "lucide-react";
 
@@ -20,18 +19,11 @@ import {
   formatPrice,
 } from "../../utils/product.utils";
 
-const normalizeValue = (value) =>
-  String(value ?? "").trim();
+import { AuthContext } from "../../context/AuthContext";
 
-const getUniqueValues = (variants, field) => {
-  return [
-    ...new Set(
-      variants
-        .map((variant) => normalizeValue(variant[field]))
-        .filter(Boolean)
-    ),
-  ];
-};
+import VariantManagement from "../../components/products/admin/VariantManagement";
+
+import VariantSelector from "../../components/products/VariantSelector";
 
 export default function ProductDetails() {
   const { id } = useParams();
@@ -41,12 +33,21 @@ export default function ProductDetails() {
   const [selectedImage, setSelectedImage] = useState("");
 
   const [variants, setVariants] = useState([]);
-  const [selectedSize, setSelectedSize] = useState("");
-  const [selectedColor, setSelectedColor] = useState("");
+  const [selectedVariant, setSelectedVariant] = useState(null);
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [variantError, setVariantError] = useState("");
+
+  const { user, isAuthenticated, loading: authLoading } =
+    useContext(AuthContext);
+
+    const userRole = String(
+    user?.role ?? user?.user_role ?? ""
+  ).toUpperCase();
+
+  const isAdmin =
+      isAuthenticated && userRole === "ADMIN";
 
   /*
   |--------------------------------------------------------------------------
@@ -66,8 +67,7 @@ export default function ProductDetails() {
       setImages([]);
       setSelectedImage("");
       setVariants([]);
-      setSelectedSize("");
-      setSelectedColor("");
+      setSelectedVariant(null);
 
       try {
         const [
@@ -115,6 +115,7 @@ export default function ProductDetails() {
 
         /*
          * Only active variants should be selectable.
+         * VariantSelector handles the initial selection itself.
          */
 
         const activeVariants = Array.isArray(variantData)
@@ -125,22 +126,6 @@ export default function ProductDetails() {
           : [];
 
         setVariants(activeVariants);
-
-        /*
-         * Initialize selection from the first available variant.
-         */
-
-        if (activeVariants.length > 0) {
-          const firstVariant = activeVariants[0];
-
-          setSelectedSize(
-            normalizeValue(firstVariant.size)
-          );
-
-          setSelectedColor(
-            normalizeValue(firstVariant.color)
-          );
-        }
       } catch (err) {
         if (!active) return;
 
@@ -162,80 +147,6 @@ export default function ProductDetails() {
       active = false;
     };
   }, [id]);
-
-  /*
-  |--------------------------------------------------------------------------
-  | Available Sizes and Colors
-  |--------------------------------------------------------------------------
-  */
-
-  const availableSizes = useMemo(
-    () => getUniqueValues(variants, "size"),
-    [variants]
-  );
-
-  const availableColors = useMemo(() => {
-    const matchingVariants = selectedSize
-      ? variants.filter(
-          (variant) =>
-            normalizeValue(variant.size) === selectedSize
-        )
-      : variants;
-
-    return getUniqueValues(matchingVariants, "color");
-  }, [variants, selectedSize]);
-
-  /*
-  |--------------------------------------------------------------------------
-  | Selected Variant
-  |--------------------------------------------------------------------------
-  */
-
-  const selectedVariant = useMemo(() => {
-    return (
-      variants.find(
-        (variant) =>
-          normalizeValue(variant.size) === selectedSize &&
-          normalizeValue(variant.color) === selectedColor
-      ) ?? null
-    );
-  }, [variants, selectedSize, selectedColor]);
-
-  /*
-  |--------------------------------------------------------------------------
-  | Handle Size Selection
-  |--------------------------------------------------------------------------
-  */
-
-  const handleSizeChange = (size) => {
-    setSelectedSize(size);
-
-    const matchingVariants = variants.filter(
-      (variant) =>
-        normalizeValue(variant.size) === size
-    );
-
-    const matchingColor = matchingVariants.find(
-      (variant) =>
-        normalizeValue(variant.color) === selectedColor
-    );
-
-    setSelectedColor(
-      matchingColor
-        ? normalizeValue(matchingColor.color)
-        : normalizeValue(matchingVariants[0]?.color)
-    );
-  };
-
-  /*
-  |--------------------------------------------------------------------------
-  | Handle Color Selection
-  |--------------------------------------------------------------------------
-  */
-
-  const handleColorChange = (color) => {
-    setSelectedColor(color);
-  };
 
   /*
   |--------------------------------------------------------------------------
@@ -427,107 +338,23 @@ export default function ProductDetails() {
 
               {variantError && (
                 <div className="flex gap-2 rounded-lg bg-amber-50 p-3 text-sm text-amber-700">
-                  <AlertCircle
-                    size={18}
-                    className="shrink-0"
-                  />
+                  <AlertCircle size={18} className="shrink-0" />
                   <p>{variantError}</p>
                 </div>
               )}
 
-              {!variantError && variants.length === 0 && (
-                <div className="rounded-xl bg-zinc-50 p-4">
-                  <p className="text-sm text-zinc-600">
-                    No active variants are currently available for this product.
-                  </p>
-                </div>
+              {!variantError && (
+                <VariantSelector
+                  variants={variants}
+                  basePrice={basePrice}
+                  onVariantChange={setSelectedVariant}
+                />
               )}
 
-              {/* Size selection */}
-
-              {availableSizes.length > 0 && (
-                <div>
-                  <div className="mb-3 flex items-center justify-between">
-                    <label className="text-sm font-semibold text-zinc-800">
-                      Size
-                    </label>
-
-                    <span className="text-sm text-zinc-500">
-                      {selectedSize || "Select size"}
-                    </span>
-                  </div>
-
-                  <div className="flex flex-wrap gap-2">
-                    {availableSizes.map((size) => {
-                      const isSelected = selectedSize === size;
-
-                      return (
-                        <button
-                          key={size}
-                          type="button"
-                          onClick={() => handleSizeChange(size)}
-                          aria-pressed={isSelected}
-                          className={`min-w-12 rounded-lg border px-4 py-2.5 text-sm font-semibold transition ${
-                            isSelected
-                              ? "border-indigo-600 bg-indigo-600 text-white"
-                              : "border-zinc-200 text-zinc-700 hover:border-indigo-400"
-                          }`}
-                        >
-                          {size}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-
-              {/* Color selection */}
-
-              {availableColors.length > 0 && (
-                <div>
-                  <div className="mb-3 flex items-center justify-between">
-                    <label className="text-sm font-semibold text-zinc-800">
-                      Color
-                    </label>
-
-                    <span className="text-sm text-zinc-500">
-                      {selectedColor || "Select color"}
-                    </span>
-                  </div>
-
-                  <div className="flex flex-wrap gap-2">
-                    {availableColors.map((color) => {
-                      const isSelected = selectedColor === color;
-
-                      return (
-                        <button
-                          key={color}
-                          type="button"
-                          onClick={() => handleColorChange(color)}
-                          aria-pressed={isSelected}
-                          className={`flex items-center gap-2 rounded-lg border px-4 py-2.5 text-sm font-medium transition ${
-                            isSelected
-                              ? "border-indigo-600 bg-indigo-50 text-indigo-700"
-                              : "border-zinc-200 text-zinc-700 hover:border-indigo-400"
-                          }`}
-                        >
-                          {isSelected && (
-                            <Check size={15} />
-                          )}
-
-                          {color}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-
-              {/* Selected variant information */}
-
-              {selectedVariant ? (
+              {selectedVariant && (
                 <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-4">
                   <div className="flex flex-wrap items-center justify-between gap-3">
+
                     <div>
                       <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">
                         SKU
@@ -543,9 +370,9 @@ export default function ProductDetails() {
                         Availability
                       </p>
 
-                      {selectedStock > 0 ? (
+                      {Number(selectedVariant.stock) > 0 ? (
                         <p className="mt-1 text-sm font-semibold text-emerald-600">
-                          {selectedStock} units available
+                          {selectedVariant.stock} units available
                         </p>
                       ) : (
                         <p className="mt-1 text-sm font-semibold text-red-600">
@@ -553,13 +380,10 @@ export default function ProductDetails() {
                         </p>
                       )}
                     </div>
+
                   </div>
                 </div>
-              ) : variants.length > 0 ? (
-                <div className="rounded-xl bg-amber-50 p-3 text-sm text-amber-700">
-                  Please select an available size and color combination.
-                </div>
-              ) : null}
+              )}
 
             </div>
 
@@ -629,6 +453,15 @@ export default function ProductDetails() {
             </div>
           </div>
         </div>
+
+        {/* Admin Variant Management */}
+
+        {!authLoading && isAdmin && (
+          <div className="mt-12 border-t border-zinc-200 pt-8">
+            <VariantManagement productId={id} />
+          </div>
+        )}
+
       </div>
     </div>
   );
