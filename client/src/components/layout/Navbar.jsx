@@ -19,6 +19,9 @@ import {
 
 import useAuth from "../../hooks/useAuth";
 
+import { useCart } from "../../context/CartContext";
+import { useWishlist } from "../../context/WishlistContext";
+
 const Navbar = () => {
   const navigate = useNavigate();
 
@@ -48,6 +51,9 @@ const Navbar = () => {
     setMenuOpen(false);
     navigate("/", { replace: true });
   };
+
+  const { cart } = useCart();
+  const { wishlist } = useWishlist();
 
   return (
     <header className="sticky top-0 z-50 border-b border-gray-100 bg-white">
@@ -98,17 +104,33 @@ const Navbar = () => {
             <Link
               to="/wishlist"
               aria-label="Wishlist"
-              className="hidden text-gray-600 hover:text-indigo-600 sm:block"
+              className="relative hidden items-center gap-2 text-gray-600 hover:text-indigo-600 sm:inline-flex"
             >
               <Heart size={21} />
+
+              <span className="hidden lg:inline">Wishlist</span>
+
+              {wishlist.total_items > 0 && (
+                <span className="absolute -right-2 -top-2 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-xs font-bold text-white">
+                  {wishlist.total_items}
+                </span>
+              )}
             </Link>
 
             <Link
               to="/cart"
               aria-label="Shopping cart"
-              className="text-gray-600 hover:text-indigo-600"
+              className="relative inline-flex items-center gap-2 text-gray-600 hover:text-indigo-600"
             >
               <ShoppingCart size={21} />
+
+              <span className="hidden lg:inline">Cart</span>
+
+              {cart.total_items > 0 && (
+                <span className="absolute -right-2 -top-2 flex h-5 min-w-5 items-center justify-center rounded-full bg-indigo-600 px-1 text-xs font-bold text-white">
+                  {cart.total_items}
+                </span>
+              )}
             </Link>
 
             {isAuthenticated ? (
@@ -175,6 +197,38 @@ const Navbar = () => {
                   {item.label}
                 </NavLink>
               ))}
+
+              {/* Mobile Wishlist */}
+              <Link
+                to="/wishlist"
+                onClick={() => setMenuOpen(false)}
+                className="flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-indigo-600"
+              >
+                <Heart size={19} />
+                Wishlist
+
+                {wishlist.total_items > 0 && (
+                  <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-xs font-bold text-white">
+                    {wishlist.total_items}
+                  </span>
+                )}
+              </Link>
+
+              {/* Mobile Cart */}
+              <Link
+                to="/cart"
+                onClick={() => setMenuOpen(false)}
+                className="flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-indigo-600"
+              >
+                <ShoppingCart size={19} />
+                Cart
+
+                {cart.total_items > 0 && (
+                  <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-indigo-600 px-1 text-xs font-bold text-white">
+                    {cart.total_items}
+                  </span>
+                )}
+              </Link>
 
               {isAuthenticated ? (
 

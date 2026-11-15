@@ -18,6 +18,9 @@ import ProductDetails from "../pages/products/ProductDetails";
 import ProtectedRoute from "./ProtectedRoute";
 import GuestRoute from "./GuestRoute";
 
+import Cart from "../pages/cart/Cart";
+import Wishlist from "../pages/wishlist/Wishlist";
+
 const AppRoutes = () => {
   return (
     <Routes>
@@ -68,6 +71,11 @@ const AppRoutes = () => {
             path="/notifications"
             element={<Placeholder title="Notifications" />}
           />
+
+          <Route path="/cart" element={<Cart />} />
+          
+          <Route path="/wishlist" element={<Wishlist />} />
+
         </Route>
 
         {/* Admin routes */}

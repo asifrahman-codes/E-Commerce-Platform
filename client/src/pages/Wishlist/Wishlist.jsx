@@ -7,7 +7,10 @@ import { useWishlist } from "../../context/WishlistContext";
 import LoadingSpinner from "../../components/common/LoadingSpinner";
 import ErrorMessage from "../../components/common/ErrorMessage";
 
-import { getImageUrl, formatPrice } from "../../utils/format";
+import {
+  getImageUrl,
+  formatPrice,
+} from "../../utils/product.utils";
 
 export default function Wishlist() {
   const {

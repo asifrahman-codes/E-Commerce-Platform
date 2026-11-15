@@ -16,6 +16,8 @@ import {
   formatPrice,
 } from "../../utils/product.utils";
 
+import WishlistButton from "../wishlist/WishlistButton";
+
 export default function ProductCard({ product }) {
   const productId = getProductId(product);
   const name = getProductName(product);
@@ -60,6 +62,11 @@ export default function ProductCard({ product }) {
           >
             {stock > 0 ? "In Stock" : "Out of Stock"}
           </span>
+          
+        {/* Wishlist Button */}
+        <div className="absolute right-3 top-3 z-10">
+          <WishlistButton productId={productId} />
+        </div>
         </div>
       </Link>
 

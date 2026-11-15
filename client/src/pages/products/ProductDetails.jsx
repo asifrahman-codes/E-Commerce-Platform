@@ -1,5 +1,5 @@
 import { useEffect, useContext, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams, useNavigate  } from "react-router-dom";
 
 import {
   ChevronRight,
@@ -7,6 +7,7 @@ import {
   ShieldCheck,
   Truck,
   AlertCircle,
+  ShoppingCart,
 } from "lucide-react";
 
 import productService from "../../services/product.service";
@@ -25,6 +26,8 @@ import VariantManagement from "../../components/products/admin/VariantManagement
 
 import VariantSelector from "../../components/products/VariantSelector";
 
+import { useCart } from "../../context/CartContext";
+
 export default function ProductDetails() {
   const { id } = useParams();
 
@@ -42,12 +45,54 @@ export default function ProductDetails() {
   const { user, isAuthenticated, loading: authLoading } =
     useContext(AuthContext);
 
+  const [addingToCart, setAddingToCart] = useState(false);
+  const [cartMessage, setCartMessage] = useState("");
+  const [cartError, setCartError] = useState("");
+
     const userRole = String(
     user?.role ?? user?.user_role ?? ""
   ).toUpperCase();
 
   const isAdmin =
       isAuthenticated && userRole === "ADMIN";
+
+  const { addToCart } = useCart();
+
+  const navigate = useNavigate();
+
+  const handleAddToCart = async () => {
+  if (!localStorage.getItem("accessToken")) {
+    navigate(`/login?redirect=${encodeURIComponent("/cart")}`);
+    return;
+  }
+
+  if (!selectedVariant) {
+    setCartError("Please select a product variant.");
+    return;
+  }
+
+  if (Number(selectedVariant.stock) < 1) {
+    setCartError("This variant is out of stock.");
+    return;
+  }
+
+  try {
+    setAddingToCart(true);
+    setCartError("");
+    setCartMessage("");
+
+    await addToCart(selectedVariant.variant_id, 1);
+
+    setCartMessage("Product added to your cart successfully.");
+  } catch (err) {
+    setCartError(
+      err.response?.data?.message ||
+        "Unable to add this product to your cart."
+    );
+  } finally {
+    setAddingToCart(false);
+  }
+};
 
   /*
   |--------------------------------------------------------------------------
@@ -405,14 +450,36 @@ export default function ProductDetails() {
             {/* =================================================
                 ADD TO CART
             ================================================== */}
-
             <button
               type="button"
-              disabled
-              className="mt-8 w-full cursor-not-allowed rounded-xl bg-zinc-300 py-4 font-semibold text-zinc-600"
+              onClick={handleAddToCart}
+              disabled={
+                addingToCart ||
+                !selectedVariant ||
+                Number(selectedVariant.stock) < 1
+              }
+              className="mt-8 flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 px-6 py-4 font-semibold text-white transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:bg-zinc-400"
             >
-              Add to Cart — Coming in Phase 6.5
+              <ShoppingCart size={19} />
+
+              {addingToCart
+                ? "Adding..."
+                : selectedVariant && Number(selectedVariant.stock) < 1
+                  ? "Out of Stock"
+                  : "Add to Cart"}
             </button>
+
+            {cartMessage && (
+              <p className="mt-3 text-sm text-green-600">
+                {cartMessage}
+              </p>
+            )}
+
+            {cartError && (
+              <p className="mt-3 text-sm text-red-600">
+                {cartError}
+              </p>
+            )}
 
             {!isVariantAvailable && selectedVariant && (
               <p className="mt-2 text-center text-sm text-red-600">

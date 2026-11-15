@@ -1,7 +1,10 @@
 import { useState } from "react";
 import { Minus, Plus, Trash2 } from "lucide-react";
 
-import { getImageUrl, formatPrice } from "../../utils/format";
+import {
+  getImageUrl,
+  formatPrice,
+} from "../../utils/product.utils";
 
 export default function CartItem({
   item,
