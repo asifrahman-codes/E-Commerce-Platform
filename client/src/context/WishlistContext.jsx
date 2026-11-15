@@ -1,7 +1,9 @@
+
 import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useState,
 } from "react";
 
@@ -50,13 +52,20 @@ export function WishlistProvider({ children }) {
     }
   }, []);
 
+  // Automatically restore wishlist when provider loads.
+  useEffect(() => {
+    if (hasAccessToken()) {
+      refreshWishlist().catch(() => {});
+    }
+  }, [refreshWishlist]);
+
   const addToWishlist = async (productId) => {
     try {
       setError("");
 
       await wishlistService.addItem(productId);
 
-      // Fetch the updated wishlist because the add
+      // Fetch updated wishlist because the add
       // endpoint returns only the inserted wishlist row.
       return await refreshWishlist();
     } catch (err) {
