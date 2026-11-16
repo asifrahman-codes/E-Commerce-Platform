@@ -3,7 +3,7 @@ import API_ENDPOINTS from "./endpoints";
 
 const payload = (response) => response?.data ?? response;
 
-// Priced entirely by the backend from the server-side cart.
+// Existing checkout functions
 export const previewOrder = async (couponCode = "") =>
   payload(
     await api.post(API_ENDPOINTS.ORDERS.PREVIEW, {
@@ -11,8 +11,10 @@ export const previewOrder = async (couponCode = "") =>
     })
   );
 
-// Only the address and coupon are sent; the backend computes every amount.
-export const placeOrder = async ({ addressId, couponCode = "" }) =>
+export const placeOrder = async ({
+  addressId,
+  couponCode = "",
+}) =>
   payload(
     await api.post(API_ENDPOINTS.ORDERS.BASE, {
       address_id: addressId,
@@ -20,5 +22,20 @@ export const placeOrder = async ({ addressId, couponCode = "" }) =>
     })
   );
 
+// Get customer order history
+export const getUserOrders = async () =>
+  payload(
+    await api.get(API_ENDPOINTS.ORDERS.BASE)
+  );
+
+// Get one order with its items, address and payment
 export const getOrder = async (id) =>
-  payload(await api.get(API_ENDPOINTS.ORDERS.DETAILS(id)));
+  payload(
+    await api.get(API_ENDPOINTS.ORDERS.DETAILS(id))
+  );
+
+// Cancel an order
+export const cancelOrder = async (id) =>
+  payload(
+    await api.patch(API_ENDPOINTS.ORDERS.CANCEL(id), {})
+  );

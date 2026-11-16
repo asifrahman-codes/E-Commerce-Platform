@@ -24,6 +24,9 @@ import Checkout from "../pages/checkout/Checkout";
 import OrderConfirmation from "../pages/checkout/OrderConfirmation";
 import MockPayment from "../pages/checkout/MockPayment";
 
+import MyOrders from "../pages/orders/MyOrders";
+import OrderDetails from "../pages/orders/OrderDetails";
+
 const AppRoutes = () => {
   return (
     <Routes>
@@ -61,14 +64,20 @@ const AppRoutes = () => {
           />
           <Route path="/mock-payment/:attemptId" element={<MockPayment />} />
 
-          <Route
-            path="/orders"
-            element={<Placeholder title="My Orders" />}
-          />
 
           <Route
             path="/notifications"
             element={<Placeholder title="Notifications" />}
+          />
+
+          <Route
+            path="/orders"
+            element={<MyOrders />}
+          />
+
+          <Route
+            path="/orders/:orderId"
+            element={<OrderDetails />}
           />
 
         </Route>
