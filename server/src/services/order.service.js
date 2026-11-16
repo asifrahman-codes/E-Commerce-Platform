@@ -6,13 +6,15 @@ import {
     createOrderItem,
     findOrderWithItems,
     findOrdersByUser,
+    findOrderByIdForUpdate,
     updateOrderStatus
 } from "../repositories/order.repository.js";
 
 import {
     findCartByUserId,
     getCartWithItems,
-    clearCartWithTransaction
+    clearCartWithTransaction,
+    lockCartForUpdate
 } from "../repositories/cart.repository.js";
 
 import {
@@ -27,19 +29,26 @@ import {
 } from "../repositories/address.repository.js";
 
 import {
-    getPricingSettingsForUpdate
+    getPricingSettingsForUpdate,
+    getActivePricingSettings
 } from "../repositories/pricing.repository.js";
+
+import {
+    findPaymentByOrderIdForOwner
+} from "../repositories/payment.repository.js";
 
 import {
     calculateOrderPricing
 } from "../utils/pricing.js";
 
 import {
-    validateCouponForOrder
+    validateCouponForOrder,
+    validateCouponService
 } from "./coupon.service.js";
 
 import {
-    createCouponUsage
+    createCouponUsage,
+    releaseCouponUsage
 } from "../repositories/coupon.repository.js";
 
 import {
@@ -191,19 +200,11 @@ export const createOrderService = async (
         coupon_code = ""
     } = orderData;
 
-
-    /*
-    |--------------------------------------------------------------------------
-    | Validate Address Ownership
-    |--------------------------------------------------------------------------
-    */
-
     const address =
         await findAddressByUserId(
             address_id,
             userId
         );
-
 
     if (!address) {
 
@@ -214,97 +215,53 @@ export const createOrderService = async (
 
     }
 
-
-    /*
-    |--------------------------------------------------------------------------
-    | Get Cart
-    |--------------------------------------------------------------------------
-    */
-
-    const {
-        cart,
-        items
-    } = await getValidCart(userId);
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | Calculate Subtotal
-    |--------------------------------------------------------------------------
-    */
-
-    const subtotal =
-        calculateSubtotal(items);
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | Temporary Pricing
-    |--------------------------------------------------------------------------
-    |
-    | Coupon, shipping and tax will be connected
-    | to their respective modules later.
-    |
-    */
-
-    // const discount = 0;
-
-    // const shipping = 0;
-
-    // const tax = 0;
-
-
-    // const total =
-    //     subtotal -
-    //     discount +
-    //     shipping +
-    //     tax;
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | Generate Order Number
-    |--------------------------------------------------------------------------
-    */
+    const { cart } = await getValidCart(userId);
 
     const orderNumber =
         generateOrderNumber();
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | Database Transaction
-    |--------------------------------------------------------------------------
-    */
 
     const orderId =
         await withTransaction(
             async (connection) => {
 
-                /*
-                |--------------------------------------------------------------------------
-                | Locked Variants
-                |--------------------------------------------------------------------------
+                // Serialise concurrent checkouts of this cart, then re-read
+                // its items so a duplicate submission sees an empty cart.
+                await lockCartForUpdate(
+                    connection,
+                    cart.cart_id
+                );
+
+                const { items } =
+                    await getValidCart(userId);
+
+                const subtotal =
+                    Math.round(
+                        (calculateSubtotal(items) + Number.EPSILON) * 100
+                    ) / 100;
+
+/*
+                -----------------------------------------
+                Lock Variants (sorted to avoid deadlocks)
+                -----------------------------------------
                 */
 
                 const lockedVariants =
                     new Map();
 
+                const sortedItems =
+                    [...items].sort(
+                        (a, b) =>
+                            Number(a.variant_id) -
+                            Number(b.variant_id)
+                    );
 
-                /*
-                |--------------------------------------------------------------------------
-                | Lock And Validate All Variants
-                |--------------------------------------------------------------------------
-                */
-
-                for (const item of items) {
+                for (const item of sortedItems) {
 
                     const variant =
                         await getVariantForUpdate(
                             connection,
                             item.variant_id
                         );
-
 
                     if (!variant) {
 
@@ -314,7 +271,6 @@ export const createOrderService = async (
                         );
 
                     }
-
 
                     if (
                         variant.status !==
@@ -328,7 +284,6 @@ export const createOrderService = async (
 
                     }
 
-
                     if (
                         Number(variant.stock) <
                         Number(item.quantity)
@@ -341,7 +296,6 @@ export const createOrderService = async (
 
                     }
 
-
                     lockedVariants.set(
                         Number(item.variant_id),
                         variant
@@ -349,12 +303,52 @@ export const createOrderService = async (
 
                 }
 
+                /*
+                -----------------------------------------
+                Coupon (validated on the backend only)
+                -----------------------------------------
+                */
+
+                let coupon = null;
+                let discount = 0;
+
+                const code =
+                    String(coupon_code || "").trim();
+
+                if (code) {
+
+                    const result =
+                        await validateCouponForOrder(
+                            connection,
+                            {
+                                code,
+                                userId,
+                                subtotal
+                            }
+                        );
+
+                    coupon = result.coupon;
+                    discount = result.discount;
+
+                }
 
                 /*
-                |--------------------------------------------------------------------------
-                | Create Order
-                |--------------------------------------------------------------------------
+                -----------------------------------------
+                Backend Pricing: shipping, tax, total
+                -----------------------------------------
                 */
+
+                const settings =
+                    await getPricingSettingsForUpdate(
+                        connection
+                    );
+
+                const pricing =
+                    calculateOrderPricing({
+                        subtotal,
+                        discount,
+                        settings
+                    });
 
                 const newOrderId =
                     await createOrder(
@@ -362,22 +356,31 @@ export const createOrderService = async (
                         {
                             user_id: userId,
                             address_id,
-                            coupon_id: null,
+                            coupon_id: coupon
+                                ? coupon.coupon_id
+                                : null,
                             order_number: orderNumber,
-                            subtotal,
-                            discount,
-                            shipping,
-                            tax,
-                            total
+                            subtotal: pricing.subtotal,
+                            discount: pricing.discount,
+                            shipping: pricing.shipping,
+                            tax: pricing.tax,
+                            total: pricing.total
                         }
                     );
 
+                if (coupon) {
 
-                /*
-                |--------------------------------------------------------------------------
-                | Create Order Items
-                |--------------------------------------------------------------------------
-                */
+                    await createCouponUsage(
+                        connection,
+                        {
+                            couponId: coupon.coupon_id,
+                            userId,
+                            orderId: newOrderId,
+                            discountAmount: pricing.discount
+                        }
+                    );
+
+                }
 
                 for (const item of items) {
 
@@ -386,24 +389,15 @@ export const createOrderService = async (
                             Number(item.variant_id)
                         );
 
-
-                    /*
-                    |--------------------------------------------------------------------------
-                    | Calculate Current Variant Price
-                    |--------------------------------------------------------------------------
-                    */
-
                     const unitPrice =
-                        Number(item.product_price) +
-                        Number(
-                            item.price_adjustment || 0
-                        );
-
+                        calculateItemPrice(item);
 
                     const totalPrice =
-                        unitPrice *
-                        Number(item.quantity);
-
+                        Math.round(
+                            (unitPrice *
+                            Number(item.quantity) +
+                            Number.EPSILON) * 100
+                        ) / 100;
 
                     await createOrderItem(
                         connection,
@@ -419,17 +413,9 @@ export const createOrderService = async (
                         }
                     );
 
-
-                    /*
-                    |--------------------------------------------------------------------------
-                    | Reduce Stock
-                    |--------------------------------------------------------------------------
-                    */
-
                     const newStock =
                         Number(variant.stock) -
                         Number(item.quantity);
-
 
                     await updateVariantStockWithTransaction(
                         connection,
@@ -437,28 +423,17 @@ export const createOrderService = async (
                         newStock
                     );
 
-
-                    /*
-                    |--------------------------------------------------------------------------
-                    | Record Inventory Transaction
-                    |--------------------------------------------------------------------------
-                    */
-
                     await createInventoryTransactionWithTransaction(
                         connection,
                         {
                             variant_id:
                                 item.variant_id,
-
                             quantity_change:
                                 -Number(item.quantity),
-
                             transaction_type:
                                 "SALE",
-
                             reference_id:
                                 newOrderId,
-
                             notes:
                                 "Stock reduced for order"
                         }
@@ -466,53 +441,22 @@ export const createOrderService = async (
 
                 }
 
-
-                /*
-                |--------------------------------------------------------------------------
-                | Clear Cart
-                |--------------------------------------------------------------------------
-                */
-
                 await clearCartWithTransaction(
                     connection,
                     cart.cart_id
                 );
-
-
-                /*
-                |--------------------------------------------------------------------------
-                | Return Order ID
-                |--------------------------------------------------------------------------
-                */
 
                 return newOrderId;
 
             }
         );
 
-
-    /*
-    |--------------------------------------------------------------------------
-    | Get Created Order
-    |--------------------------------------------------------------------------
-    */
-
-    const order =
-        await findOrderWithItems(
-            orderId
-        );
-
-
-    return order;
+    return await findOrderWithItems(
+        orderId
+    );
 
 };
 
-
-/*
-|--------------------------------------------------------------------------
-| Get Order By ID
-|--------------------------------------------------------------------------
-*/
 
 export const getOrderByIdService = async (
     orderId,
@@ -554,7 +498,16 @@ export const getOrderByIdService = async (
     }
 
 
-    return order;
+    const [address, payment] = await Promise.all([
+        findAddressByUserId(order.address_id, userId),
+        findPaymentByOrderIdForOwner(orderId, userId)
+    ]);
+
+    return {
+        ...order,
+        address,
+        payment: payment || null
+    };
 
 };
 
@@ -658,6 +611,25 @@ export const cancelOrderService = async (
     await withTransaction(
         async (connection) => {
 
+            // Re-check under a row lock so concurrent cancel/payment cannot race.
+            const locked =
+                await findOrderByIdForUpdate(
+                    connection,
+                    orderId
+                );
+
+            if (
+                !locked ||
+                !["PENDING", "CONFIRMED"].includes(locked.status)
+            ) {
+
+                throw new ApiError(
+                    409,
+                    "This order cannot be cancelled"
+                );
+
+            }
+
             /*
             |--------------------------------------------------------------------------
             | Restore Stock For Every Order Item
@@ -743,6 +715,11 @@ export const cancelOrderService = async (
                 "CANCELLED"
             );
 
+            await releaseCouponUsage(
+                connection,
+                orderId
+            );
+
         }
     );
 
@@ -756,5 +733,74 @@ export const cancelOrderService = async (
     return await findOrderWithItems(
         orderId
     );
+
+};
+
+
+/*
+|--------------------------------------------------------------------------
+| Checkout preview: priced entirely from the server-side cart.
+| Nothing from the client except the coupon code is trusted.
+|--------------------------------------------------------------------------
+*/
+
+export const previewOrderService = async (
+    userId,
+    { coupon_code = "" } = {}
+) => {
+
+    const { items } = await getValidCart(userId);
+
+    const subtotal =
+        Math.round(
+            (calculateSubtotal(items) + Number.EPSILON) * 100
+        ) / 100;
+
+    let discount = 0;
+    let coupon = null;
+
+    const code = String(coupon_code || "").trim();
+
+    if (code) {
+
+        const result =
+            await validateCouponService({
+                code,
+                userId,
+                subtotal
+            });
+
+        discount = result.discount;
+
+        coupon = {
+            code: result.code,
+            discount_type: result.discount_type,
+            discount: result.discount
+        };
+
+    }
+
+    const settings =
+        await getActivePricingSettings();
+
+    const pricing =
+        calculateOrderPricing({
+            subtotal,
+            discount,
+            settings
+        });
+
+    return {
+        ...pricing,
+        coupon,
+        free_shipping_threshold:
+            settings.free_shipping_threshold === null
+                ? null
+                : Number(settings.free_shipping_threshold),
+        item_count: items.reduce(
+            (sum, item) => sum + Number(item.quantity),
+            0
+        )
+    };
 
 };

@@ -4,10 +4,17 @@ import {
     createOrderController,
     getOrderByIdController,
     getUserOrdersController,
-    cancelOrderController
+    cancelOrderController,
+    previewOrderController
 } from "../controllers/order.controller.js";
 
 import authMiddleware from "../middleware/auth.middleware.js";
+import validate from "../middleware/validation.middleware.js";
+import {
+    createOrderSchema,
+    cancelOrderSchema,
+    previewOrderSchema
+} from "../validations/order.validation.js";
 
 
 const router = express.Router();
@@ -21,8 +28,16 @@ const router = express.Router();
 */
 
 router.post(
+    "/preview",
+    authMiddleware,
+    validate(previewOrderSchema),
+    previewOrderController
+);
+
+router.post(
     "/",
     authMiddleware,
+    validate(createOrderSchema),
     createOrderController
 );
 
@@ -65,6 +80,7 @@ router.get(
 router.patch(
     "/:orderId/cancel",
     authMiddleware,
+    validate(cancelOrderSchema),
     cancelOrderController
 );
 

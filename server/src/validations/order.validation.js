@@ -38,3 +38,11 @@ export const cancelOrderSchema = Joi.object({
         .optional()
 
 });
+
+export const previewOrderSchema = Joi.object({
+    coupon_code: Joi.string()
+        .trim()
+        .max(50)
+        .allow("")
+        .optional()
+});

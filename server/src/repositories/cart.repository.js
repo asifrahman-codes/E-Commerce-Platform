@@ -279,3 +279,27 @@ export const getCartWithItems = async (
 
     return await query(sql, [cartId]);
 };
+
+/*
+|--------------------------------------------------------------------------
+| Lock the cart row for the duration of an order transaction so two
+| simultaneous checkouts of the same cart cannot both succeed.
+|--------------------------------------------------------------------------
+*/
+
+export const lockCartForUpdate = async (
+    connection,
+    cartId
+) => {
+
+    const [rows] = await connection.execute(
+        `SELECT cart_id
+         FROM carts
+         WHERE cart_id = ?
+         FOR UPDATE`,
+        [cartId]
+    );
+
+    return rows[0] || null;
+
+};

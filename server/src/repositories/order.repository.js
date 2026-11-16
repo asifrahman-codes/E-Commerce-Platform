@@ -368,3 +368,27 @@ export const updatePaymentStatus = async (
 
     return result.affectedRows;
 };
+
+export const findOrderByIdForUpdate = async (
+    connection,
+    orderId
+) => {
+
+    const [rows] = await connection.execute(
+        `SELECT
+            order_id,
+            user_id,
+            coupon_id,
+            order_number,
+            status,
+            payment_status
+         FROM orders
+         WHERE order_id = ?
+         LIMIT 1
+         FOR UPDATE`,
+        [orderId]
+    );
+
+    return rows[0] || null;
+
+};

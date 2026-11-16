@@ -2,7 +2,8 @@ import {
     createOrderService,
     getOrderByIdService,
     getUserOrdersService,
-    cancelOrderService
+    cancelOrderService,
+    previewOrderService
 } from "../services/order.service.js";
 
 
@@ -182,6 +183,34 @@ export const cancelOrderController = async (
 
             data: order
 
+        });
+
+    } catch (error) {
+
+        next(error);
+
+    }
+
+};
+
+export const previewOrderController = async (
+    req,
+    res,
+    next
+) => {
+
+    try {
+
+        const preview =
+            await previewOrderService(
+                req.user.user_id,
+                req.body
+            );
+
+        return res.status(200).json({
+            success: true,
+            message: "Order preview calculated",
+            data: preview
         });
 
     } catch (error) {
