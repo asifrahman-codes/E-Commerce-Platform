@@ -20,6 +20,9 @@ import GuestRoute from "./GuestRoute";
 
 import Cart from "../pages/cart/Cart";
 import Wishlist from "../pages/wishlist/Wishlist";
+import Checkout from "../pages/checkout/Checkout";
+import OrderConfirmation from "../pages/checkout/OrderConfirmation";
+import MockPayment from "../pages/checkout/MockPayment";
 
 const AppRoutes = () => {
   return (
@@ -38,15 +41,9 @@ const AppRoutes = () => {
           element={<Placeholder title="Categories" />}
         />
 
-        <Route
-          path="/cart"
-          element={<Placeholder title="Shopping Cart" />}
-        />
-
-        <Route
-          path="/wishlist"
-          element={<Placeholder title="My Wishlist" />}
-        />
+        <Route path="/cart" element={<Cart />} />
+        
+        <Route path="/wishlist" element={<Wishlist />} />
 
         <Route
           path="/search"
@@ -57,10 +54,12 @@ const AppRoutes = () => {
         <Route element={<ProtectedRoute />}>
           <Route path="/account" element={<Profile />} />
 
+          <Route path="/checkout" element={<Checkout />} />
           <Route
-            path="/checkout"
-            element={<Placeholder title="Checkout" />}
+            path="/order-confirmation/:orderId"
+            element={<OrderConfirmation />}
           />
+          <Route path="/mock-payment/:attemptId" element={<MockPayment />} />
 
           <Route
             path="/orders"
@@ -71,10 +70,6 @@ const AppRoutes = () => {
             path="/notifications"
             element={<Placeholder title="Notifications" />}
           />
-
-          <Route path="/cart" element={<Cart />} />
-          
-          <Route path="/wishlist" element={<Wishlist />} />
 
         </Route>
 
