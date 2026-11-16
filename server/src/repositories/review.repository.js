@@ -8,8 +8,10 @@ export async function findDeliveredPurchase(userId, productId) {
       FROM orders o
       INNER JOIN order_items oi
         ON oi.order_id = o.order_id
+      INNER JOIN product_variants pv
+        ON pv.variant_id = oi.variant_id
       WHERE o.user_id = ?
-        AND oi.product_id = ?
+        AND pv.product_id = ?
         AND o.status = 'DELIVERED'
       ORDER BY o.order_id DESC
       LIMIT 1
