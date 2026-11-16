@@ -34,6 +34,12 @@ export const getOrder = async (id) =>
     await api.get(API_ENDPOINTS.ORDERS.DETAILS(id))
   );
 
+// Get shipments for an order (customer-owned)
+export const getOrderShipments = async (orderId) =>
+  payload(
+    await api.get(`/shipping/orders/${orderId}/shipments`)
+  );
+  
 // Cancel an order
 export const cancelOrder = async (id) =>
   payload(

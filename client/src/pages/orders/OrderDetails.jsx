@@ -1,4 +1,3 @@
-
 import { useCallback, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import {
@@ -13,12 +12,14 @@ import {
 import {
   getOrder,
   cancelOrder,
+  getOrderShipments,
 } from "../../services/order.service";
 
 import OrderStatusBadge from "../../components/orders/OrderStatusBadge";
 import OrderItems from "../../components/orders/OrderItems";
 import OrderTimeline from "../../components/orders/OrderTimeline";
 import CancelOrderModal from "../../components/orders/CancelOrderModal";
+import ShipmentTracking from "../../components/orders/ShipmentTracking";
 
 import {
   canCancelOrder,
@@ -37,6 +38,10 @@ const OrderDetails = () => {
   const [cancelModalOpen, setCancelModalOpen] = useState(false);
   const [cancelError, setCancelError] = useState("");
 
+  const [shipments, setShipments] = useState([]);
+  const [shipmentLoading, setShipmentLoading] = useState(true);
+  const [shipmentError, setShipmentError] = useState("");
+
   const fetchOrder = useCallback(async () => {
     try {
       setLoading(true);
@@ -47,11 +52,11 @@ const OrderDetails = () => {
       const orderData = response?.data ?? response;
 
       if (
-          !orderData ||
-          typeof orderData !== "object" ||
-          Array.isArray(orderData)
+        !orderData ||
+        typeof orderData !== "object" ||
+        Array.isArray(orderData)
       ) {
-          throw new Error("Invalid order response from server.");
+        throw new Error("Invalid order response from server.");
       }
 
       setOrder(orderData);
@@ -65,6 +70,38 @@ const OrderDetails = () => {
   useEffect(() => {
     fetchOrder();
   }, [fetchOrder]);
+
+  const fetchShipments = useCallback(async () => {
+    try {
+      setShipmentLoading(true);
+      setShipmentError("");
+
+      const response = await getOrderShipments(orderId);
+
+      const shipmentData =
+        response?.data?.data ??
+        response?.data ??
+        response;
+
+      if (!Array.isArray(shipmentData)) {
+        throw new Error("Invalid shipment response from server.");
+      }
+
+      setShipments(shipmentData);
+    } catch (err) {
+      setShipmentError(
+        err?.response?.data?.message ||
+        err?.message ||
+        "Unable to load shipment information."
+      );
+    } finally {
+      setShipmentLoading(false);
+    }
+  }, [orderId]);
+
+  useEffect(() => {
+    fetchShipments();
+  }, [fetchShipments]);
 
   const handleCancelOrder = async () => {
     try {
@@ -211,6 +248,45 @@ const OrderDetails = () => {
         {/* Order status */}
         <div className="mt-6">
           <OrderTimeline status={order.status} />
+        </div>
+
+        {/* Shipment tracking */}
+        <div className="mt-6 space-y-4">
+          <div>
+            <h2 className="text-lg font-bold text-gray-900">
+              Shipment Tracking
+            </h2>
+
+            <p className="mt-1 text-sm text-gray-500">
+              Follow the shipping progress of your order.
+            </p>
+          </div>
+
+          {shipmentLoading ? (
+            <div className="rounded-xl border border-gray-200 bg-white p-6 text-center">
+              <div className="mx-auto h-8 w-8 animate-spin rounded-full border-4 border-indigo-100 border-t-indigo-600" />
+
+              <p className="mt-3 text-sm text-gray-500">
+                Loading shipment information...
+              </p>
+            </div>
+          ) : shipmentError ? (
+            <div className="rounded-xl border border-red-200 bg-red-50 p-5">
+              <p className="text-sm text-red-700">
+                {shipmentError}
+              </p>
+
+              <button
+                type="button"
+                onClick={fetchShipments}
+                className="mt-3 text-sm font-semibold text-indigo-600 hover:text-indigo-700"
+              >
+                Retry
+              </button>
+            </div>
+          ) : (
+            <ShipmentTracking shipments={shipments} />
+          )}
         </div>
 
         {/* Items and summary */}
