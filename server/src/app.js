@@ -9,10 +9,8 @@ import routes from "./routes/index.js";
 import notFound from "./middleware/notFound.middleware.js";
 import errorHandler from "./middleware/error.middleware.js";
 
-import {
-  requestIdMiddleware,
-  generalApiLimiter,
-} from "./middleware/rate-Limit.middleware.js";
+import { requestIdMiddleware } from "./middleware/request-id.middleware.js";
+import { generalApiLimiter } from "./middleware/rate-limit.middleware.js";
 
 import { pool } from "./database/index.js";
 
@@ -43,17 +41,26 @@ app.use(
         return callback(null, true);
       }
 
-      return callback(new Error("Origin is not allowed by CORS."));
+      const corsError = new Error("Origin is not allowed by CORS.");
+      corsError.statusCode = 403;
+      return callback(corsError);
     },
     credentials: true,
   })
 );
 
 app.use(compression());
+// Payment webhooks need the untouched raw bytes for HMAC verification,
+// so they must be registered BEFORE express.json().
+app.use(
+  `${process.env.API_PREFIX || "/api/v1"}/payments/online/webhook`,
+  express.raw({ type: "*/*", limit: "1mb" })
+);
+
 app.use(express.json({ limit: "1mb" }));
 app.use(express.urlencoded({ extended: true, limit: "1mb" }));
 app.use(cookieParser());
-app.use(morgan("dev"));
+app.use(morgan(process.env.NODE_ENV === "production" ? "combined" : "dev"));
 
 app.get("/", (req, res) => {
   res.status(200).json({

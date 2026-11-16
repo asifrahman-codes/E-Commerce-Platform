@@ -43,7 +43,7 @@ export default function Wishlist() {
       await clearWishlist();
     } catch (err) {
       setActionError(
-        err.response?.data?.message ||
+        err.message ||
           "Unable to clear your wishlist."
       );
     } finally {
@@ -57,7 +57,7 @@ export default function Wishlist() {
       await removeFromWishlist(productId);
     } catch (err) {
       setActionError(
-        err.response?.data?.message ||
+        err.message ||
           "Unable to remove this product."
       );
     }

@@ -65,3 +65,30 @@ export const login = asyncHandler(
     }
 
 );
+
+export const getMe = asyncHandler(
+    async (req, res) => {
+
+        const u = req.user;
+
+        return res
+            .status(200)
+            .json(
+                new ApiResponse(
+                    200,
+                    "Current user retrieved successfully",
+                    {
+                        user: {
+                            userId: u.user_id,
+                            firstName: u.first_name,
+                            lastName: u.last_name,
+                            email: u.email,
+                            role: u.role,
+                            status: u.status
+                        }
+                    }
+                )
+            );
+
+    }
+);

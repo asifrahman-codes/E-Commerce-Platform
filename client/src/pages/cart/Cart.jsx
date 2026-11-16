@@ -42,7 +42,7 @@ export default function Cart() {
       await clearCart();
     } catch (err) {
       setActionError(
-        err.response?.data?.message ||
+        err.message ||
           "Unable to clear your cart."
       );
     } finally {

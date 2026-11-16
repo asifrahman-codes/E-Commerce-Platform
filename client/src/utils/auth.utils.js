@@ -1,4 +1,5 @@
 export const TOKEN_KEY = "accessToken";
+export const REFRESH_TOKEN_KEY = "refreshToken";
 
 export const getStoredToken = () => {
   return localStorage.getItem(TOKEN_KEY);
@@ -28,4 +29,17 @@ export const hasRole = (user, allowedRoles = []) => {
   return allowedRoles.some(
     (role) => normalizeRole(role) === userRole
   );
+};
+export const getStoredRefreshToken = () => {
+  return localStorage.getItem(REFRESH_TOKEN_KEY);
+};
+
+export const setStoredRefreshToken = (token) => {
+  if (!token) return;
+  localStorage.setItem(REFRESH_TOKEN_KEY, token);
+};
+
+export const clearStoredTokens = () => {
+  localStorage.removeItem(TOKEN_KEY);
+  localStorage.removeItem(REFRESH_TOKEN_KEY);
 };

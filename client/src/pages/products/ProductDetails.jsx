@@ -86,7 +86,7 @@ export default function ProductDetails() {
     setCartMessage("Product added to your cart successfully.");
   } catch (err) {
     setCartError(
-      err.response?.data?.message ||
+      err.message ||
         "Unable to add this product to your cart."
     );
   } finally {

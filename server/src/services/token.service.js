@@ -4,7 +4,8 @@ import ApiError from "../utils/ApiError.js";
 
 import {
     generateAccessToken,
-    generateRefreshToken
+    generateRefreshToken,
+    getTokenExpiryDate
 } from "../utils/security/jwt.helper.js";
 
 import {
@@ -19,22 +20,6 @@ import {
     updateLastLogin
 } from "../repositories/user.repository.js";
 
-const getRefreshTokenExpiry = () => {
-
-    const days = parseInt(
-        process.env.REFRESH_TOKEN_EXPIRES_IN || 7,
-        10
-    );
-
-    const expiresAt = new Date();
-
-    expiresAt.setDate(
-        expiresAt.getDate() + days
-    );
-
-    return expiresAt;
-
-};
 
 /**
  * Refresh Access Token
@@ -110,13 +95,11 @@ export const refreshAccessToken = async (
 
             refreshToken,
 
-            process.env.JWT_REFRESH_SECRET
+            process.env.JWT_REFRESH_SECRET || process.env.REFRESH_TOKEN_SECRET
 
         );
 
     } catch {
-
-       console.log("Refresh token verification failed:", error.message);
 
         throw new ApiError(
             401,
@@ -185,7 +168,7 @@ export const refreshAccessToken = async (
 
         token: newRefreshToken,
 
-        expiresAt: getRefreshTokenExpiry()
+        expiresAt: getTokenExpiryDate(newRefreshToken)
 
     });
 

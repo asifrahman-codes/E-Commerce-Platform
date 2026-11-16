@@ -31,7 +31,13 @@ const authorize = (...allowedRoles) => {
         -----------------------------------------
         */
 
-        if (!allowedRoles.includes(req.user.role)) {
+        const userRole = String(req.user.role || "").trim().toLowerCase();
+
+        const permitted = allowedRoles.some(
+            (role) => String(role).trim().toLowerCase() === userRole
+        );
+
+        if (!permitted) {
 
             throw new ApiError(
 

@@ -34,7 +34,7 @@ export default function CartItem({
       await onUpdate(item.cart_item_id, newQuantity);
     } catch (err) {
       setError(
-        err.response?.data?.message ||
+        err.message ||
           "Could not update quantity."
       );
     } finally {
@@ -50,7 +50,7 @@ export default function CartItem({
       await onRemove(item.cart_item_id);
     } catch (err) {
       setError(
-        err.response?.data?.message ||
+        err.message ||
           "Could not remove this item."
       );
     } finally {

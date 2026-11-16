@@ -1,14 +1,4 @@
-import { randomUUID } from "node:crypto";
 import rateLimit from "express-rate-limit";
-
-export function requestIdMiddleware(req, res, next) {
-  const requestId = randomUUID();
-
-  req.requestId = requestId;
-  res.setHeader("X-Request-ID", requestId);
-
-  next();
-}
 
 export const generalApiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -30,5 +20,16 @@ export const authLimiter = rateLimit({
   message: {
     success: false,
     message: "Too many authentication attempts. Try again later.",
+  },
+});
+
+export const refreshLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 30,
+  standardHeaders: "draft-8",
+  legacyHeaders: false,
+  message: {
+    success: false,
+    message: "Too many token refresh attempts. Try again later.",
   },
 });

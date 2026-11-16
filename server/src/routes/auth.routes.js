@@ -2,10 +2,13 @@ import { Router } from "express";
 
 import {
     register,
-    login
+    login,
+    getMe
 } from "../controllers/auth.controller.js";
 
 import validate from "../middleware/validation.middleware.js";
+import authMiddleware from "../middleware/auth.middleware.js";
+import { authLimiter } from "../middleware/rate-limit.middleware.js";
 
 import {
     registerSchema,
@@ -14,36 +17,25 @@ import {
 
 const router = Router();
 
-/*
-|--------------------------------------------------------------------------
-| Register
-|--------------------------------------------------------------------------
-*/
-
 router.post(
-
     "/register",
-
+    authLimiter,
     validate(registerSchema),
-
     register
-
 );
 
-/*
-|--------------------------------------------------------------------------
-| Login
-|--------------------------------------------------------------------------
-*/
-
 router.post(
-
     "/login",
-
+    authLimiter,
     validate(loginSchema),
-
     login
+);
 
+// Current authenticated user (used by the frontend to restore a session).
+router.get(
+    "/me",
+    authMiddleware,
+    getMe
 );
 
 export default router;

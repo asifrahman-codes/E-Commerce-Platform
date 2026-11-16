@@ -1,3 +1,4 @@
+import ApiError from "../ApiError.js";
 import crypto from "node:crypto";
 import paymentConfig from "../../config/payment.config.js";
 import { PaymentGateway } from "./payment-gateway.interface.js";
@@ -20,18 +21,18 @@ export class MockPaymentGateway extends PaymentGateway {
 
   async verifyWebhook(req) {
     if (process.env.NODE_ENV === "production") {
-      throw new Error("Mock webhook is disabled in production");
+      throw new ApiError(404, "Route not found");
     }
 
     const signature = req.headers["x-mock-signature"];
     const rawBody = req.body;
 
     if (!Buffer.isBuffer(rawBody)) {
-      throw new Error("Webhook raw body is required");
+      throw new ApiError(400, "Webhook raw body is required");
     }
 
     if (!signature || !paymentConfig.mockSecret) {
-      throw new Error("Missing mock webhook signature configuration");
+      throw new ApiError(400, "Missing mock webhook signature configuration");
     }
 
     const expectedSignature = crypto
@@ -46,7 +47,7 @@ export class MockPaymentGateway extends PaymentGateway {
       supplied.length !== expected.length ||
       !crypto.timingSafeEqual(supplied, expected)
     ) {
-      throw new Error("Invalid mock webhook signature");
+      throw new ApiError(401, "Invalid mock webhook signature");
     }
 
     const event = JSON.parse(rawBody.toString("utf8"));
@@ -56,7 +57,7 @@ export class MockPaymentGateway extends PaymentGateway {
       !event.attemptId ||
       !["SUCCEEDED", "FAILED", "CANCELLED"].includes(event.status)
     ) {
-      throw new Error("Invalid mock webhook payload");
+      throw new ApiError(400, "Invalid mock webhook payload");
     }
 
     return {

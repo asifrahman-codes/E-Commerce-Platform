@@ -38,7 +38,7 @@ export default function WishlistButton({
       }
     } catch (err) {
       setError(
-        err.response?.data?.message ||
+        err.message ||
           "Unable to update your wishlist."
       );
     } finally {

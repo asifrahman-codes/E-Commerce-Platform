@@ -11,6 +11,7 @@ import {
 import authMiddleware from "../middleware/auth.middleware.js";
 
 import validate from "../middleware/validation.middleware.js";
+import { refreshLimiter } from "../middleware/rate-limit.middleware.js";
 
 import {
 
@@ -25,6 +26,7 @@ const router = Router();
 router.post(
 
     "/refresh",
+    refreshLimiter,
 
     validate(refreshTokenSchema),
 

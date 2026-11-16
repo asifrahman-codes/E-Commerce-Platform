@@ -42,7 +42,7 @@ export function WishlistProvider({ children }) {
       return data;
     } catch (err) {
       const message =
-        err.response?.data?.message ||
+        err.message ||
         "Unable to load your wishlist.";
 
       setError(message);
@@ -70,7 +70,7 @@ export function WishlistProvider({ children }) {
       return await refreshWishlist();
     } catch (err) {
       const message =
-        err.response?.data?.message ||
+        err.message ||
         "Unable to add this product to your wishlist.";
 
       setError(message);
@@ -87,7 +87,7 @@ export function WishlistProvider({ children }) {
       return await refreshWishlist();
     } catch (err) {
       const message =
-        err.response?.data?.message ||
+        err.message ||
         "Unable to remove this product from your wishlist.";
 
       setError(message);
@@ -106,7 +106,7 @@ export function WishlistProvider({ children }) {
       return emptyWishlist;
     } catch (err) {
       const message =
-        err.response?.data?.message ||
+        err.message ||
         "Unable to clear your wishlist.";
 
       setError(message);

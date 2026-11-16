@@ -52,3 +52,16 @@ export const verifyToken = (token, secret) => {
     );
 
 };
+/**
+ * Expiry date of a signed token, read from its own exp claim,
+ * so the database row can never disagree with the JWT.
+ */
+export const getTokenExpiryDate = (token) => {
+    const decoded = jwt.decode(token);
+
+    if (!decoded?.exp) {
+        throw new Error("Token has no expiry claim");
+    }
+
+    return new Date(decoded.exp * 1000);
+};

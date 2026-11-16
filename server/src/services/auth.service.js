@@ -24,7 +24,8 @@ import {
 
 import {
     generateAccessToken,
-    generateRefreshToken
+    generateRefreshToken,
+    getTokenExpiryDate
 } from "../utils/security/jwt.helper.js";
 
 /**
@@ -202,8 +203,7 @@ export const loginUser = async ({ email, password }) => {
     Save Refresh Token
     -----------------------------------------
     */
-    const expiresAt = new Date();
-    expiresAt.setDate(expiresAt.getDate() + 7);
+    const expiresAt = getTokenExpiryDate(refreshToken);
 
     await saveRefreshToken({
     userId: user.user_id,
@@ -239,7 +239,7 @@ export const loginUser = async ({ email, password }) => {
 
     profileImage: user.profile_image,
 
-    role: user.role_name,
+    role: user.role,
 
     emailVerified: user.email_verified,
 

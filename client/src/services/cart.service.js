@@ -3,7 +3,7 @@ import api from "./api";
 const cartService = {
   async getCart() {
     const response = await api.get("/cart");
-    return response.data.data;
+    return response.data;
   },
 
   async addItem(variantId, quantity = 1) {
@@ -12,7 +12,7 @@ const cartService = {
       quantity,
     });
 
-    return response.data.data;
+    return response.data;
   },
 
   async updateItem(cartItemId, quantity) {
@@ -21,7 +21,7 @@ const cartService = {
       { quantity }
     );
 
-    return response.data.data;
+    return response.data;
   },
 
   async removeItem(cartItemId) {
@@ -29,12 +29,12 @@ const cartService = {
       `/cart/items/${cartItemId}`
     );
 
-    return response.data.data;
+    return response.data;
   },
 
   async clearCart() {
     const response = await api.delete("/cart");
-    return response.data.data;
+    return response.data;
   },
 };
 

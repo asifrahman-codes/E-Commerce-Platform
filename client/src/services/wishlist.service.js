@@ -3,7 +3,7 @@ import api from "./api";
 const wishlistService = {
   async getWishlist() {
     const response = await api.get("/wishlist");
-    return response.data.data;
+    return response.data;
   },
 
   async addItem(productId) {
@@ -11,7 +11,7 @@ const wishlistService = {
       product_id: productId,
     });
 
-    return response.data.data;
+    return response.data;
   },
 
   async removeItem(productId) {
@@ -19,12 +19,12 @@ const wishlistService = {
       `/wishlist/${productId}`
     );
 
-    return response.data.data;
+    return response.data;
   },
 
   async clearWishlist() {
     const response = await api.delete("/wishlist");
-    return response.data.data;
+    return response.data;
   },
 };
 

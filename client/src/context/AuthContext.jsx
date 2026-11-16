@@ -17,6 +17,8 @@ import {
   getStoredToken,
   setStoredToken,
   clearStoredToken,
+  setStoredRefreshToken,
+  clearStoredTokens,
 } from "../utils/auth.utils";
 
 export const AuthContext = createContext(null);
@@ -89,6 +91,7 @@ export const AuthProvider = ({ children }) => {
     }
 
     setStoredToken(result.token);
+    setStoredRefreshToken(result.refreshToken);
 
     setToken(result.token);
     setUser(result.user);
@@ -112,7 +115,7 @@ export const AuthProvider = ({ children }) => {
         await logoutUser();
       }
     } finally {
-      clearStoredToken();
+      clearStoredTokens();
 
       setToken(null);
       setUser(null);

@@ -1,5 +1,6 @@
 import api from "./api";
 import API_ENDPOINTS from "./endpoints";
+import { getStoredRefreshToken } from "../utils/auth.utils";
 
 // Normalize the backend response envelope.
 const getResponseData = (response) => {
@@ -32,6 +33,7 @@ export const loginUser = async (credentials) => {
       result.access_token ||
       result.token ||
       null,
+    refreshToken: result.refreshToken || null,
   };
 };
 
@@ -48,5 +50,7 @@ export const getCurrentUser = async () => {
 
 // Logout
 export const logoutUser = async () => {
-  return api.post(API_ENDPOINTS.AUTH.LOGOUT);
+  return api.post(API_ENDPOINTS.AUTH.LOGOUT, {
+    refreshToken: getStoredRefreshToken(),
+  });
 };
