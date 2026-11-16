@@ -21,6 +21,7 @@ import shippingRoutes from "./shipping.routes.js";
 import onlinePaymentRoutes from "./online-payment.routes.js";
 import notificationRoutes from "./notification.routes.js";
 import productDiscoveryRoutes from "./product-discovery.routes.js";
+import addressRoutes from "./address.routes.js";
 
 const router = Router();
 
@@ -56,5 +57,6 @@ router.use("/pricing", pricingRoutes);
 router.use("/shipping", shippingRoutes);
 router.use("/payments/online", onlinePaymentRoutes);
 router.use("/notifications", notificationRoutes);
+router.use("/addresses", addressRoutes);
 
 export default router;
