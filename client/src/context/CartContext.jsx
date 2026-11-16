@@ -43,7 +43,7 @@ export function CartProvider({ children }) {
       return data;
     } catch (err) {
       const message =
-        err.response?.data?.message ||
+        err.message ||
         "Unable to load your cart.";
 
       setError(message);
@@ -67,7 +67,7 @@ export function CartProvider({ children }) {
       return data;
     } catch (err) {
       const message =
-        err.response?.data?.message ||
+        err.message ||
         "Unable to add this item to your cart.";
 
       setError(message);
@@ -89,7 +89,7 @@ export function CartProvider({ children }) {
       return data;
     } catch (err) {
       const message =
-        err.response?.data?.message ||
+        err.message ||
         "Unable to update the cart item.";
 
       setError(message);
@@ -110,7 +110,7 @@ export function CartProvider({ children }) {
       return data;
     } catch (err) {
       const message =
-        err.response?.data?.message ||
+        err.message ||
         "Unable to remove the cart item.";
 
       setError(message);
@@ -129,7 +129,7 @@ export function CartProvider({ children }) {
       return data;
     } catch (err) {
       const message =
-        err.response?.data?.message ||
+        err.message ||
         "Unable to clear your cart.";
 
       setError(message);
