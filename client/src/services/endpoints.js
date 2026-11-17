@@ -49,6 +49,17 @@ const API_ENDPOINTS = {
     MOCK_COMPLETE: (attemptId) => `/payments/online/mock/attempts/${attemptId}/complete`,
   },
   NOTIFICATIONS: { BASE: "/notifications" },
+
+  REVIEWS: {
+  PRODUCT: (productId) => `/reviews/products/${productId}`,
+  BASE: "/reviews",
+  MY_REVIEWS: "/reviews/my-reviews",
+  DETAILS: (reviewId) => `/reviews/${reviewId}`,
+  ADMIN: "/reviews/admin",
+  MODERATE: (reviewId) =>
+    `/reviews/admin/${reviewId}/moderate`,
+ },
+
 };
 
 export default API_ENDPOINTS;
