@@ -1,7 +1,8 @@
 import api from "./api";
 import API_ENDPOINTS from "./endpoints";
 
-const payload = (response) => response?.data ?? response;
+const payload = (response) =>
+  response?.data?.data ?? response?.data ?? response;
 
 export const getProductReviews = async (
   productId,

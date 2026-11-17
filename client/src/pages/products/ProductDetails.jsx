@@ -28,6 +28,8 @@ import VariantSelector from "../../components/products/VariantSelector";
 
 import { useCart } from "../../context/CartContext";
 
+import ReviewList from "../../components/reviews/ReviewList";
+
 export default function ProductDetails() {
   const { id } = useParams();
 
@@ -525,6 +527,7 @@ export default function ProductDetails() {
 
         {!authLoading && isAdmin && (
           <div className="mt-12 border-t border-zinc-200 pt-8">
+            <ReviewList productId={id} />
             <VariantManagement productId={id} />
           </div>
         )}

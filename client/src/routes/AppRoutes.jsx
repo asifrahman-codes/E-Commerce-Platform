@@ -27,6 +27,9 @@ import MockPayment from "../pages/checkout/MockPayment";
 import MyOrders from "../pages/orders/MyOrders";
 import OrderDetails from "../pages/orders/OrderDetails";
 
+import MyReviews from "../pages/reviews/MyReviews";
+import ReviewManagement from "../pages/admin/ReviewManagement";
+
 const AppRoutes = () => {
   return (
     <Routes>
@@ -80,6 +83,11 @@ const AppRoutes = () => {
             element={<OrderDetails />}
           />
 
+          <Route
+            path="/my-reviews"
+            element={<MyReviews />}
+          />
+
         </Route>
 
         {/* Admin routes */}
@@ -88,7 +96,13 @@ const AppRoutes = () => {
             path="/admin"
             element={<Placeholder title="Admin Dashboard" />}
           />
+
+          <Route
+          path="/admin/reviews"
+          element={<ReviewManagement />}
+        />
         </Route>
+        
       </Route>
 
       {/* Guest-only authentication routes */}
