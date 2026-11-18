@@ -60,6 +60,18 @@ const API_ENDPOINTS = {
     `/reviews/admin/${reviewId}/moderate`,
  },
 
+  USERS: {
+      ME: "/users/me",
+      UPDATE_PROFILE: "/users/me",
+      CHANGE_PASSWORD: "/users/me/password",
+  },
+
+  ADDRESSES: {
+      BASE: "/addresses",
+      DETAILS: (id) => `/addresses/${id}`,
+      DEFAULT: (id) => `/addresses/${id}/default`,
+  },
+  
 };
 
 export default API_ENDPOINTS;

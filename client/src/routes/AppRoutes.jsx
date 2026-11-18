@@ -10,7 +10,10 @@ import Login from "../pages/auth/Login";
 import Register from "../pages/auth/Register";
 import ForgotPassword from "../pages/auth/ForgotPassword";
 
-import Profile from "../pages/account/Profile";
+import AccountLayout from "../pages/account/AccountLayout";
+import MyProfile from "../pages/account/MyProfile";
+import MyAddresses from "../pages/account/MyAddresses";
+import ChangePassword from "../pages/account/ChangePassword";
 
 import ProductCatalog from "../pages/products/ProductCatalog";
 import ProductDetails from "../pages/products/ProductDetails";
@@ -58,7 +61,19 @@ const AppRoutes = () => {
 
         {/* Authenticated customer routes */}
         <Route element={<ProtectedRoute />}>
-          <Route path="/account" element={<Profile />} />
+          <Route path="/account" element={<AccountLayout />}>
+        <Route index element={<MyProfile />} />
+
+        <Route
+            path="addresses"
+            element={<MyAddresses />}
+        />
+
+        <Route
+            path="password"
+            element={<ChangePassword />}
+        />
+      </Route>
 
           <Route path="/checkout" element={<Checkout />} />
           <Route

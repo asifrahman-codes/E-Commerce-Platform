@@ -3,52 +3,94 @@ import ApiResponse from "../utils/ApiResponse.js";
 import ApiError from "../utils/ApiError.js";
 
 import {
-    listAddressesService,
-    getAddressService,
-    createAddressService,
-    updateAddressService,
-    setDefaultAddressService,
-    deleteAddressService
+    getMyAddressesService,
+    createMyAddressService,
+    updateMyAddressService,
+    deleteMyAddressService,
+    setMyDefaultAddressService,
 } from "../services/address.service.js";
 
-const parseId = (value) => {
+const getUserId = (req) =>
+    req.user?.user_id ?? req.user?.id ?? req.user?.userId;
 
-    const id = Number(value);
+export const getMyAddresses = async (req, res, next) => {
+    try {
+        const addresses = await getMyAddressesService(getUserId(req));
 
-    if (!Number.isSafeInteger(id) || id <= 0) {
-        throw new ApiError(400, "Invalid address ID");
+        return res.status(200).json({
+            success: true,
+            message: "Addresses fetched successfully",
+            data: addresses,
+        });
+    } catch (error) {
+        next(error);
     }
-
-    return id;
-
 };
 
-export const listAddresses = asyncHandler(async (req, res) => {
-    const data = await listAddressesService(req.user.user_id);
-    return res.status(200).json(new ApiResponse(200, "Addresses retrieved successfully", data));
-});
+export const createMyAddress = async (req, res, next) => {
+    try {
+        const address = await createMyAddressService(
+            getUserId(req),
+            req.body
+        );
 
-export const getAddress = asyncHandler(async (req, res) => {
-    const data = await getAddressService(parseId(req.params.addressId), req.user.user_id);
-    return res.status(200).json(new ApiResponse(200, "Address retrieved successfully", data));
-});
+        return res.status(201).json({
+            success: true,
+            message: "Address created successfully",
+            data: address,
+        });
+    } catch (error) {
+        next(error);
+    }
+};
 
-export const createAddress = asyncHandler(async (req, res) => {
-    const data = await createAddressService(req.user.user_id, req.body);
-    return res.status(201).json(new ApiResponse(201, "Address created successfully", data));
-});
+export const updateMyAddress = async (req, res, next) => {
+    try {
+        const address = await updateMyAddressService(
+            req.params.addressId,
+            getUserId(req),
+            req.body
+        );
 
-export const updateAddress = asyncHandler(async (req, res) => {
-    const data = await updateAddressService(parseId(req.params.addressId), req.user.user_id, req.body);
-    return res.status(200).json(new ApiResponse(200, "Address updated successfully", data));
-});
+        return res.status(200).json({
+            success: true,
+            message: "Address updated successfully",
+            data: address,
+        });
+    } catch (error) {
+        next(error);
+    }
+};
 
-export const setDefaultAddress = asyncHandler(async (req, res) => {
-    const data = await setDefaultAddressService(parseId(req.params.addressId), req.user.user_id);
-    return res.status(200).json(new ApiResponse(200, "Default address updated", data));
-});
+export const deleteMyAddress = async (req, res, next) => {
+    try {
+        await deleteMyAddressService(
+            req.params.addressId,
+            getUserId(req)
+        );
 
-export const deleteAddress = asyncHandler(async (req, res) => {
-    await deleteAddressService(parseId(req.params.addressId), req.user.user_id);
-    return res.status(200).json(new ApiResponse(200, "Address deleted successfully"));
-});
+        return res.status(200).json({
+            success: true,
+            message: "Address deleted successfully",
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+export const setMyDefaultAddress = async (req, res, next) => {
+    try {
+        const address = await setMyDefaultAddressService(
+            req.params.addressId,
+            getUserId(req)
+        );
+
+        return res.status(200).json({
+            success: true,
+            message: "Default address updated successfully",
+            data: address,
+        });
+    } catch (error) {
+        next(error);
+    }
+};

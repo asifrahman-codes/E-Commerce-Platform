@@ -1,33 +1,24 @@
 import { Router } from "express";
 
 import {
-    listAddresses,
-    getAddress,
-    createAddress,
-    updateAddress,
-    setDefaultAddress,
-    deleteAddress
+    getMyAddresses,
+    createMyAddress,
+    updateMyAddress,
+    deleteMyAddress,
+    setMyDefaultAddress,
 } from "../controllers/address.controller.js";
 
-import authMiddleware from "../middleware/auth.middleware.js";
-import validate from "../middleware/validation.middleware.js";
-
-import {
-    createAddressSchema,
-    updateAddressSchema
-} from "../validations/address.validation.js";
+// Replace with your existing authentication middleware.
+import authenticate from "../middleware/auth.middleware.js";
 
 const router = Router();
 
-// Every address route is scoped to the authenticated user.
-router.use(authMiddleware);
+router.use(authenticate);
 
-router.get("/", listAddresses);
-router.post("/", validate(createAddressSchema), createAddress);
-
-router.get("/:addressId", getAddress);
-router.patch("/:addressId", validate(updateAddressSchema), updateAddress);
-router.patch("/:addressId/default", setDefaultAddress);
-router.delete("/:addressId", deleteAddress);
+router.get("/", getMyAddresses);
+router.post("/", createMyAddress);
+router.patch("/:addressId", updateMyAddress);
+router.delete("/:addressId", deleteMyAddress);
+router.patch("/:addressId/default", setMyDefaultAddress);
 
 export default router;
