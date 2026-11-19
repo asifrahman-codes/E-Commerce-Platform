@@ -72,6 +72,10 @@ const API_ENDPOINTS = {
       DEFAULT: (id) => `/addresses/${id}/default`,
   },
   
+  ADMIN: {
+    DASHBOARD: "/admin/dashboard",
+},
+  
 };
 
 export default API_ENDPOINTS;
