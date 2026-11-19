@@ -74,8 +74,23 @@ const API_ENDPOINTS = {
   
   ADMIN: {
     DASHBOARD: "/admin/dashboard",
-},
-  
+  },
+
+  ADMIN_ORDERS: {
+      BASE: "/admin/orders",
+      DETAILS: (id) => `/admin/orders/${id}`,
+  },
+
+  SHIPPING: {
+      METHODS: "/shipping/methods",
+      ADMIN_METHODS: "/shipping/admin/methods",
+      ADMIN_SHIPMENTS: "/shipping/admin/shipments",
+      UPDATE_SHIPMENT: (id) =>
+          `/shipping/admin/shipments/${id}/status`,
+      TRACKING: (id) =>
+          `/shipping/shipments/${id}/tracking`,
+  },
+    
 };
 
 export default API_ENDPOINTS;

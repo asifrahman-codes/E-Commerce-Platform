@@ -147,7 +147,7 @@ export default function AdminDashboard() {
 
         <div className="min-h-screen bg-zinc-50">
 
-            <div className="space-y-8">
+            <div className="space-y-8 m-6">
 
                 {/* Header */}
 

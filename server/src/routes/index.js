@@ -23,6 +23,7 @@ import notificationRoutes from "./notification.routes.js";
 import productDiscoveryRoutes from "./product-discovery.routes.js";
 import addressRoutes from "./address.routes.js";
 import adminRoutes from "./admin.routes.js";
+import adminOrderRoutes from "./admin-order.routes.js";
 
 const router = Router();
 
@@ -60,5 +61,6 @@ router.use("/payments/online", onlinePaymentRoutes);
 router.use("/notifications", notificationRoutes);
 router.use("/addresses", addressRoutes);
 router.use("/admin", adminRoutes);
+router.use("/admin/orders", adminOrderRoutes);
 
 export default router;

@@ -35,6 +35,10 @@ import ReviewManagement from "../pages/admin/ReviewManagement";
 
 import AdminDashboard from "../pages/admin/AdminDashboard";
 
+import AdminOrders from "../pages/admin/AdminOrders";
+
+import AdminOrderDetails from "../pages/admin/AdminOrderDetails";
+
 const AppRoutes = () => {
   return (
     <Routes>
@@ -119,6 +123,16 @@ const AppRoutes = () => {
             <Route
                 path="/admin/reviews"
                 element={<ReviewManagement />}
+            />
+
+            <Route
+                path="/admin/orders"
+                element={<AdminOrders />}
+            />
+
+            <Route
+                path="/admin/orders/:orderId"
+                element={<AdminOrderDetails />}
             />
 
         </Route>
