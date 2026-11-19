@@ -15,6 +15,7 @@ import {
   LogOut,
   Menu,
   X,
+  LayoutDashboard,
 } from "lucide-react";
 
 import useAuth from "../../hooks/useAuth";
@@ -32,6 +33,13 @@ const Navbar = () => {
     isAuthenticated,
     logout,
   } = useAuth();
+
+  const roleValue =
+    typeof user?.role === "string"
+      ? user.role
+      : user?.role?.name || user?.role_name || "";
+
+  const isAdmin = String(roleValue).toLowerCase() === "admin";
 
   const navLinks = [
     { label: "Home", path: "/" },
@@ -137,6 +145,16 @@ const Navbar = () => {
 
               <div className="hidden items-center gap-3 lg:flex">
 
+                {isAdmin && (
+                  <Link
+                    to="/admin"
+                    className="flex items-center gap-2 rounded-lg bg-indigo-50 px-3 py-2 text-sm font-semibold text-indigo-700 hover:bg-indigo-100"
+                  >
+                    <LayoutDashboard size={18} />
+                    Admin
+                  </Link>
+                )}
+
                 <Link
                   to="/account"
                   className="flex items-center gap-2 text-sm font-medium text-gray-700 hover:text-indigo-600"
@@ -233,6 +251,17 @@ const Navbar = () => {
               {isAuthenticated ? (
 
                 <>
+                  {isAdmin && (
+                    <Link
+                      to="/admin"
+                      onClick={() => setMenuOpen(false)}
+                      className="flex items-center gap-2 text-sm font-semibold text-indigo-600"
+                    >
+                      <LayoutDashboard size={19} />
+                      Admin Dashboard
+                    </Link>
+                  )}
+
                   <Link
                     to="/account"
                     onClick={() => setMenuOpen(false)}

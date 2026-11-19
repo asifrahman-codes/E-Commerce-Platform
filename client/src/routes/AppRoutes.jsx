@@ -33,6 +33,8 @@ import OrderDetails from "../pages/orders/OrderDetails";
 import MyReviews from "../pages/reviews/MyReviews";
 import ReviewManagement from "../pages/admin/ReviewManagement";
 
+import AdminDashboard from "../pages/admin/AdminDashboard";
+
 const AppRoutes = () => {
   return (
     <Routes>
@@ -106,16 +108,19 @@ const AppRoutes = () => {
         </Route>
 
         {/* Admin routes */}
-        <Route element={<ProtectedRoute allowedRoles={["admin"]} />}>
-          <Route
-            path="/admin"
-            element={<Placeholder title="Admin Dashboard" />}
-          />
 
-          <Route
-          path="/admin/reviews"
-          element={<ReviewManagement />}
-        />
+        <Route element={<ProtectedRoute allowedRoles={["admin"]} />}>
+
+            <Route
+                path="/admin"
+                element={<AdminDashboard />}
+            />
+
+            <Route
+                path="/admin/reviews"
+                element={<ReviewManagement />}
+            />
+
         </Route>
         
       </Route>
