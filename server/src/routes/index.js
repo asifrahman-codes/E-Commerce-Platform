@@ -26,6 +26,7 @@ import adminRoutes from "./admin.routes.js";
 import adminOrderRoutes from "./admin-order.routes.js";
 import adminProductRoutes from "./admin-product.routes.js";
 import adminInventoryRoutes from "./admin-inventory.routes.js";
+import adminDashboardRoutes from "./admin-dashboard.routes.js";
 
 const router = Router();
 
@@ -66,5 +67,6 @@ router.use("/admin", adminRoutes);
 router.use("/admin/orders", adminOrderRoutes);
 router.use("/admin/products", adminProductRoutes);
 router.use("/admin/inventory", adminInventoryRoutes);
+router.use("/admin/dashboard", adminDashboardRoutes);
 
 export default router;

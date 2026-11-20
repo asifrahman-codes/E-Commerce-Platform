@@ -8,7 +8,6 @@ import {
     setMyDefaultAddress,
 } from "../controllers/address.controller.js";
 
-// Replace with your existing authentication middleware.
 import authenticate from "../middleware/auth.middleware.js";
 
 const router = Router();

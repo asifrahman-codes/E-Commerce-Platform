@@ -112,6 +112,22 @@ const API_ENDPOINTS = {
         IMAGE: (imageId) => `/products/images/${imageId}`,
         IMAGE_PRIMARY: (imageId) => `/products/images/${imageId}/primary`,
     },
+
+    ADMIN_DASHBOARD: {
+
+      OVERVIEW: "/admin/dashboard/overview",
+
+      SALES: "/admin/dashboard/sales",
+
+      ORDERS: "/admin/dashboard/orders",
+
+      TOP_PRODUCTS: "/admin/dashboard/top-products",
+
+      RECENT_ORDERS: "/admin/dashboard/recent-orders",
+
+      CUSTOMERS: "/admin/dashboard/customers"
+
+  },
         
 };
 
