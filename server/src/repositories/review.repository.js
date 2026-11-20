@@ -1,4 +1,3 @@
-
 import { pool } from "../database/index.js";
 
 export async function findDeliveredPurchase(userId, productId) {
@@ -272,6 +271,19 @@ export async function getAdminReviews({
     ? `WHERE ${conditions.join(" AND ")}`
     : "";
 
+  const parsedLimit = Number.parseInt(limit, 10);
+  const parsedOffset = Number.parseInt(offset, 10);
+
+  const finalLimit =
+    Number.isInteger(parsedLimit) && parsedLimit > 0
+      ? Math.min(parsedLimit, 100)
+      : 10;
+
+  const finalOffset =
+    Number.isInteger(parsedOffset) && parsedOffset >= 0
+      ? parsedOffset
+      : 0;
+
   const [rows] = await pool.execute(
     `
       SELECT
@@ -295,9 +307,9 @@ export async function getAdminReviews({
         ON u.user_id = r.user_id
       ${whereClause}
       ORDER BY r.created_at DESC
-      LIMIT ? OFFSET ?
+      LIMIT ${finalLimit} OFFSET ${finalOffset}
     `,
-    [...params, limit, offset]
+    params
   );
 
   return rows;

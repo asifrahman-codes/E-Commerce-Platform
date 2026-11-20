@@ -90,7 +90,29 @@ const API_ENDPOINTS = {
       TRACKING: (id) =>
           `/shipping/shipments/${id}/tracking`,
   },
-    
+
+  ADMIN_PRODUCTS: {
+    BASE: "/admin/products",
+    DETAILS: (id) => `/admin/products/${id}`,
+    STATUS: (id) => `/admin/products/${id}/status`,
+  },
+
+  ADMIN_INVENTORY: {
+      DASHBOARD: "/admin/inventory/dashboard",
+      LOW_STOCK: "/admin/inventory/low-stock",
+      HISTORY: "/admin/inventory/history",
+      ADJUST: "/admin/inventory/adjust",
+  },
+
+    ADMIN_PRODUCTS: {
+        BASE: "/admin/products",
+        DETAILS: (id) => `/admin/products/${id}`,
+        STATUS: (id) => `/admin/products/${id}/status`,
+        IMAGES: (id) => `/products/${id}/images`,
+        IMAGE: (imageId) => `/products/images/${imageId}`,
+        IMAGE_PRIMARY: (imageId) => `/products/images/${imageId}/primary`,
+    },
+        
 };
 
 export default API_ENDPOINTS;

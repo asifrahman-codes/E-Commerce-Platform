@@ -31,13 +31,22 @@ import MyOrders from "../pages/orders/MyOrders";
 import OrderDetails from "../pages/orders/OrderDetails";
 
 import MyReviews from "../pages/reviews/MyReviews";
+
+import AdminLayout from "../pages/admin/AdminLayout";
+import AdminDashboard from "../pages/admin/AdminDashboard";
+import AdminOrders from "../pages/admin/AdminOrders";
+import AdminOrderDetails from "../pages/admin/AdminOrderDetails";
 import ReviewManagement from "../pages/admin/ReviewManagement";
 
-import AdminDashboard from "../pages/admin/AdminDashboard";
+import AdminProducts from "../pages/admin/products/AdminProducts";
+import CreateProduct from "../pages/admin/products/CreateProduct";
+import EditProduct from "../pages/admin/products/EditProduct";
+import AdminProductVariants from "../pages/admin/products/AdminProductVariants";
 
-import AdminOrders from "../pages/admin/AdminOrders";
-
-import AdminOrderDetails from "../pages/admin/AdminOrderDetails";
+import InventoryDashboard from "../pages/admin/inventory/InventoryDashboard";
+import StockAdjustment from "../pages/admin/inventory/StockAdjustment";
+import InventoryHistory from "../pages/admin/inventory/InventoryHistory";
+import LowStockProducts from "../pages/admin/inventory/LowStockProducts";
 
 const AppRoutes = () => {
   return (
@@ -57,7 +66,7 @@ const AppRoutes = () => {
         />
 
         <Route path="/cart" element={<Cart />} />
-        
+
         <Route path="/wishlist" element={<Wishlist />} />
 
         <Route
@@ -68,75 +77,72 @@ const AppRoutes = () => {
         {/* Authenticated customer routes */}
         <Route element={<ProtectedRoute />}>
           <Route path="/account" element={<AccountLayout />}>
-        <Route index element={<MyProfile />} />
-
-        <Route
-            path="addresses"
-            element={<MyAddresses />}
-        />
-
-        <Route
-            path="password"
-            element={<ChangePassword />}
-        />
-      </Route>
+            <Route index element={<MyProfile />} />
+            <Route path="addresses" element={<MyAddresses />} />
+            <Route path="password" element={<ChangePassword />} />
+          </Route>
 
           <Route path="/checkout" element={<Checkout />} />
+
           <Route
             path="/order-confirmation/:orderId"
             element={<OrderConfirmation />}
           />
-          <Route path="/mock-payment/:attemptId" element={<MockPayment />} />
 
+          <Route path="/mock-payment/:attemptId" element={<MockPayment />} />
 
           <Route
             path="/notifications"
             element={<Placeholder title="Notifications" />}
           />
 
-          <Route
-            path="/orders"
-            element={<MyOrders />}
-          />
+          <Route path="/orders" element={<MyOrders />} />
 
-          <Route
-            path="/orders/:orderId"
-            element={<OrderDetails />}
-          />
+          <Route path="/orders/:orderId" element={<OrderDetails />} />
 
-          <Route
-            path="/my-reviews"
-            element={<MyReviews />}
-          />
-
+          <Route path="/my-reviews" element={<MyReviews />} />
         </Route>
 
         {/* Admin routes */}
-
         <Route element={<ProtectedRoute allowedRoles={["admin"]} />}>
+          <Route element={<AdminLayout />}>
+            <Route path="/admin" element={<AdminDashboard />} />
 
+            {/* Orders */}
+            <Route path="/admin/orders" element={<AdminOrders />} />
             <Route
-                path="/admin"
-                element={<AdminDashboard />}
+              path="/admin/orders/:orderId"
+              element={<AdminOrderDetails />}
             />
 
+            {/* Reviews */}
+            <Route path="/admin/reviews" element={<ReviewManagement />} />
+
+            {/* Products */}
+            <Route path="/admin/products" element={<AdminProducts />} />
+            <Route path="/admin/products/create" element={<CreateProduct />} />
+            <Route path="/admin/products/:id/edit" element={<EditProduct />} />
             <Route
-                path="/admin/reviews"
-                element={<ReviewManagement />}
+              path="/admin/products/:id/variants"
+              element={<AdminProductVariants />}
             />
 
+            {/* Inventory */}
+            <Route path="/admin/inventory" element={<InventoryDashboard />} />
             <Route
-                path="/admin/orders"
-                element={<AdminOrders />}
+              path="/admin/inventory/adjust"
+              element={<StockAdjustment />}
             />
-
             <Route
-                path="/admin/orders/:orderId"
-                element={<AdminOrderDetails />}
+              path="/admin/inventory/history"
+              element={<InventoryHistory />}
             />
-
+            <Route
+              path="/admin/inventory/low-stock"
+              element={<LowStockProducts />}
+            />
+          </Route>
         </Route>
-        
       </Route>
 
       {/* Guest-only authentication routes */}

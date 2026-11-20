@@ -24,6 +24,8 @@ import productDiscoveryRoutes from "./product-discovery.routes.js";
 import addressRoutes from "./address.routes.js";
 import adminRoutes from "./admin.routes.js";
 import adminOrderRoutes from "./admin-order.routes.js";
+import adminProductRoutes from "./admin-product.routes.js";
+import adminInventoryRoutes from "./admin-inventory.routes.js";
 
 const router = Router();
 
@@ -62,5 +64,7 @@ router.use("/notifications", notificationRoutes);
 router.use("/addresses", addressRoutes);
 router.use("/admin", adminRoutes);
 router.use("/admin/orders", adminOrderRoutes);
+router.use("/admin/products", adminProductRoutes);
+router.use("/admin/inventory", adminInventoryRoutes);
 
 export default router;
