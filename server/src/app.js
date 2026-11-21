@@ -13,31 +13,24 @@ import { requestIdMiddleware } from "./middleware/request-id.middleware.js";
 import { generalApiLimiter } from "./middleware/rate-limit.middleware.js";
 
 import { pool } from "./database/index.js";
+import { logger } from "./utils/logger.js";
+import serverConfig from "./config/server.js";
 
 const app = express();
 
 app.disable("x-powered-by");
 
-if (process.env.TRUST_PROXY === "1") {
+if (serverConfig.trustProxy) {
   app.set("trust proxy", 1);
 }
 
 app.use(requestIdMiddleware);
 app.use(helmet());
 
-const allowedOrigins = (
-  process.env.CORS_ORIGINS ||
-  process.env.CLIENT_URL ||
-  ""
-)
-  .split(",")
-  .map((origin) => origin.trim())
-  .filter(Boolean);
-
 app.use(
   cors({
     origin(origin, callback) {
-      if (!origin || allowedOrigins.includes(origin)) {
+      if (!origin || serverConfig.corsOrigins.includes(origin)) {
         return callback(null, true);
       }
 
@@ -53,14 +46,14 @@ app.use(compression());
 // Payment webhooks need the untouched raw bytes for HMAC verification,
 // so they must be registered BEFORE express.json().
 app.use(
-  `${process.env.API_PREFIX || "/api/v1"}/payments/online/webhook`,
+  `${serverConfig.apiPrefix}/payments/online/webhook`,
   express.raw({ type: "*/*", limit: "1mb" })
 );
 
 app.use(express.json({ limit: "1mb" }));
 app.use(express.urlencoded({ extended: true, limit: "1mb" }));
 app.use(cookieParser());
-app.use(morgan(process.env.NODE_ENV === "production" ? "combined" : "dev"));
+app.use(morgan(serverConfig.nodeEnv === "production" ? "combined" : "dev"));
 
 app.get("/", (req, res) => {
   res.status(200).json({
@@ -89,7 +82,7 @@ app.get("/health/ready", async (req, res) => {
       requestId: req.requestId,
     });
   } catch (error) {
-    console.error("Database readiness check failed:", {
+    logger.error("Database readiness check failed", {
       requestId: req.requestId,
       message: error.message,
     });
@@ -103,7 +96,7 @@ app.get("/health/ready", async (req, res) => {
 });
 
 app.use(
-  process.env.API_PREFIX || "/api/v1",
+  serverConfig.apiPrefix,
   generalApiLimiter,
   routes
 );

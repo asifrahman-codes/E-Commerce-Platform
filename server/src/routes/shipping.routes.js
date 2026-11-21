@@ -10,6 +10,7 @@ import {
   updateShippingMethodSchema,
   createShipmentSchema,
   updateShipmentStatusSchema,
+  updateShipmentDetailsSchema,
 } from "../validations/shipping.validation.js";
 
 import {
@@ -19,6 +20,7 @@ import {
   updateShippingMethodController,
   createShipmentController,
   updateShipmentStatusController,
+  updateShipmentDetailsController,
   getShipmentTrackingController,
   getCustomerOrderShipmentsController,
 } from "../controllers/shipping.controller.js";
@@ -66,6 +68,15 @@ router.get(
   "/orders/:orderId/shipments",
   authenticate,
   getCustomerOrderShipmentsController
+);
+
+// Admin: update shipment carrier/tracking/delivery date details.
+router.patch(
+  "/admin/shipments/:shipmentId",
+  authenticate,
+  authorizeRoles("ADMIN"),
+  validate(updateShipmentDetailsSchema),
+  updateShipmentDetailsController
 );
 
 // Admin: record carrier scans and status changes.

@@ -34,6 +34,26 @@ export const saveRefreshToken = async ({
 
 };
 
+export const saveRefreshTokenWithTransaction = async (
+    connection,
+    {
+        userId,
+        token,
+        expiresAt
+    }
+) => {
+    const [result] = await connection.execute(
+        `INSERT INTO user_refresh_tokens (
+            user_id,
+            token,
+            expires_at
+        ) VALUES (?, ?, ?)`,
+        [userId, token, expiresAt]
+    );
+
+    return result.insertId;
+};
+
 /**
  * Find Refresh Token
  */
@@ -74,6 +94,21 @@ export const revokeRefreshToken = async (token) => {
 
 };
 
+export const revokeRefreshTokenIfActive = async (
+    connection,
+    token
+) => {
+    const [result] = await connection.execute(
+        `UPDATE user_refresh_tokens
+         SET revoked_at = NOW()
+         WHERE token = ?
+           AND revoked_at IS NULL`,
+        [token]
+    );
+
+    return result.affectedRows === 1;
+};
+
 /**
  * Revoke All User Tokens
  */
@@ -88,6 +123,21 @@ export const revokeAllUserTokens = async (userId) => {
 
     return await query(sql, [userId]);
 
+};
+
+export const revokeAllUserTokensWithTransaction = async (
+    connection,
+    userId
+) => {
+    const [result] = await connection.execute(
+        `UPDATE user_refresh_tokens
+         SET revoked_at = NOW()
+         WHERE user_id = ?
+           AND revoked_at IS NULL`,
+        [userId]
+    );
+
+    return result.affectedRows;
 };
 
 /**

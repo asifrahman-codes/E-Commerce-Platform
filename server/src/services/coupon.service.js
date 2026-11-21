@@ -1,10 +1,10 @@
-import {pool} from "../database/index.js";
 import ApiError from "../utils/ApiError.js";
+import withTransaction from "../utils/transaction.js";
 
 import {
     createCoupon,
     findCouponById,
-    findCouponByCode,
+    findCouponByIdWithConnection,
     findCouponByCodeForUpdate,
     findCouponByIdForUpdate,
     listCoupons,
@@ -12,24 +12,6 @@ import {
     countCouponUsages,
     countUserCouponUsages
 } from "../repositories/coupon.repository.js";
-
-async function withTransaction(callback) {
-    const connection = await pool.getConnection();
-
-    try {
-        await connection.beginTransaction();
-
-        const result = await callback(connection);
-
-        await connection.commit();
-        return result;
-    } catch (error) {
-        await connection.rollback();
-        throw error;
-    } finally {
-        connection.release();
-    }
-}
 
 function roundMoney(value) {
     return Math.round((Number(value) + Number.EPSILON) * 100) / 100;
@@ -134,28 +116,19 @@ export async function createCouponService(data) {
     }
 
     return withTransaction(async (connection) => {
-        const [existing] = await connection.execute(
-            "SELECT coupon_id FROM coupons WHERE code = ? FOR UPDATE",
-            [data.code]
+        const existing = await findCouponByCodeForUpdate(
+            connection,
+            data.code
         );
 
-        if (existing.length > 0) {
+        if (existing) {
             throw new ApiError(409, "Coupon code already exists.");
         }
 
         const couponId = await createCoupon(connection, data);
 
-        return findCouponByIdAfterInsert(connection, couponId);
+        return findCouponByIdWithConnection(connection, couponId);
     });
-}
-
-async function findCouponByIdAfterInsert(connection, couponId) {
-    const [rows] = await connection.execute(
-        "SELECT * FROM coupons WHERE coupon_id = ?",
-        [couponId]
-    );
-
-    return rows[0];
 }
 
 // Admin: list all coupons.
@@ -221,12 +194,7 @@ export async function updateCouponService(couponId, data) {
 
         await updateCoupon(connection, couponId, data);
 
-        const [rows] = await connection.execute(
-            "SELECT * FROM coupons WHERE coupon_id = ?",
-            [couponId]
-        );
-
-        return rows[0];
+        return findCouponByIdWithConnection(connection, couponId);
     });
 }
 
@@ -241,11 +209,7 @@ export async function validateCouponService({
     userId,
     subtotal
 }) {
-    const connection = await pool.getConnection();
-
-    try {
-        await connection.beginTransaction();
-
+    return withTransaction(async (connection) => {
         const coupon = await findCouponByCodeForUpdate(connection, code);
 
         const discount = await validateCouponRecord(
@@ -255,8 +219,6 @@ export async function validateCouponService({
             subtotal
         );
 
-        await connection.commit();
-
         return {
             coupon_id: coupon.coupon_id,
             code: coupon.code,
@@ -265,12 +227,7 @@ export async function validateCouponService({
             discount,
             total_after_discount: roundMoney(Number(subtotal) - discount)
         };
-    } catch (error) {
-        await connection.rollback();
-        throw error;
-    } finally {
-        connection.release();
-    }
+    });
 }
 
 // Used by the order service while its order transaction is open.

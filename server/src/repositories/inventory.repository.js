@@ -30,17 +30,33 @@ export const getVariantForUpdate = async (
     const [rows] = await connection.execute(
         `
             SELECT
-                variant_id,
-                stock,
-                status
-            FROM product_variants
-            WHERE variant_id = ?
+                v.variant_id,
+                v.product_id,
+                v.stock,
+                v.status,
+                p.status AS product_status
+            FROM product_variants v
+            JOIN products p ON p.product_id = v.product_id
+            WHERE v.variant_id = ?
             FOR UPDATE
         `,
         [variantId]
     );
 
     return rows[0] || null;
+};
+
+export const lockProductsForUpdate = async (connection, productIds) => {
+    const ids = [...new Set(productIds.map(Number))].sort((a, b) => a - b);
+    if (!ids.length) return;
+    await connection.query(
+        `SELECT product_id
+         FROM products
+         WHERE product_id IN (${ids.map(() => "?").join(",")})
+         ORDER BY product_id
+         FOR UPDATE`,
+        ids
+    );
 };
 
 

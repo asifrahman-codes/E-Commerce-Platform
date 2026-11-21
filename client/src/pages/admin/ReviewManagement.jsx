@@ -6,6 +6,7 @@ import {
 } from "../../services/review.service";
 
 import StarRating from "../../components/reviews/StarRating";
+import { AdminPageHeader } from "../../components/admin/AdminPrimitives";
 
 export default function ReviewManagement() {
   const [reviews, setReviews] = useState([]);
@@ -71,14 +72,12 @@ export default function ReviewManagement() {
   };
 
   return (
-    <div className="container-custom py-10">
-      <h1 className="text-3xl font-bold text-zinc-900">
-        Review Management
-      </h1>
-
-      <p className="mt-2 text-sm text-zinc-500">
-        Review customer feedback and manage publication status.
-      </p>
+    <div className="space-y-6">
+      <AdminPageHeader
+        eyebrow="Customer feedback"
+        title="Review management"
+        description="Review customer feedback and manage publication status."
+      />
 
       <div className="mt-7 flex flex-wrap items-center gap-4">
         <label

@@ -1,5 +1,5 @@
 import { useEffect, useContext, useState } from "react";
-import { Link, useParams, useNavigate  } from "react-router-dom";
+import { Link, useParams, useNavigate, useSearchParams } from "react-router-dom";
 
 import {
   ChevronRight,
@@ -12,12 +12,12 @@ import {
 
 import productService from "../../services/product.service";
 
-import LoadingSpinner from "../../components/common/LoadingSpinner";
 import ErrorMessage from "../../components/common/ErrorMessage";
 
 import {
   getImageUrl,
   formatPrice,
+  getResponsiveImageProps,
 } from "../../utils/product.utils";
 
 import { AuthContext } from "../../context/AuthContext";
@@ -25,13 +25,22 @@ import { AuthContext } from "../../context/AuthContext";
 import VariantManagement from "../../components/products/admin/VariantManagement";
 
 import VariantSelector from "../../components/products/VariantSelector";
+import CompareButton from "../../components/products/CompareButton";
+import ProductRelatedRecommendations from "../../components/recommendations/ProductRelatedRecommendations";
 
 import { useCart } from "../../context/CartContext";
 
 import ReviewList from "../../components/reviews/ReviewList";
+import ProductQuestions from "../../components/products/ProductQuestions";
+import { rememberRecentlyViewedProduct } from "../../utils/recentlyViewed";
+import { setPageMetadata } from "../../utils/seo.utils";
+import WishlistButton from "../../components/wishlist/WishlistButton";
+import StorefrontSkeleton from "../../components/common/StorefrontSkeleton";
 
 export default function ProductDetails() {
   const { id } = useParams();
+  const [searchParams] = useSearchParams();
+  const initialVariantId = searchParams.get("variant_id");
 
   const [product, setProduct] = useState(null);
   const [images, setImages] = useState([]);
@@ -173,6 +182,21 @@ export default function ProductDetails() {
           : [];
 
         setVariants(activeVariants);
+        rememberRecentlyViewedProduct({
+          product_id: productData.product_id ?? id,
+          name: productData.name,
+          slug: productData.slug,
+          base_price: productData.base_price,
+          display_price: productData.base_price,
+          brand_name: productData.brand_name,
+          primary_image: uniqueImages[0] ?? null,
+          total_stock: activeVariants.reduce(
+            (total, variant) => total + Number(variant.stock ?? 0),
+            0
+          ),
+          average_rating: productData.average_rating,
+          review_count: productData.review_count,
+        });
       } catch (err) {
         if (!active) return;
 
@@ -195,6 +219,101 @@ export default function ProductDetails() {
     };
   }, [id]);
 
+  useEffect(() => {
+    if (!product) return undefined;
+
+    const title = `${product.name ?? "Product"} | ShopSphere`;
+    const description = String(product.description ?? "")
+      .replace(/\s+/g, " ")
+      .trim()
+      .slice(0, 160) || "View product details, pricing, and availability on ShopSphere.";
+    const configuredSiteUrl = import.meta.env.VITE_SITE_URL;
+    const siteOrigin = configuredSiteUrl
+      ? new URL(configuredSiteUrl).origin
+      : window.location.origin;
+    const canonicalUrl = `${siteOrigin}${window.location.pathname}`;
+    const imageSources = images.length
+      ? images
+      : [getImageUrl(
+          product.primary_image ??
+          product.primary_image_url ??
+          product.image_url
+        )].filter(Boolean);
+    const absoluteImages = imageSources.map(
+      (url) => new URL(url, siteOrigin).href
+    );
+    const image = absoluteImages[0] ?? null;
+    const activeVariants = variants.filter(
+      (variant) => String(variant.status).toUpperCase() === "ACTIVE"
+    );
+    const variantPrices = activeVariants
+      .map((variant) => Number(variant.final_price))
+      .filter((price) => Number.isFinite(price) && price >= 0);
+    const inStock = activeVariants.some((variant) => Number(variant.stock) > 0);
+    const offers = variantPrices.length
+      ? variantPrices.length === 1
+        ? {
+            "@type": "Offer",
+            priceCurrency: "PKR",
+            price: variantPrices[0],
+            availability: `https://schema.org/${inStock ? "InStock" : "OutOfStock"}`,
+            url: canonicalUrl,
+          }
+        : {
+            "@type": "AggregateOffer",
+            priceCurrency: "PKR",
+            lowPrice: Math.min(...variantPrices),
+            highPrice: Math.max(...variantPrices),
+            offerCount: variantPrices.length,
+            availability: `https://schema.org/${inStock ? "InStock" : "OutOfStock"}`,
+            url: canonicalUrl,
+          }
+      : undefined;
+    const rating = Number(product.average_rating);
+    const reviewCount = Number(product.review_count);
+    const structuredData = {
+      "@context": "https://schema.org",
+      "@type": "Product",
+      name: product.name,
+      description: product.description || undefined,
+      image: absoluteImages.length ? absoluteImages : undefined,
+      sku: product.sku ?? (activeVariants.length === 1 ? activeVariants[0].sku : undefined),
+      category: product.category_name || undefined,
+      brand: product.brand_name
+        ? { "@type": "Brand", name: product.brand_name }
+        : undefined,
+      offers,
+      aggregateRating:
+        Number.isFinite(rating) &&
+        rating > 0 &&
+        rating <= 5 &&
+        Number.isSafeInteger(reviewCount) &&
+        reviewCount > 0
+          ? {
+              "@type": "AggregateRating",
+              ratingValue: rating,
+              reviewCount,
+            }
+          : undefined,
+    };
+
+    setPageMetadata({
+      title,
+      description,
+      canonicalUrl,
+      image,
+      type: "product",
+    });
+
+    const schema = document.createElement("script");
+    schema.id = "shopsphere-product-structured-data";
+    schema.type = "application/ld+json";
+    schema.textContent = JSON.stringify(structuredData);
+    document.head.appendChild(schema);
+
+    return () => schema.remove();
+  }, [product, images, variants]);
+
   /*
   |--------------------------------------------------------------------------
   | Loading State
@@ -202,11 +321,7 @@ export default function ProductDetails() {
   */
 
   if (loading) {
-    return (
-      <div className="flex min-h-[60vh] items-center justify-center">
-        <LoadingSpinner />
-      </div>
-    );
+    return <StorefrontSkeleton label="Loading product details" layout="split" />;
   }
 
   /*
@@ -253,12 +368,12 @@ export default function ProductDetails() {
     selectedStock > 0;
 
   return (
-    <div className="min-h-screen bg-white">
-      <div className="container-custom py-8">
+    <div className="shop-page">
+      <div className="container-custom py-6 sm:py-10">
 
         {/* Breadcrumb */}
 
-        <nav className="mb-8 flex flex-wrap items-center gap-2 text-sm text-zinc-500">
+        <nav aria-label="Breadcrumb" className="mb-7 flex flex-wrap items-center gap-2 text-sm text-muted">
           <Link
             to="/"
             className="hover:text-indigo-600"
@@ -289,11 +404,18 @@ export default function ProductDetails() {
           ====================================================== */}
 
           <div>
-            <div className="flex aspect-square items-center justify-center overflow-hidden rounded-2xl bg-zinc-50">
+            <div className="flex aspect-square items-center justify-center overflow-hidden rounded-[1.75rem] border border-line bg-[#f0f3ed]">
               {selectedImage ? (
                 <img
-                  src={selectedImage}
+                  {...getResponsiveImageProps(selectedImage, {
+                    sizes: "(min-width: 1024px) 50vw, 100vw",
+                    widths: [640, 960, 1280, 1600],
+                    fallbackWidth: 1280,
+                  })}
                   alt={name}
+                  loading="eager"
+                  fetchPriority="high"
+                  decoding="async"
                   className="h-full w-full object-contain p-6"
                 />
               ) : (
@@ -312,15 +434,21 @@ export default function ProductDetails() {
                     type="button"
                     onClick={() => setSelectedImage(image)}
                     aria-label={`View product image ${index + 1}`}
-                    className={`aspect-square overflow-hidden rounded-xl border-2 bg-zinc-50 transition ${
+                    className={`aspect-square overflow-hidden rounded-xl border-2 bg-white transition ${
                       selectedImage === image
                         ? "border-indigo-600"
                         : "border-transparent hover:border-zinc-300"
                     }`}
                   >
                     <img
-                      src={image}
+                      {...getResponsiveImageProps(image, {
+                        sizes: "96px",
+                        widths: [128, 256, 384],
+                        fallbackWidth: 256,
+                      })}
                       alt={`${name} image ${index + 1}`}
+                      loading="lazy"
+                      decoding="async"
                       className="h-full w-full object-contain p-2"
                     />
                   </button>
@@ -335,11 +463,11 @@ export default function ProductDetails() {
 
           <div>
 
-            <p className="mb-3 text-sm font-semibold uppercase tracking-wider text-indigo-600">
+            <p className="shop-eyebrow mb-3">
               {product.category_name ?? "Products"}
             </p>
 
-            <h1 className="text-3xl font-bold leading-tight text-zinc-900 sm:text-4xl">
+            <h1 className="text-3xl font-semibold leading-tight tracking-tight text-ink sm:text-4xl">
               {name}
             </h1>
 
@@ -349,12 +477,12 @@ export default function ProductDetails() {
 
             {/* Price */}
 
-            <div className="mt-6">
+            <div className="shop-panel mt-6 p-5 sm:p-6">
               <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">
                 {selectedVariant ? "Variant price" : "Base price"}
               </p>
 
-              <p className="mt-1 text-3xl font-bold text-zinc-900">
+              <p className="mt-1 text-3xl font-semibold tracking-tight text-ink">
                 {formatPrice(selectedPrice)}
               </p>
 
@@ -369,7 +497,7 @@ export default function ProductDetails() {
                 VARIANT SELECTION
             ================================================== */}
 
-            <div className="mt-7 space-y-6 border-t border-zinc-100 pt-6">
+            <div className="mt-7 space-y-6 border-t border-line pt-6">
 
               <div className="flex items-center justify-between">
                 <h2 className="font-semibold text-zinc-900">
@@ -394,6 +522,7 @@ export default function ProductDetails() {
                 <VariantSelector
                   variants={variants}
                   basePrice={basePrice}
+                  initialVariantId={initialVariantId}
                   onVariantChange={setSelectedVariant}
                 />
               )}
@@ -407,7 +536,7 @@ export default function ProductDetails() {
                         SKU
                       </p>
 
-                      <p className="mt-1 font-semibold text-zinc-800">
+                      <p className="mt-1 break-all font-semibold text-zinc-800">
                         {selectedVariant.sku}
                       </p>
                     </div>
@@ -438,7 +567,7 @@ export default function ProductDetails() {
                 DESCRIPTION
             ================================================== */}
 
-            <div className="mt-7 border-t border-zinc-100 pt-6">
+            <div className="mt-7 border-t border-line pt-6">
               <h2 className="mb-3 font-semibold text-zinc-900">
                 Description
               </h2>
@@ -460,7 +589,7 @@ export default function ProductDetails() {
                 !selectedVariant ||
                 Number(selectedVariant.stock) < 1
               }
-              className="mt-8 flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 px-6 py-4 font-semibold text-white transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:bg-zinc-400"
+              className="shop-button shop-button-primary mt-8 min-h-14 w-full rounded-full disabled:cursor-not-allowed disabled:bg-zinc-400"
             >
               <ShoppingCart size={19} />
 
@@ -472,16 +601,23 @@ export default function ProductDetails() {
             </button>
 
             {cartMessage && (
-              <p className="mt-3 text-sm text-green-600">
+              <p role="status" className="mt-3 text-sm text-green-700">
                 {cartMessage}
               </p>
             )}
 
             {cartError && (
-              <p className="mt-3 text-sm text-red-600">
+              <p role="alert" className="mt-3 text-sm text-red-600">
                 {cartError}
               </p>
             )}
+
+            <div className="mt-3 flex flex-wrap items-center gap-3">
+              <CompareButton
+                productId={product.product_id ?? id}
+              />
+              <WishlistButton productId={product.product_id ?? id} />
+            </div>
 
             {!isVariantAvailable && selectedVariant && (
               <p className="mt-2 text-center text-sm text-red-600">
@@ -493,7 +629,7 @@ export default function ProductDetails() {
                 SHOPPING INFORMATION
             ================================================== */}
 
-            <div className="mt-8 space-y-4 border-t border-zinc-100 pt-6">
+            <div className="mt-8 space-y-4 border-t border-line pt-6">
 
               <div className="flex items-center gap-3 text-sm text-zinc-600">
                 <Truck
@@ -523,11 +659,15 @@ export default function ProductDetails() {
           </div>
         </div>
 
-        {/* Admin Variant Management */}
+        <ProductRelatedRecommendations productId={id} />
+        <ProductQuestions productId={id} />
+
+        <div className="mt-12 border-t border-line pt-8">
+          <ReviewList productId={id} />
+        </div>
 
         {!authLoading && isAdmin && (
-          <div className="mt-12 border-t border-zinc-200 pt-8">
-            <ReviewList productId={id} />
+          <div className="mt-12 border-t border-line pt-8">
             <VariantManagement productId={id} />
           </div>
         )}

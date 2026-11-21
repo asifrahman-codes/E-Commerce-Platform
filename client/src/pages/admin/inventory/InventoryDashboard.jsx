@@ -181,7 +181,7 @@ export default function InventoryDashboard() {
 
                 ) : (
 
-                    <div className="overflow-x-auto">
+                    <div className="overflow-x-auto overscroll-x-contain touch-pan-x">
 
                         <table className="w-full text-sm text-left">
 

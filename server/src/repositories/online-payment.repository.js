@@ -18,6 +18,120 @@ export async function findOrderForUpdate(connection, orderId, userId) {
   return rows[0] ?? null;
 }
 
+export async function insertPaymentWebhookEvent(connection, {
+  provider,
+  event,
+}) {
+  await connection.execute(
+    `INSERT INTO payment_webhook_events (
+       provider,
+       provider_event_id,
+       attempt_id,
+       event_type,
+       payload
+     )
+     VALUES (?, ?, ?, ?, ?)`,
+    [
+      provider,
+      event.eventId,
+      event.attemptId,
+      event.eventType,
+      JSON.stringify(event.rawEvent ?? {}),
+    ]
+  );
+}
+
+export async function findOrderForPaymentAttempt(connection, orderId) {
+  const [rows] = await connection.execute(
+    `SELECT
+       order_id,
+       order_number,
+       total,
+       status,
+       payment_status
+     FROM orders
+     WHERE order_id = ?
+     FOR UPDATE`,
+    [orderId]
+  );
+
+  return rows[0] ?? null;
+}
+
+export async function markWebhookEventIgnored(
+  connection,
+  provider,
+  eventId
+) {
+  await connection.execute(
+    `UPDATE payment_webhook_events
+     SET processing_status = 'IGNORED',
+         processed_at = CURRENT_TIMESTAMP
+     WHERE provider = ?
+       AND provider_event_id = ?`,
+    [provider, eventId]
+  );
+}
+
+export async function updateAttemptFromWebhook(connection, {
+  status,
+  gatewayReference,
+  failureReason,
+  attemptId,
+}) {
+  await connection.execute(
+    `UPDATE online_payment_attempts
+     SET status = ?,
+         gateway_reference = COALESCE(?, gateway_reference),
+         failure_reason = ?,
+         completed_at = CURRENT_TIMESTAMP
+     WHERE attempt_id = ?`,
+    [status, gatewayReference, failureReason, attemptId]
+  );
+}
+
+export async function markOrderPaidFromWebhook(connection, orderId) {
+  const [result] = await connection.execute(
+    `UPDATE orders
+     SET payment_status = 'PAID',
+         status = CASE
+           WHEN status = 'PENDING' THEN 'CONFIRMED'
+           ELSE status
+         END
+     WHERE order_id = ?
+       AND payment_status = 'PENDING'`,
+    [orderId]
+  );
+
+  return result.affectedRows;
+}
+
+export async function markOrderFailedFromWebhook(connection, orderId) {
+  const [result] = await connection.execute(
+    `UPDATE orders
+     SET payment_status = 'FAILED'
+     WHERE order_id = ?
+       AND payment_status = 'PENDING'`,
+    [orderId]
+  );
+
+  return result.affectedRows;
+}
+
+export async function markWebhookEventProcessed(
+  connection,
+  provider,
+  eventId
+) {
+  await connection.execute(
+    `UPDATE payment_webhook_events
+     SET processed_at = CURRENT_TIMESTAMP
+     WHERE provider = ?
+       AND provider_event_id = ?`,
+    [provider, eventId]
+  );
+}
+
 export async function findAttemptForUpdate(connection, attemptId) {
   const [rows] = await connection.execute(
     `SELECT *

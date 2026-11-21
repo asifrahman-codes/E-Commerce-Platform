@@ -1,170 +1,154 @@
-import { useEffect, useState } from "react";
-import { Save } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Save, Loader2 } from "lucide-react";
 
-import {
-    getMyProfile,
-    updateMyProfile,
-} from "../../services/account.service";
+import { updateMyProfile } from "../../services/account.service";
 
-export default function ProfileForm() {
-    const [form, setForm] = useState({
-        first_name: "",
-        last_name: "",
-        email: "",
-    });
+export default function ProfileForm({ user, onUpdate }) {
+  const [form, setForm] = useState({
+    first_name: "",
+    last_name: "",
+    phone: "",
+  });
 
-    const [loading, setLoading] = useState(true);
-    const [saving, setSaving] = useState(false);
-    const [message, setMessage] = useState("");
-    const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState("");
+  const [error, setError] = useState("");
 
-    useEffect(() => {
-        const loadProfile = async () => {
-            try {
-                const user = await getMyProfile();
+  useEffect(() => {
+    if (user) {
+      setForm({
+        first_name: user.first_name || "",
+        last_name: user.last_name || "",
+        phone: user.phone || "",
+      });
+    }
+  }, [user]);
 
-                setForm({
-                    first_name: user.first_name || "",
-                    last_name: user.last_name || "",
-                    email: user.email || "",
-                });
-            } catch (err) {
-                setError(
-                    err.response?.data?.message ||
-                    "Unable to load your profile."
-                );
-            } finally {
-                setLoading(false);
-            }
-        };
+  const handleChange = (e) => {
+    setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+    setError("");
+    setSuccess("");
+  };
 
-        loadProfile();
-    }, []);
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
-    const handleChange = (event) => {
-        setForm({
-            ...form,
-            [event.target.name]: event.target.value,
-        });
-    };
-
-    const handleSubmit = async (event) => {
-        event.preventDefault();
-
-        setError("");
-        setMessage("");
-        setSaving(true);
-
-        try {
-            const user = await updateMyProfile({
-                first_name: form.first_name,
-                last_name: form.last_name,
-            });
-
-            setForm((previous) => ({
-                ...previous,
-                first_name: user.first_name,
-                last_name: user.last_name,
-            }));
-
-            setMessage("Your profile has been updated.");
-        } catch (err) {
-            setError(
-                err.response?.data?.message ||
-                "Unable to update your profile."
-            );
-        } finally {
-            setSaving(false);
-        }
-    };
-
-    if (loading) {
-        return <div className="rounded-2xl bg-white p-6">Loading profile...</div>;
+    if (!form.first_name.trim() || !form.last_name.trim()) {
+      setError("First name and last name are required.");
+      return;
     }
 
-    return (
-        <section className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm">
-            <div className="mb-6">
-                <h2 className="text-xl font-semibold text-zinc-900">
-                    Personal Information
-                </h2>
+    try {
+      setLoading(true);
+      setError("");
+      setSuccess("");
 
-                <p className="mt-1 text-sm text-zinc-500">
-                    Update your personal details.
-                </p>
-            </div>
+      const updated = await updateMyProfile(form);
+      await onUpdate?.(updated);
+      setSuccess("Profile updated successfully.");
+    } catch (err) {
+      setError(
+        err?.response?.data?.message ||
+          err?.message ||
+          "Failed to update profile."
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
 
-            {message && (
-                <p className="mb-4 rounded-lg bg-green-50 p-3 text-sm text-green-700">
-                    {message}
-                </p>
-            )}
+  return (
+    <form onSubmit={handleSubmit} className="shop-panel space-y-5 p-5 sm:p-8">
+      <div className="grid gap-5 sm:grid-cols-2">
+        <div>
+          <label htmlFor="profile-first-name" className="mb-1.5 block text-sm font-medium text-zinc-700">
+            First Name
+          </label>
+          <input
+            type="text"
+            id="profile-first-name"
+            name="first_name"
+            value={form.first_name}
+            onChange={handleChange}
+            maxLength={100}
+            className="shop-input min-h-11 px-4 py-3 text-base sm:text-sm"
+            placeholder="First name"
+          />
+        </div>
 
-            {error && (
-                <p className="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-700">
-                    {error}
-                </p>
-            )}
+        <div>
+          <label htmlFor="profile-last-name" className="mb-1.5 block text-sm font-medium text-zinc-700">
+            Last Name
+          </label>
+          <input
+            type="text"
+            id="profile-last-name"
+            name="last_name"
+            value={form.last_name}
+            onChange={handleChange}
+            maxLength={100}
+            className="shop-input min-h-11 px-4 py-3 text-base sm:text-sm"
+            placeholder="Last name"
+          />
+        </div>
+      </div>
 
-            <form onSubmit={handleSubmit} className="space-y-5">
-                <div className="grid gap-5 sm:grid-cols-2">
-                    <div>
-                        <label className="mb-2 block text-sm font-medium text-zinc-700">
-                            First Name
-                        </label>
+      <div>
+        <label htmlFor="profile-phone" className="mb-1.5 block text-sm font-medium text-zinc-700">
+          Phone Number
+        </label>
+        <input
+          type="tel"
+          id="profile-phone"
+          name="phone"
+          value={form.phone}
+          onChange={handleChange}
+          maxLength={20}
+          className="shop-input min-h-11 px-4 py-3 text-base sm:text-sm"
+          placeholder="+1 (555) 000-0000"
+        />
+      </div>
 
-                        <input
-                            name="first_name"
-                            value={form.first_name}
-                            onChange={handleChange}
-                            required
-                            maxLength={100}
-                            className="w-full rounded-xl border border-zinc-300 px-4 py-3 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
-                        />
-                    </div>
+      <div>
+        <label htmlFor="profile-email" className="mb-1.5 block text-sm font-medium text-zinc-700">
+          Email Address
+        </label>
+        <input
+          type="email"
+          id="profile-email"
+          value={user?.email || ""}
+          disabled
+          className="min-h-11 w-full cursor-not-allowed rounded-xl border border-zinc-100 bg-zinc-50 px-4 py-3 text-base text-zinc-500 sm:text-sm"
+        />
+        <p className="mt-1 text-xs text-zinc-400">
+          Email address cannot be changed.
+        </p>
+      </div>
 
-                    <div>
-                        <label className="mb-2 block text-sm font-medium text-zinc-700">
-                            Last Name
-                        </label>
+      {error && (
+        <p className="rounded-lg bg-red-50 px-4 py-2.5 text-sm text-red-600">
+          {error}
+        </p>
+      )}
 
-                        <input
-                            name="last_name"
-                            value={form.last_name}
-                            onChange={handleChange}
-                            required
-                            maxLength={100}
-                            className="w-full rounded-xl border border-zinc-300 px-4 py-3 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
-                        />
-                    </div>
-                </div>
+      {success && (
+        <p className="rounded-lg bg-green-50 px-4 py-2.5 text-sm text-green-600">
+          {success}
+        </p>
+      )}
 
-                <div>
-                    <label className="mb-2 block text-sm font-medium text-zinc-700">
-                        Email Address
-                    </label>
-
-                    <input
-                        type="email"
-                        value={form.email}
-                        disabled
-                        className="w-full cursor-not-allowed rounded-xl border border-zinc-200 bg-zinc-100 px-4 py-3 text-zinc-500"
-                    />
-
-                    <p className="mt-1 text-xs text-zinc-500">
-                        Email editing is not enabled in this version.
-                    </p>
-                </div>
-
-                <button
-                    type="submit"
-                    disabled={saving}
-                    className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                    <Save size={17} />
-                    {saving ? "Saving..." : "Save Changes"}
-                </button>
-            </form>
-        </section>
-    );
+      <button
+        type="submit"
+        disabled={loading}
+        className="shop-button shop-button-primary disabled:cursor-not-allowed disabled:opacity-50"
+      >
+        {loading ? (
+          <Loader2 size={16} className="animate-spin" />
+        ) : (
+          <Save size={16} />
+        )}
+        {loading ? "Saving..." : "Save Changes"}
+      </button>
+    </form>
+  );
 }

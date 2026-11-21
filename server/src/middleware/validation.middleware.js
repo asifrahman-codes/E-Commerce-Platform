@@ -1,44 +1,39 @@
-const validate = (schema) => {
+import ApiError from "../utils/ApiError.js";
 
-    return (req, res, next) => {
+const REQUEST_SOURCES = new Set(["body", "params", "query"]);
 
-        const { error, value } = schema.validate(req.body, {
+const validate = (schema, source = "body") => {
+  if (!REQUEST_SOURCES.has(source)) {
+    throw new TypeError(`Unsupported validation source: ${source}`);
+  }
 
-            abortEarly: false,
+  return (req, res, next) => {
+    const { error, value } = schema.validate(req[source], {
+      abortEarly: false,
+      convert: true,
+      stripUnknown: source === "body",
+    });
 
-            stripUnknown: true
+    if (error) {
+      const errors = error.details.map((detail) => ({
+        field: detail.path.join("."),
+        message: detail.message,
+      }));
 
-        });
+      return next(new ApiError(400, "Validation Failed", { errors }));
+    }
 
+    if (source === "body") {
+      req.body = value;
+    } else {
+      req.validated = {
+        ...req.validated,
+        [source]: value,
+      };
+    }
 
-        if (error) {
-
-            const errors = error.details.map(detail => ({
-
-                field: detail.path.join("."),
-
-                message: detail.message
-
-            }));
-
-            return res.status(400).json({
-
-                success: false,
-
-                message: "Validation Failed",
-
-                errors
-
-            });
-
-        }
-
-        req.body = value;
-
-        next();
-
-    };
-
+    return next();
+  };
 };
 
 export default validate;

@@ -2,8 +2,8 @@ import { useCallback, useEffect, useState } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import { CheckCircle2, Clock, AlertTriangle, Loader2, MapPin, CreditCard } from "lucide-react";
 
-import LoadingSpinner from "../../components/common/LoadingSpinner";
 import ErrorMessage from "../../components/common/ErrorMessage";
+import StorefrontSkeleton from "../../components/common/StorefrontSkeleton";
 import { getOrder } from "../../services/order.service";
 import { payWithCod, startOnlinePayment } from "../../services/payment.service";
 import { formatPrice } from "../../utils/product.utils";
@@ -61,7 +61,7 @@ export default function OrderConfirmation() {
   };
 
   if (loading) {
-    return <div className="flex min-h-[50vh] items-center justify-center"><LoadingSpinner size="lg" /></div>;
+    return <StorefrontSkeleton label="Loading order confirmation" layout="split" />;
   }
 
   if (error || !order) {
@@ -78,8 +78,9 @@ export default function OrderConfirmation() {
   const iconColor = cancelled ? "text-red-500" : needsPayment ? "text-amber-500" : "text-emerald-500";
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-10 sm:px-6">
-      <div className="text-center">
+    <div className="shop-page">
+    <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6 sm:py-14">
+      <div className="rounded-[2rem] bg-[#e9ede5] px-5 py-10 text-center sm:px-8 sm:py-12">
         <Icon className={`mx-auto ${iconColor}`} size={52} aria-hidden="true" />
         <h1 className="mt-4 text-2xl font-bold text-zinc-900 sm:text-3xl">{heading}</h1>
         <p className="mt-2 text-zinc-600">
@@ -112,7 +113,7 @@ export default function OrderConfirmation() {
       )}
 
       <div className="mt-8 grid gap-6 md:grid-cols-3">
-        <section className="rounded-2xl border border-zinc-200 bg-white p-5 md:col-span-2" aria-labelledby="items-heading">
+        <section className="shop-panel p-5 sm:p-6 md:col-span-2" aria-labelledby="items-heading">
           <h2 id="items-heading" className="text-lg font-bold text-zinc-900">Items</h2>
           <ul className="mt-3 divide-y divide-zinc-100">
             {order.items?.map((item) => (
@@ -139,7 +140,7 @@ export default function OrderConfirmation() {
         </section>
 
         <div className="space-y-6">
-          <section className="rounded-2xl border border-zinc-200 bg-white p-5 text-sm" aria-labelledby="status-heading">
+          <section className="shop-panel p-5 text-sm" aria-labelledby="status-heading">
             <h2 id="status-heading" className="text-lg font-bold text-zinc-900">Status</h2>
             <dl className="mt-3 space-y-2">
               <Line label="Order" value={label(order.status)} />
@@ -149,7 +150,7 @@ export default function OrderConfirmation() {
           </section>
 
           {order.address && (
-            <section className="rounded-2xl border border-zinc-200 bg-white p-5 text-sm text-zinc-700" aria-labelledby="ship-heading">
+            <section className="shop-panel p-5 text-sm text-zinc-700" aria-labelledby="ship-heading">
               <h2 id="ship-heading" className="flex items-center gap-2 text-lg font-bold text-zinc-900"><MapPin size={18} /> Delivery to</h2>
               <p className="mt-3 font-medium text-zinc-900">{order.address.street}</p>
               <p>{order.address.city}{order.address.postal_code ? `, ${order.address.postal_code}` : ""}</p>
@@ -160,10 +161,11 @@ export default function OrderConfirmation() {
       </div>
 
       <div className="mt-8 flex justify-center">
-        <Link to="/products" className="rounded-xl bg-indigo-600 px-6 py-3 font-semibold text-white hover:bg-indigo-700">
+        <Link to="/products" className="shop-button shop-button-primary">
           Continue shopping
         </Link>
       </div>
+    </div>
     </div>
   );
 }

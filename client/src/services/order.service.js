@@ -4,21 +4,24 @@ import API_ENDPOINTS from "./endpoints";
 const payload = (response) => response?.data ?? response;
 
 // Existing checkout functions
-export const previewOrder = async (couponCode = "") =>
+export const previewOrder = async (couponCode = "", loyaltyPoints = 0) =>
   payload(
     await api.post(API_ENDPOINTS.ORDERS.PREVIEW, {
       coupon_code: couponCode,
+      loyalty_points: loyaltyPoints,
     })
   );
 
 export const placeOrder = async ({
   addressId,
   couponCode = "",
+  loyaltyPoints = 0,
 }) =>
   payload(
     await api.post(API_ENDPOINTS.ORDERS.BASE, {
       address_id: addressId,
       coupon_code: couponCode,
+      loyalty_points: loyaltyPoints,
     })
   );
 

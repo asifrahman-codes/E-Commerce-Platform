@@ -10,14 +10,14 @@ import {
 
 const OrderCard = ({ order }) => {
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-5 transition hover:border-indigo-200 hover:shadow-sm">
+    <div className="shop-panel p-5 transition hover:-translate-y-0.5 hover:shadow-md sm:p-6">
       <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
         <div>
-          <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
+          <p className="shop-eyebrow">
             Order Number
           </p>
 
-          <h3 className="mt-1 font-semibold text-gray-900">
+          <h3 className="mt-1 font-semibold text-ink">
             {order.order_number}
           </h3>
 
@@ -29,11 +29,11 @@ const OrderCard = ({ order }) => {
         <OrderStatusBadge status={order.status} />
       </div>
 
-      <div className="my-5 grid grid-cols-2 gap-4 border-y border-gray-100 py-4">
+      <div className="my-5 grid grid-cols-2 gap-4 border-y border-line py-4">
         <div>
           <p className="text-xs text-gray-500">Order Total</p>
 
-          <p className="mt-1 font-semibold text-gray-900">
+          <p className="mt-1 font-semibold text-ink">
             {formatCurrency(order.total)}
           </p>
         </div>
@@ -41,7 +41,7 @@ const OrderCard = ({ order }) => {
         <div>
           <p className="text-xs text-gray-500">Payment Status</p>
 
-          <p className="mt-1 font-semibold text-gray-900">
+          <p className="mt-1 font-semibold text-ink">
             {order.payment_status || "N/A"}
           </p>
         </div>
@@ -58,7 +58,7 @@ const OrderCard = ({ order }) => {
 
         <Link
           to={`/orders/${order.order_id}`}
-          className="inline-flex items-center gap-2 text-sm font-semibold text-indigo-600 hover:text-indigo-800"
+          className="inline-flex items-center gap-2 text-sm font-semibold text-indigo-700 hover:text-indigo-900"
         >
           View Details
           <ArrowRight size={16} />

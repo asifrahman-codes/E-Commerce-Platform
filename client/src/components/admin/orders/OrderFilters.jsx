@@ -10,7 +10,7 @@ export default function OrderFilters({
 
         <div className="rounded-2xl border border-zinc-200 bg-white p-4">
 
-            <div className="grid gap-4 md:grid-cols-4">
+            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
 
                 <div className="relative">
 
@@ -65,6 +65,21 @@ export default function OrderFilters({
                     <option value="FAILED">Failed</option>
                     <option value="REFUNDED">Refunded</option>
 
+                </select>
+
+                <select
+                    value={filters.sort}
+                    onChange={(e) => onChange({
+                        ...filters,
+                        sort: e.target.value
+                    })}
+                    aria-label="Sort orders"
+                    className="rounded-xl border border-zinc-200 px-3 py-3 text-sm outline-none focus:border-indigo-500"
+                >
+                    <option value="newest">Newest first</option>
+                    <option value="oldest">Oldest first</option>
+                    <option value="amount_desc">Amount: high to low</option>
+                    <option value="amount_asc">Amount: low to high</option>
                 </select>
 
                 <button

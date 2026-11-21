@@ -139,8 +139,10 @@ export default function MyAddresses() {
 
     if (loading) {
         return (
-            <div className="rounded-2xl bg-white p-6">
-                Loading addresses...
+            <div role="status" aria-label="Loading addresses" className="shop-panel animate-pulse space-y-4 p-6">
+                <div className="h-5 w-36 rounded bg-[#edf0e9]" />
+                <div className="h-24 rounded-xl bg-[#edf0e9]" />
+                <div className="h-24 rounded-xl bg-[#edf0e9]" />
             </div>
         );
     }
@@ -149,11 +151,11 @@ export default function MyAddresses() {
         <section className="space-y-6">
             <div className="flex flex-wrap items-center justify-between gap-4">
                 <div>
-                    <h2 className="text-xl font-semibold text-zinc-900">
+                    <h2 className="text-xl font-semibold text-ink">
                         My Addresses
                     </h2>
 
-                    <p className="mt-1 text-sm text-zinc-500">
+                    <p className="mt-1 text-sm text-muted">
                         Manage your delivery addresses.
                     </p>
                 </div>

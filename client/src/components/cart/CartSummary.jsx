@@ -10,13 +10,13 @@ export default function CartSummary({ cart }) {
   const hasItems = cart.items.length > 0;
 
   return (
-    <div className="rounded-2xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
-      <h2 className="text-lg font-bold text-zinc-900 dark:text-white">
+    <div className="shop-panel p-5 sm:p-6">
+      <h2 className="text-lg font-semibold text-ink">
         Order Summary
       </h2>
 
       <div className="mt-6 space-y-4">
-        <div className="flex justify-between text-sm text-zinc-600 dark:text-zinc-400">
+        <div className="flex justify-between text-sm text-muted">
           <span>Items ({cart.total_items})</span>
           <span>{formatPrice(cart.subtotal)}</span>
         </div>
@@ -26,13 +26,13 @@ export default function CartSummary({ cart }) {
           <span>Calculated at checkout</span>
         </div>
 
-        <div className="border-t border-zinc-200 pt-4 dark:border-zinc-700">
+        <div className="border-t border-line pt-4">
           <div className="flex justify-between">
-            <span className="font-semibold text-zinc-900 dark:text-white">
+            <span className="font-semibold text-ink">
               Subtotal
             </span>
 
-            <span className="text-lg font-bold text-zinc-900 dark:text-white">
+            <span className="text-lg font-semibold text-ink">
               {formatPrice(cart.subtotal)}
             </span>
           </div>

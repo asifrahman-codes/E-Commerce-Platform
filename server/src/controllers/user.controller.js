@@ -2,6 +2,7 @@ import {
     getAuthenticatedUser,
     updateMyProfileService,
     changeMyPasswordService,
+    deactivateMyAccountService,
 } from "../services/user.service.js";
 
 export const getMyProfile = async (req, res, next) => {
@@ -45,6 +46,22 @@ export const changeMyPassword = async (req, res, next) => {
         return res.status(200).json({
             success: true,
             message: "Password changed successfully",
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+export const deactivateMyAccount = async (req, res, next) => {
+    try {
+        await deactivateMyAccountService(
+            req.user.user_id,
+            req.body
+        );
+
+        return res.status(200).json({
+            success: true,
+            message: "Account deactivated successfully",
         });
     } catch (error) {
         next(error);

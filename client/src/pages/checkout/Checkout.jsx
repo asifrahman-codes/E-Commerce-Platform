@@ -6,10 +6,11 @@ import { useCart } from "../../context/CartContext";
 import AddressSelector from "../../components/checkout/AddressSelector";
 import PaymentMethodSelector from "../../components/checkout/PaymentMethodSelector";
 import OrderSummary from "../../components/checkout/OrderSummary";
-import LoadingSpinner from "../../components/common/LoadingSpinner";
 import ErrorMessage from "../../components/common/ErrorMessage";
+import StorefrontSkeleton from "../../components/common/StorefrontSkeleton";
 
 import { getAddresses } from "../../services/address.service";
+import { getLoyaltyAccount } from "../../services/loyalty.service";
 import { previewOrder, placeOrder } from "../../services/order.service";
 import { payWithCod, startOnlinePayment } from "../../services/payment.service";
 import { formatPrice } from "../../utils/product.utils";
@@ -27,6 +28,10 @@ export default function Checkout() {
 
   const [couponCode, setCouponCode] = useState("");
   const [couponError, setCouponError] = useState("");
+  const [loyaltyPoints, setLoyaltyPoints] = useState(0);
+  const [loyaltyAccount, setLoyaltyAccount] = useState(null);
+  const [loyaltyError, setLoyaltyError] = useState("");
+  const [loyaltyAccountError, setLoyaltyAccountError] = useState("");
 
   const [preview, setPreview] = useState(null);
   const [previewLoading, setPreviewLoading] = useState(false);
@@ -34,6 +39,7 @@ export default function Checkout() {
   const [method, setMethod] = useState("COD");
   const [placing, setPlacing] = useState(false);
   const [submitError, setSubmitError] = useState("");
+  const [keyboardOpen, setKeyboardOpen] = useState(false);
 
   // A ref closes the gap before React re-renders, so a double click
   // can never send two order requests.
@@ -41,12 +47,36 @@ export default function Checkout() {
 
   const items = cart?.items ?? [];
 
-  const loadPreview = useCallback(async (code = "") => {
+  useEffect(() => {
+    const viewport = window.visualViewport;
+    if (!viewport) return undefined;
+
+    const updateKeyboardState = () => {
+      const focusedFormControl = document.activeElement?.matches("input, textarea, select");
+      setKeyboardOpen(Boolean(focusedFormControl && window.innerHeight - viewport.height > 120));
+    };
+
+    viewport.addEventListener("resize", updateKeyboardState);
+    viewport.addEventListener("scroll", updateKeyboardState);
+    document.addEventListener("focusin", updateKeyboardState);
+    document.addEventListener("focusout", updateKeyboardState);
+    updateKeyboardState();
+
+    return () => {
+      viewport.removeEventListener("resize", updateKeyboardState);
+      viewport.removeEventListener("scroll", updateKeyboardState);
+      document.removeEventListener("focusin", updateKeyboardState);
+      document.removeEventListener("focusout", updateKeyboardState);
+    };
+  }, []);
+
+  const loadPreview = useCallback(async (code = "", points = 0) => {
     setPreviewLoading(true);
 
     try {
-      setPreview(await previewOrder(code));
+      setPreview(await previewOrder(code, points));
       setCouponError("");
+      setLoyaltyError("");
       return true;
     } catch (error) {
       if (code) {
@@ -54,7 +84,15 @@ export default function Checkout() {
         setCouponCode("");
 
         try {
-          setPreview(await previewOrder(""));
+          setPreview(await previewOrder("", 0));
+        } catch (inner) {
+          setSubmitError(getErrorMessage(inner));
+        }
+      } else if (points > 0) {
+        setLoyaltyError(getErrorMessage(error));
+        setLoyaltyPoints(0);
+        try {
+          setPreview(await previewOrder("", 0));
         } catch (inner) {
           setSubmitError(getErrorMessage(inner));
         }
@@ -85,6 +123,11 @@ export default function Checkout() {
       try {
         const freshCart = await refreshCart();
         await loadAddresses();
+        try {
+          setLoyaltyAccount(await getLoyaltyAccount());
+        } catch (error) {
+          setLoyaltyAccountError(getErrorMessage(error));
+        }
 
         const hasItems = (freshCart?.items ?? []).length > 0;
         if (active && hasItems) await loadPreview("");
@@ -102,13 +145,26 @@ export default function Checkout() {
 
   const handleApplyCoupon = async (code) => {
     setSubmitError("");
-    const ok = await loadPreview(code);
-    if (ok) setCouponCode(code.toUpperCase());
+    const ok = await loadPreview(code, 0);
+    if (ok) {
+      setLoyaltyPoints(0);
+      setCouponCode(code.toUpperCase());
+    }
   };
 
   const handleRemoveCoupon = async () => {
     setCouponCode("");
-    await loadPreview("");
+    setLoyaltyPoints(0);
+    await loadPreview("", 0);
+  };
+
+  const handleApplyPoints = async (points) => {
+    setSubmitError("");
+    const ok = await loadPreview("", points);
+    if (ok) {
+      setCouponCode("");
+      setLoyaltyPoints(points);
+    }
   };
 
   const handlePlaceOrder = async () => {
@@ -126,7 +182,7 @@ export default function Checkout() {
     let order;
 
     try {
-      order = await placeOrder({ addressId, couponCode });
+      order = await placeOrder({ addressId, couponCode, loyaltyPoints });
     } catch (error) {
       setSubmitError(getErrorMessage(error));
       placingRef.current = false;
@@ -134,7 +190,7 @@ export default function Checkout() {
 
       // Stock, prices or coupon may have changed: show fresh numbers.
       await refreshCart().catch(() => {});
-      await loadPreview(couponCode);
+      await loadPreview(couponCode, loyaltyPoints);
       return;
     }
 
@@ -159,16 +215,12 @@ export default function Checkout() {
   };
 
   if (initialLoading) {
-    return (
-      <div className="flex min-h-[50vh] items-center justify-center">
-        <LoadingSpinner size="lg" />
-      </div>
-    );
+    return <StorefrontSkeleton label="Preparing checkout" layout="split" />;
   }
 
   if (loadError) {
     return (
-      <div className="mx-auto max-w-3xl px-4 py-12">
+      <div className="container-custom py-12">
         <ErrorMessage message={loadError} onRetry={() => window.location.reload()} />
       </div>
     );
@@ -176,7 +228,7 @@ export default function Checkout() {
 
   if (items.length === 0) {
     return (
-      <div className="mx-auto max-w-7xl px-4 py-20 text-center">
+      <div className="shop-page mx-auto max-w-7xl px-4 py-20 text-center">
         <ShoppingBag className="mx-auto text-zinc-400" size={48} />
         <h1 className="mt-5 text-2xl font-bold text-zinc-900">Your cart is empty</h1>
         <p className="mt-2 text-zinc-600">Add something to your cart before checking out.</p>
@@ -191,14 +243,15 @@ export default function Checkout() {
   const canPlace = Boolean(addressId) && Boolean(preview);
 
   return (
-    <div className="mx-auto max-w-7xl px-4 pb-32 pt-8 sm:px-6 lg:px-8 lg:pb-12">
+    <div className="shop-page">
+    <div className={`container-custom pt-8 lg:pb-12 ${keyboardOpen ? "pb-8" : "pb-32"}`}>
       <nav aria-label="Breadcrumb" className="text-sm text-zinc-500">
         <Link to="/cart" className="hover:text-zinc-800">Cart</Link>
         <span className="mx-2">/</span>
         <span className="font-medium text-zinc-800">Checkout</span>
       </nav>
 
-      <h1 className="mt-3 text-2xl font-bold text-zinc-900 sm:text-3xl">Checkout</h1>
+      <h1 className="mt-3 text-3xl font-semibold tracking-tight text-ink sm:text-4xl">Checkout</h1>
 
       {submitError && (
         <p role="alert" className="mt-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
@@ -226,6 +279,11 @@ export default function Checkout() {
             couponError={couponError}
             onApplyCoupon={handleApplyCoupon}
             onRemoveCoupon={handleRemoveCoupon}
+            loyaltyAccount={loyaltyAccount}
+            loyaltyAccountError={loyaltyAccountError}
+            loyaltyPoints={loyaltyPoints}
+            loyaltyError={loyaltyError}
+            onApplyPoints={handleApplyPoints}
             onPlaceOrder={handlePlaceOrder}
             placing={placing}
             canPlace={canPlace}
@@ -235,7 +293,7 @@ export default function Checkout() {
       </div>
 
       {/* Mobile sticky action bar */}
-      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-zinc-200 bg-white p-3 shadow-[0_-4px_12px_rgba(0,0,0,0.06)] lg:hidden">
+      {!keyboardOpen && <div className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-white/95 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-[0_-4px_18px_rgba(29,40,34,0.08)] backdrop-blur lg:hidden">
         <div className="mx-auto flex max-w-xl items-center gap-4">
           <div className="min-w-0">
             <p className="text-xs text-zinc-500">Total</p>
@@ -244,13 +302,15 @@ export default function Checkout() {
           <button
             type="button"
             onClick={handlePlaceOrder}
+            aria-label={buttonLabel}
             disabled={!canPlace || placing || previewLoading}
             className="ml-auto flex flex-1 items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 py-3 text-sm font-semibold text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {placing ? <><Loader2 className="animate-spin" size={18} /> Placing…</> : <><Lock size={16} /> {buttonLabel}</>}
+            {placing ? <><Loader2 className="animate-spin" size={18} /> Placing…</> : <><Lock size={16} /><span className="sm:hidden">Place order</span><span className="hidden sm:inline">{buttonLabel}</span></>}
           </button>
         </div>
-      </div>
+      </div>}
+    </div>
     </div>
   );
 }

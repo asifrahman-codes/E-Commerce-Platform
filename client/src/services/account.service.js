@@ -30,6 +30,15 @@ export const changeMyPassword = async (data) => {
     return getData(response);
 };
 
+export const deactivateMyAccount = async (data) => {
+    const response = await api.post(
+        API_ENDPOINTS.USERS.DEACTIVATE,
+        data
+    );
+
+    return getData(response);
+};
+
 export const getMyAddresses = async () => {
     const response = await api.get(API_ENDPOINTS.ADDRESSES.BASE);
 

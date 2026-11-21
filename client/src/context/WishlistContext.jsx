@@ -4,6 +4,7 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useMemo,
   useState,
 } from "react";
 
@@ -59,7 +60,7 @@ export function WishlistProvider({ children }) {
     }
   }, [refreshWishlist]);
 
-  const addToWishlist = async (productId) => {
+  const addToWishlist = useCallback(async (productId) => {
     try {
       setError("");
 
@@ -76,9 +77,9 @@ export function WishlistProvider({ children }) {
       setError(message);
       throw err;
     }
-  };
+  }, [refreshWishlist]);
 
-  const removeFromWishlist = async (productId) => {
+  const removeFromWishlist = useCallback(async (productId) => {
     try {
       setError("");
 
@@ -93,9 +94,9 @@ export function WishlistProvider({ children }) {
       setError(message);
       throw err;
     }
-  };
+  }, [refreshWishlist]);
 
-  const clearWishlist = async () => {
+  const clearWishlist = useCallback(async () => {
     try {
       setError("");
 
@@ -112,34 +113,44 @@ export function WishlistProvider({ children }) {
       setError(message);
       throw err;
     }
-  };
+  }, []);
 
-  const isInWishlist = (productId) => {
+  const isInWishlist = useCallback((productId) => {
     return wishlist.items.some(
       (item) =>
         Number(item.product_id) === Number(productId)
     );
-  };
+  }, [wishlist.items]);
 
-  const resetWishlist = () => {
+  const resetWishlist = useCallback(() => {
     setWishlist(emptyWishlist);
     setError("");
-  };
+  }, []);
+
+  const value = useMemo(() => ({
+    wishlist,
+    loading,
+    error,
+    refreshWishlist,
+    addToWishlist,
+    removeFromWishlist,
+    clearWishlist,
+    isInWishlist,
+    resetWishlist,
+  }), [
+    wishlist,
+    loading,
+    error,
+    refreshWishlist,
+    addToWishlist,
+    removeFromWishlist,
+    clearWishlist,
+    isInWishlist,
+    resetWishlist,
+  ]);
 
   return (
-    <WishlistContext.Provider
-      value={{
-        wishlist,
-        loading,
-        error,
-        refreshWishlist,
-        addToWishlist,
-        removeFromWishlist,
-        clearWishlist,
-        isInWishlist,
-        resetWishlist,
-      }}
-    >
+    <WishlistContext.Provider value={value}>
       {children}
     </WishlistContext.Provider>
   );

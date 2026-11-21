@@ -7,6 +7,7 @@ import { formatPrice } from "../../utils/product.utils";
 export default function VariantSelector({
     variants = [],
     basePrice = 0,
+    initialVariantId = null,
     onVariantChange,
 }) {
     const activeVariants = useMemo(
@@ -20,18 +21,23 @@ export default function VariantSelector({
 
     const [selectedVariantId, setSelectedVariantId] = useState(null);
 
-    // Select the first available variant when variants change.
+    // Honor a requested in-stock variant, then fall back to a usable default.
     useEffect(() => {
+        const requestedVariant = activeVariants.find(
+            (variant) =>
+                Number(variant.variant_id) === Number(initialVariantId) &&
+                Number(variant.stock) > 0
+        );
         const firstAvailable = activeVariants.find(
             (variant) => Number(variant.stock) > 0
         );
 
-        const firstVariant = firstAvailable || activeVariants[0];
+        const firstVariant = requestedVariant || firstAvailable || activeVariants[0];
 
         setSelectedVariantId(
             firstVariant?.variant_id ?? null
         );
-    }, [activeVariants]);
+    }, [activeVariants, initialVariantId]);
 
     const selectedVariant = useMemo(
         () =>
@@ -140,7 +146,7 @@ export default function VariantSelector({
     const stock = Number(selectedVariant?.stock ?? 0);
 
     const inputClass =
-        "rounded-lg border px-3 py-2 text-sm transition";
+        "min-h-11 rounded-lg border px-3 py-2 text-sm transition";
 
     return (
         <div className="space-y-5">
@@ -234,17 +240,17 @@ export default function VariantSelector({
             {selectedVariant && (
                 <div className="space-y-3 rounded-xl border border-zinc-200 p-4 dark:border-zinc-800">
 
-                    <div className="flex items-center justify-between gap-3">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
                         <span className="text-sm text-zinc-500">
                             Selected SKU
                         </span>
 
-                        <span className="text-sm font-medium text-zinc-900 dark:text-white">
+                        <span className="min-w-0 break-all text-right text-sm font-medium text-zinc-900 dark:text-white">
                             {selectedVariant.sku}
                         </span>
                     </div>
 
-                    <div className="flex items-center justify-between gap-3">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
                         <span className="text-sm text-zinc-500">
                             Price
                         </span>
@@ -254,7 +260,7 @@ export default function VariantSelector({
                         </span>
                     </div>
 
-                    <div className="flex items-center justify-between gap-3">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
                         <span className="text-sm text-zinc-500">
                             Stock
                         </span>

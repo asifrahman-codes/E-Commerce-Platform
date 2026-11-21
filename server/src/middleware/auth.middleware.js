@@ -3,6 +3,7 @@ import ApiError from "../utils/ApiError.js";
 import asyncHandler from "../utils/asyncHandler.js";
 
 import { verifyToken } from "../utils/security/jwt.helper.js";
+import jwtConfig from "../config/jwt.js";
 
 import { getAuthenticatedUser } from "../services/user.service.js";
 
@@ -66,7 +67,7 @@ const authMiddleware = asyncHandler(
 
             token,
 
-            process.env.JWT_SECRET
+            jwtConfig.secret
 
         );
 
@@ -76,9 +77,10 @@ const authMiddleware = asyncHandler(
         -----------------------------------------
         */
 
-       const user = await getAuthenticatedUser(
-        decoded.userId
-      );
+        const user = await getAuthenticatedUser(
+            decoded.userId,
+            decoded.tokenVersion ?? 0
+        );
 
         /*
         -----------------------------------------

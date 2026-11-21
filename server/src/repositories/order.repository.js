@@ -369,6 +369,36 @@ export const updatePaymentStatus = async (
     return result.affectedRows;
 };
 
+export const markOrderShippedFromShipment = async (
+    connection,
+    orderId
+) => {
+    const [result] = await connection.execute(
+        `UPDATE orders
+         SET status = 'SHIPPED'
+         WHERE order_id = ?
+           AND status IN ('CONFIRMED', 'PROCESSING', 'SHIPPED')`,
+        [orderId]
+    );
+
+    return result.affectedRows;
+};
+
+export const markOrderDeliveredFromShipment = async (
+    connection,
+    orderId
+) => {
+    const [result] = await connection.execute(
+        `UPDATE orders
+         SET status = 'DELIVERED'
+         WHERE order_id = ?
+           AND status IN ('SHIPPED', 'PROCESSING', 'CONFIRMED')`,
+        [orderId]
+    );
+
+    return result.affectedRows;
+};
+
 export const findOrderByIdForUpdate = async (
     connection,
     orderId

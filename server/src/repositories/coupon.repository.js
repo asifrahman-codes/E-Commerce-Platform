@@ -45,6 +45,17 @@ export async function findCouponById(couponId) {
     return rows[0] ?? null;
 }
 
+export async function findCouponByIdWithConnection(connection, couponId) {
+    const [rows] = await connection.execute(
+        `SELECT *
+         FROM coupons
+         WHERE coupon_id = ?`,
+        [couponId]
+    );
+
+    return rows[0] ?? null;
+}
+
 export async function findCouponByCode(code) {
     const [rows] = await pool.execute(
         `SELECT *

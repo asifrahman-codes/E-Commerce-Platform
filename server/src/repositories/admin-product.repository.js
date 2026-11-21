@@ -14,6 +14,7 @@ export const findAllAdminProducts = async ({
     search = "",
     status = "",
     category_id = null,
+    sort = "newest",
     page = 1,
     limit = 10
 }) => {
@@ -51,6 +52,15 @@ export const findAllAdminProducts = async ({
     const where = conditions.length
         ? `WHERE ${conditions.join(" AND ")}`
         : "";
+    const sortOrders = {
+        newest: "p.created_at DESC, p.product_id DESC",
+        oldest: "p.created_at ASC, p.product_id ASC",
+        price_asc: "p.base_price ASC, p.product_id ASC",
+        price_desc: "p.base_price DESC, p.product_id DESC",
+        name_asc: "p.name ASC, p.product_id ASC",
+        name_desc: "p.name DESC, p.product_id DESC"
+    };
+    const orderBy = sortOrders[sort] || sortOrders.newest;
 
     const countRows = await query(
         `
@@ -99,7 +109,7 @@ export const findAllAdminProducts = async ({
         LEFT JOIN categories c ON c.category_id = p.category_id
         LEFT JOIN brands b ON b.brand_id = p.brand_id
         ${where}
-        ORDER BY p.created_at DESC
+        ORDER BY ${orderBy}
         LIMIT ${safeLimit} OFFSET ${offset}
         `,
         params

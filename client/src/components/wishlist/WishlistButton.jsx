@@ -52,13 +52,14 @@ export default function WishlistButton({
         type="button"
         onClick={handleClick}
         disabled={loading}
+        aria-pressed={active}
         aria-label={
           active ? "Remove from wishlist" : "Add to wishlist"
         }
         title={
           active ? "Remove from wishlist" : "Add to wishlist"
         }
-        className={`inline-flex items-center justify-center rounded-full border border-zinc-200 bg-white p-2.5 text-zinc-600 shadow-sm transition hover:border-red-200 hover:text-red-600 disabled:opacity-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300 ${className}`}
+        className={`inline-flex h-11 w-11 items-center justify-center rounded-full border border-zinc-200 bg-white text-zinc-600 shadow-sm transition hover:border-red-200 hover:text-red-600 disabled:opacity-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300 ${className}`}
       >
         <Heart
           size={19}

@@ -1,4 +1,4 @@
-
+import asyncHandler from "../utils/asyncHandler.js";
 import {
   getAvailableShippingMethodsService,
   getAllShippingMethodsService,
@@ -6,109 +6,92 @@ import {
   updateShippingMethodService,
   createShipmentService,
   updateShipmentStatusService,
+  updateShipmentDetailsService,
   getShipmentTrackingService,
   getCustomerOrderShipmentsService,
 } from "../services/shipping.service.js";
 
-export async function getAvailableShippingMethodsController(req, res, next) {
-  try {
-    const data = await getAvailableShippingMethodsService();
-    res.status(200).json({ success: true, data });
-  } catch (error) {
-    next(error);
-  }
+function success(res, data, message, status = 200) {
+  const response = { success: true };
+  if (message) response.message = message;
+  response.data = data;
+  return res.status(status).json(response);
 }
 
-export async function getAllShippingMethodsController(req, res, next) {
-  try {
-    const data = await getAllShippingMethodsService();
-    res.status(200).json({ success: true, data });
-  } catch (error) {
-    next(error);
-  }
-}
+export const getAvailableShippingMethodsController = asyncHandler(
+  async (_req, res) =>
+    success(res, await getAvailableShippingMethodsService())
+);
 
-export async function createShippingMethodController(req, res, next) {
-  try {
-    const data = await createShippingMethodService(req.body);
-    res.status(201).json({
-      success: true,
-      message: "Shipping method created",
-      data,
-    });
-  } catch (error) {
-    next(error);
-  }
-}
+export const getAllShippingMethodsController = asyncHandler(async (_req, res) =>
+  success(res, await getAllShippingMethodsService())
+);
 
-export async function updateShippingMethodController(req, res, next) {
-  try {
-    const data = await updateShippingMethodService(
+export const createShippingMethodController = asyncHandler(async (req, res) =>
+  success(
+    res,
+    await createShippingMethodService(req.body),
+    "Shipping method created",
+    201
+  )
+);
+
+export const updateShippingMethodController = asyncHandler(async (req, res) =>
+  success(
+    res,
+    await updateShippingMethodService(
       Number(req.params.shippingMethodId),
       req.body
-    );
+    ),
+    "Shipping method updated"
+  )
+);
 
-    res.status(200).json({
-      success: true,
-      message: "Shipping method updated",
-      data,
-    });
-  } catch (error) {
-    next(error);
-  }
-}
+export const createShipmentController = asyncHandler(async (req, res) =>
+  success(
+    res,
+    await createShipmentService(req.body),
+    "Shipment created",
+    201
+  )
+);
 
-export async function createShipmentController(req, res, next) {
-  try {
-    const data = await createShipmentService(req.body);
-    res.status(201).json({
-      success: true,
-      message: "Shipment created",
-      data,
-    });
-  } catch (error) {
-    next(error);
-  }
-}
-
-export async function updateShipmentStatusController(req, res, next) {
-  try {
-    const data = await updateShipmentStatusService(
+export const updateShipmentStatusController = asyncHandler(async (req, res) =>
+  success(
+    res,
+    await updateShipmentStatusService(
       Number(req.params.shipmentId),
       req.body
-    );
+    ),
+    "Shipment updated"
+  )
+);
 
-    res.status(200).json({
-      success: true,
-      message: "Shipment updated",
-      data,
-    });
-  } catch (error) {
-    next(error);
-  }
-}
+export const updateShipmentDetailsController = asyncHandler(async (req, res) =>
+  success(
+    res,
+    await updateShipmentDetailsService(
+      Number(req.params.shipmentId),
+      req.body
+    ),
+    "Shipment details updated"
+  )
+);
 
-export async function getShipmentTrackingController(req, res, next) {
-  try {
-    const data = await getShipmentTrackingService(
-      Number(req.params.shipmentId)
-    );
+export const getShipmentTrackingController = asyncHandler(async (req, res) =>
+  success(
+    res,
+    await getShipmentTrackingService(Number(req.params.shipmentId))
+  )
+);
 
-    res.status(200).json({ success: true, data });
-  } catch (error) {
-    next(error);
-  }
-}
-
-export async function getCustomerOrderShipmentsController(req, res, next) {
-  try {
-    const data = await getCustomerOrderShipmentsService(
-      Number(req.params.orderId),
-      req.user.user_id
-    );
-
-    res.status(200).json({ success: true, data });
-  } catch (error) {
-    next(error);
-  }
-}
+export const getCustomerOrderShipmentsController = asyncHandler(
+  async (req, res) =>
+    success(
+      res,
+      await getCustomerOrderShipmentsService(
+        Number(req.params.orderId),
+        req.user.user_id
+      )
+    )
+);

@@ -69,3 +69,10 @@ export const updateShipmentStatusSchema = Joi.object({
   tracking_url: Joi.string().uri().max(500).allow("", null),
   estimated_delivery_date: Joi.date().iso().allow(null),
 });
+
+export const updateShipmentDetailsSchema = Joi.object({
+  carrier: Joi.string().trim().max(100).allow("", null),
+  tracking_number: Joi.string().trim().max(150).allow("", null),
+  tracking_url: Joi.string().uri().max(500).allow("", null),
+  estimated_delivery_date: Joi.date().iso().allow("", null),
+}).min(1);

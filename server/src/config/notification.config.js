@@ -20,6 +20,10 @@ export const notificationConfig = {
     false
   ),
 
+  emailProvider:
+    process.env.NOTIFICATION_EMAIL_PROVIDER?.toLowerCase() ||
+    "smtp",
+
   emailFrom:
     process.env.NOTIFICATION_EMAIL_FROM ||
     "no-reply@example.com",
@@ -29,6 +33,6 @@ export const notificationConfig = {
     port: Number(process.env.SMTP_PORT || 587),
     secure: readBoolean(process.env.SMTP_SECURE, false),
     user: process.env.SMTP_USER || "",
-    pass: process.env.SMTP_PASS || "",
+    pass: process.env.SMTP_PASS || process.env.SMTP_PASSWORD || "",
   },
 };

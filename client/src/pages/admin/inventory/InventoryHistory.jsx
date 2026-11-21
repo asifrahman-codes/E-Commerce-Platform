@@ -119,7 +119,7 @@ export default function InventoryHistory() {
             )}
 
 
-            <div className="overflow-x-auto rounded-2xl border border-zinc-200 bg-white">
+            <div className="overflow-x-auto overscroll-x-contain touch-pan-x rounded-2xl border border-zinc-200 bg-white">
 
                 <table className="w-full text-left text-sm">
 

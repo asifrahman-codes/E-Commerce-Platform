@@ -4,40 +4,22 @@ import BenefitsSection from "../../components/home/BenefitsSection";
 
 import CategorySection from "../../components/home/CategorySection";
 
-import FeaturedProducts from "../../components/home/FeaturedProducts";
-
 import PromoBanner from "../../components/home/PromoBanner";
 
-import NewArrivals from "../../components/home/NewArrivals";
+import HomeRecommendations from "../../components/recommendations/HomeRecommendations";
 
 import NewsletterSection from "../../components/home/NewsletterSection";
 
 const Home = () => {
   return (
-    <main>
-
-      {/* Hero */}
+    <div>
       <HeroSection />
-
-      {/* Shopping Benefits */}
       <BenefitsSection />
-
-      {/* Categories */}
       <CategorySection />
-
-      {/* Featured Products */}
-      <FeaturedProducts />
-
-      {/* Promotional Banner */}
       <PromoBanner />
-
-      {/* New Arrivals */}
-      <NewArrivals />
-
-      {/* Newsletter */}
+      <HomeRecommendations />
       <NewsletterSection />
-
-    </main>
+    </div>
   );
 };
 

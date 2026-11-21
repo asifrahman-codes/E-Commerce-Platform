@@ -20,6 +20,7 @@ import OrderItems from "../../components/orders/OrderItems";
 import OrderTimeline from "../../components/orders/OrderTimeline";
 import CancelOrderModal from "../../components/orders/CancelOrderModal";
 import ShipmentTracking from "../../components/orders/ShipmentTracking";
+import StorefrontSkeleton from "../../components/common/StorefrontSkeleton";
 
 import {
   canCancelOrder,
@@ -123,17 +124,7 @@ const OrderDetails = () => {
   };
 
   if (loading) {
-    return (
-      <div className="flex min-h-[50vh] items-center justify-center">
-        <div className="text-center">
-          <div className="mx-auto h-10 w-10 animate-spin rounded-full border-4 border-indigo-100 border-t-indigo-600" />
-
-          <p className="mt-4 text-sm text-gray-500">
-            Loading order details...
-          </p>
-        </div>
-      </div>
-    );
+    return <StorefrontSkeleton label="Loading order details" layout="split" />;
   }
 
   if (error || !order) {
@@ -192,7 +183,7 @@ const OrderDetails = () => {
     payment.payment_reference;
 
   return (
-    <section className="min-h-screen bg-gray-50 px-4 py-10 sm:px-6">
+    <section className="shop-page px-4 py-10 sm:px-6 sm:py-14">
       <div className="mx-auto max-w-6xl">
         <Link
           to="/orders"
@@ -203,7 +194,7 @@ const OrderDetails = () => {
         </Link>
 
         {/* Order header */}
-        <div className="rounded-xl border border-gray-200 bg-white p-5 sm:p-7">
+        <div className="shop-panel p-5 sm:p-7">
           <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
             <div>
               <p className="text-sm text-gray-500">
@@ -263,7 +254,7 @@ const OrderDetails = () => {
           </div>
 
           {shipmentLoading ? (
-            <div className="rounded-xl border border-gray-200 bg-white p-6 text-center">
+            <div className="shop-panel p-6 text-center">
               <div className="mx-auto h-8 w-8 animate-spin rounded-full border-4 border-indigo-100 border-t-indigo-600" />
 
               <p className="mt-3 text-sm text-gray-500">
@@ -295,7 +286,7 @@ const OrderDetails = () => {
             <OrderItems items={order.items || []} />
 
             {/* Delivery address */}
-            <div className="rounded-xl border border-gray-200 bg-white p-5">
+            <div className="shop-panel p-5">
               <div className="flex items-center gap-2">
                 <MapPin className="text-indigo-600" size={20} />
 
@@ -320,7 +311,7 @@ const OrderDetails = () => {
             </div>
 
             {/* Payment information */}
-            <div className="rounded-xl border border-gray-200 bg-white p-5">
+            <div className="shop-panel p-5">
               <div className="flex items-center gap-2">
                 <CreditCard className="text-indigo-600" size={20} />
 
@@ -373,7 +364,7 @@ const OrderDetails = () => {
 
           {/* Pricing summary */}
           <div>
-            <div className="rounded-xl border border-gray-200 bg-white p-5">
+            <div className="shop-panel p-5">
               <div className="flex items-center gap-2">
                 <Receipt size={20} className="text-indigo-600" />
 

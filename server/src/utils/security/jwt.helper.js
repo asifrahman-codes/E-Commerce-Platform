@@ -1,41 +1,30 @@
 import jwt from "jsonwebtoken";
+import jwtConfig from "../../config/jwt.js";
 
 /**
  * Generate Access Token
  */
 export const generateAccessToken = (payload) => {
-
     return jwt.sign(
-
         payload,
-
-        process.env.JWT_SECRET,
-
+        jwtConfig.secret,
         {
-            expiresIn: process.env.JWT_EXPIRES_IN
+            expiresIn: jwtConfig.expiresIn,
         }
-
     );
-
 };
 
 /**
  * Generate Refresh Token
  */
 export const generateRefreshToken = (payload) => {
-
     return jwt.sign(
-
         payload,
-
-        process.env.JWT_REFRESH_SECRET,
-
+        jwtConfig.refreshSecret,
         {
-            expiresIn: process.env.JWT_REFRESH_EXPIRES_IN
+            expiresIn: jwtConfig.refreshExpiresIn,
         }
-
     );
-
 };
 
 /**

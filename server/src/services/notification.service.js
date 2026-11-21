@@ -40,10 +40,15 @@ function parsePagination(query = {}) {
     throw createError(400, "Limit must be between 1 and 50.");
   }
 
+  const offset = (page - 1) * limit;
+  if (!Number.isSafeInteger(offset)) {
+    throw createError(400, "Page is too large.");
+  }
+
   return {
     page,
     limit,
-    offset: (page - 1) * limit,
+    offset,
   };
 }
 
@@ -254,6 +259,22 @@ export async function notifyOrderConfirmed({
   });
 }
 
+export async function notifyOrderProcessing({
+  userId,
+  orderId,
+  orderNumber,
+}) {
+  return createNotification({
+    userId,
+    eventKey: `order:${orderId}:processing`,
+    type: "ORDER_PROCESSING",
+    title: "Order is processing",
+    message: `Your order ${orderNumber || orderId} is now being prepared for shipment.`,
+    data: { order_id: orderId, order_number: orderNumber ?? null },
+    sendEmail: true,
+  });
+}
+
 export async function notifyOrderCancelled({
   userId,
   orderId,
@@ -266,6 +287,94 @@ export async function notifyOrderCancelled({
     title: "Order cancelled",
     message: `Your order ${orderNumber || orderId} has been cancelled.`,
     data: { order_id: orderId, order_number: orderNumber ?? null },
+    sendEmail: true,
+  });
+}
+
+export async function notifyOrderRefunded({
+  userId,
+  orderId,
+  orderNumber,
+}) {
+  return createNotification({
+    userId,
+    eventKey: `order:${orderId}:refunded`,
+    type: "ORDER_REFUNDED",
+    title: "Order refunded",
+    message: `A refund has been processed for your order ${orderNumber || orderId}.`,
+    data: { order_id: orderId, order_number: orderNumber ?? null },
+    sendEmail: true,
+  });
+}
+
+export async function notifyOrderDelivered({
+  userId,
+  orderId,
+  orderNumber,
+}) {
+  return createNotification({
+    userId,
+    eventKey: `order:${orderId}:delivered`,
+    type: "ORDER_DELIVERED",
+    title: "Your order has been delivered",
+    message: `Your order ${orderNumber || orderId} has been delivered.`,
+    data: { order_id: orderId, order_number: orderNumber ?? null },
+    sendEmail: true,
+  });
+}
+
+export async function notifyPaymentStatusUpdated({
+  userId,
+  orderId,
+  orderNumber,
+  paymentStatus,
+  attemptId,
+}) {
+  const status = String(paymentStatus ?? "").toUpperCase();
+  const labels = {
+    PENDING: {
+      title: "Payment pending",
+      message: "is awaiting payment.",
+    },
+    PAID: {
+      title: "Payment received",
+      message: "has been paid.",
+    },
+    FAILED: {
+      title: "Payment failed",
+      message: "could not be processed. You can try another payment method.",
+    },
+    CANCELLED: {
+      title: "Payment cancelled",
+      message: "was cancelled.",
+    },
+    REFUNDED: {
+      title: "Payment refunded",
+      message: "has been refunded.",
+    },
+  };
+  const update = labels[status];
+
+  if (!update) {
+    throw createError(400, "Invalid payment status.");
+  }
+
+  const orderLabel = orderNumber || orderId;
+
+  return createNotification({
+    userId,
+    eventKey: attemptId
+      ? `payment:${attemptId}:status:${status.toLowerCase()}`
+      : `order:${orderId}:payment:${status.toLowerCase()}`,
+    type: "PAYMENT_STATUS_UPDATED",
+    title: update.title,
+    message: `Payment for order ${orderLabel} ${update.message}`,
+    data: {
+      order_id: orderId,
+      order_number: orderNumber ?? null,
+      payment_status: status,
+      attempt_id: attemptId ?? null,
+    },
     sendEmail: true,
   });
 }
@@ -295,6 +404,8 @@ export async function notifyShipmentDispatched({
 
 export async function notifyShipmentInTransit({
   userId,
+  orderId,
+  orderNumber,
   shipmentId,
   trackingStatus,
 }) {
@@ -303,8 +414,10 @@ export async function notifyShipmentInTransit({
     eventKey: `shipment:${shipmentId}:in-transit:${trackingStatus}`,
     type: "SHIPMENT_IN_TRANSIT",
     title: "Shipment update",
-    message: `Your shipment is now in transit. Status: ${trackingStatus}.`,
+    message: `Your shipment for order ${orderNumber || orderId} is now in transit. Status: ${trackingStatus}.`,
     data: {
+      order_id: orderId,
+      order_number: orderNumber ?? null,
       shipment_id: shipmentId,
       tracking_status: trackingStatus,
     },

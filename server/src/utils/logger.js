@@ -1,11 +1,22 @@
 const isProduction = process.env.NODE_ENV === "production";
+const logLevels = {
+  debug: 10,
+  info: 20,
+  warn: 30,
+  error: 40,
+};
+const configuredLevel = process.env.LOG_LEVEL?.toLowerCase();
+const minimumLevel =
+  logLevels[configuredLevel] ?? (isProduction ? logLevels.info : logLevels.debug);
 
 function write(level, message, meta = {}) {
+  if (logLevels[level] < minimumLevel) return;
+
   const entry = {
+    ...meta,
     timestamp: new Date().toISOString(),
     level,
     message,
-    ...meta,
   };
 
   const output = JSON.stringify(entry);
@@ -33,8 +44,6 @@ export const logger = {
   },
 
   debug(message, meta) {
-    if (!isProduction) {
-      write("debug", message, meta);
-    }
+    write("debug", message, meta);
   },
 };

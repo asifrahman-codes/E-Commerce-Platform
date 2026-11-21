@@ -224,3 +224,15 @@ export const findPaymentsByUser = async (userId) => {
         [userId]
     );
 };
+
+export async function markPaymentSucceededById(connection, paymentId) {
+    const [result] = await connection.execute(
+        `UPDATE payments
+         SET status = 'SUCCEEDED',
+             paid_at = NOW()
+         WHERE payment_id = ?`,
+        [paymentId]
+    );
+
+    return result.affectedRows > 0;
+}

@@ -1,11 +1,15 @@
-import { pool } from "../database/index.js";
 import {
   claimNotificationBatch,
   completeNotification,
   retryNotification,
   recoverStaleNotifications,
 } from "../repositories/notification-outbox.repository.js";
+import {
+  findUserEmail,
+  upsertNotificationFromOutbox,
+} from "../repositories/notification.repository.js";
 import { sendNotificationEmail } from "./email.service.js";
+import { notificationConfig } from "../config/notification.config.js";
 import { logger } from "../utils/logger.js";
 
 const MAX_ATTEMPTS = 8;
@@ -24,32 +28,17 @@ async function processNotification(event) {
   }
 
   // First create/update the in-app notification idempotently.
-  await pool.execute(
-    `INSERT INTO notifications
-      (user_id, event_key, type, title, message, data, is_read)
-     VALUES (?, ?, ?, ?, ?, ?, FALSE)
-     ON DUPLICATE KEY UPDATE
-       notification_id = LAST_INSERT_ID(notification_id)`,
-    [
-      event.user_id,
-      event.event_key,
-      event.event_type,
-      payload.title,
-      payload.message,
-      JSON.stringify(payload.data || {}),
-    ]
-  );
+  await upsertNotificationFromOutbox({
+    userId: event.user_id,
+    eventKey: event.event_key,
+    type: event.event_type,
+    title: payload.title,
+    message: payload.message,
+    data: payload.data || {},
+  });
 
   // Read the recipient from the database, not from a user-supplied payload.
-  const [users] = await pool.execute(
-    `SELECT email
-     FROM users
-     WHERE user_id = ?
-     LIMIT 1`,
-    [event.user_id]
-  );
-
-  const recipient = users[0]?.email;
+  const recipient = await findUserEmail(event.user_id);
 
   // Email service must treat disabled email as an intentional skip.
   // When enabled, SMTP failures must throw so the worker can retry.
@@ -62,6 +51,8 @@ async function processNotification(event) {
 }
 
 export async function processNotificationBatch() {
+  if (!notificationConfig.enabled) return 0;
+
   const events = await claimNotificationBatch(10);
 
   for (const event of events) {

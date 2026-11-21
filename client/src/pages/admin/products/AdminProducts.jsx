@@ -11,6 +11,13 @@ import {
 } from "lucide-react";
 
 import adminProductService from "../../../services/admin-product.service";
+import categoryService from "../../../services/category.service";
+import {
+    AdminConfirmDialog,
+    AdminPageHeader,
+    AdminSkeleton
+} from "../../../components/admin/AdminPrimitives";
+import { useAdminToast } from "../../../components/admin/AdminToastContext";
 
 import { formatPrice } from "../../../utils/product.utils";
 
@@ -25,13 +32,23 @@ export default function AdminProducts() {
 
     const [status, setStatus] = useState("");
 
+    const [categoryId, setCategoryId] = useState("");
+
+    const [sort, setSort] = useState("newest");
+
+    const [categories, setCategories] = useState([]);
+
     const [page, setPage] = useState(1);
 
     const [loading, setLoading] = useState(true);
 
     const [error, setError] = useState("");
 
-    const [message, setMessage] = useState("");
+    const [categoryError, setCategoryError] = useState("");
+    const [pendingStatusChange, setPendingStatusChange] = useState(null);
+    const [statusError, setStatusError] = useState("");
+    const [savingStatus, setSavingStatus] = useState(false);
+    const notify = useAdminToast();
 
 
     const loadProducts = useCallback(async () => {
@@ -44,6 +61,8 @@ export default function AdminProducts() {
             const result = await adminProductService.getProducts({
                 search,
                 status,
+                category_id: categoryId,
+                sort,
                 page,
                 limit: 10
             });
@@ -55,6 +74,7 @@ export default function AdminProducts() {
         } catch (err) {
 
             setError(
+                err.message ||
                 err.response?.data?.message ||
                 "Unable to load products."
             );
@@ -65,7 +85,7 @@ export default function AdminProducts() {
 
         }
 
-    }, [search, status, page]);
+    }, [search, status, categoryId, sort, page]);
 
 
     useEffect(() => {
@@ -74,39 +94,44 @@ export default function AdminProducts() {
 
     }, [loadProducts]);
 
+    useEffect(() => {
+        categoryService.getCategories()
+            .then((items) => setCategories(Array.isArray(items) ? items : []))
+            .catch((loadError) => {
+                setCategoryError(loadError.message || loadError.response?.data?.message || "Category filter options are unavailable.");
+            });
+    }, []);
 
-    const handleStatusChange = async (product) => {
+    const handleStatusChange = async () => {
+        const product = pendingStatusChange;
+        if (!product) return;
 
         const nextStatus =
             product.status === "ACTIVE"
                 ? "INACTIVE"
                 : "ACTIVE";
 
-        if (!window.confirm(
-            `Change product status to ${nextStatus}?`
-        )) return;
-
+        setSavingStatus(true);
         try {
 
             setError("");
-            setMessage("");
+            setStatusError("");
 
             await adminProductService.updateProductStatus(
                 product.product_id,
                 nextStatus
             );
 
-            setMessage("Product status updated.");
-
-            loadProducts();
+            setPendingStatusChange(null);
+            notify("Product status updated.");
+            await loadProducts();
 
         } catch (err) {
 
-            setError(
-                err.response?.data?.message ||
-                "Unable to update product status."
-            );
+            setStatusError(err.message || err.response?.data?.message || "Unable to update product status.");
 
+        } finally {
+            setSavingStatus(false);
         }
 
     };
@@ -114,38 +139,22 @@ export default function AdminProducts() {
 
     return (
 
-        <div className="space-y-7">
+        <div className="space-y-6">
 
-            <div className="flex flex-wrap items-center justify-between gap-4">
-
-                <div>
-
-                    <h1 className="text-2xl font-bold text-zinc-900">
-                        Product Management
-                    </h1>
-
-                    <p className="mt-2 text-sm text-zinc-500">
-                        Manage your store products and availability.
-                    </p>
-
-                </div>
-
-                <Link
-                    to="/admin/products/create"
-                    className="flex items-center gap-2 rounded-xl bg-indigo-600 px-5 py-3 font-semibold text-white hover:bg-indigo-700"
-                >
-                    <Plus size={18} />
-                    Add Product
-                </Link>
-
-            </div>
-
-
-            {message && (
-                <div className="rounded-xl bg-green-50 p-4 text-sm text-green-700">
-                    {message}
-                </div>
-            )}
+            <AdminPageHeader
+                eyebrow="Catalog management"
+                title="Products"
+                description="Manage product records, availability, and variant stock."
+                actions={
+                    <Link
+                        to="/admin/products/create"
+                        className="inline-flex h-10 items-center gap-2 rounded-xl bg-[#315d47] px-4 text-sm font-semibold text-white hover:bg-[#244b39]"
+                    >
+                        <Plus size={17} />
+                        Add product
+                    </Link>
+                }
+            />
 
             {error && (
                 <div className="rounded-xl bg-red-50 p-4 text-sm text-red-700">
@@ -193,6 +202,39 @@ export default function AdminProducts() {
 
                 </select>
 
+                <select
+                    value={categoryId}
+                    onChange={(e) => {
+                        setCategoryId(e.target.value);
+                        setPage(1);
+                    }}
+                    aria-label="Filter by category"
+                    className="rounded-xl border border-zinc-200 px-4 py-3"
+                >
+                    <option value="">All Categories</option>
+                    {categories.map((category) => (
+                        <option key={category.category_id} value={category.category_id}>
+                            {category.name}
+                        </option>
+                    ))}
+                </select>
+
+                <select
+                    value={sort}
+                    onChange={(e) => {
+                        setSort(e.target.value);
+                        setPage(1);
+                    }}
+                    aria-label="Sort products"
+                    className="rounded-xl border border-zinc-200 px-4 py-3"
+                >
+                    <option value="newest">Newest first</option>
+                    <option value="oldest">Oldest first</option>
+                    <option value="price_asc">Price: low to high</option>
+                    <option value="price_desc">Price: high to low</option>
+                    <option value="name_asc">Name: A to Z</option>
+                    <option value="name_desc">Name: Z to A</option>
+                </select>
 
                 <button
                     type="button"
@@ -205,14 +247,13 @@ export default function AdminProducts() {
 
             </div>
 
+            {categoryError && <p role="status" className="text-xs text-amber-700">{categoryError}</p>}
 
             <div className="overflow-hidden rounded-2xl border border-zinc-200 bg-white">
 
                 {loading ? (
 
-                    <div className="p-12 text-center text-zinc-500">
-                        Loading products...
-                    </div>
+                    <AdminSkeleton rows={5} columns={7} />
 
                 ) : products.length === 0 ? (
 
@@ -231,7 +272,7 @@ export default function AdminProducts() {
 
                 ) : (
 
-                    <div className="overflow-x-auto">
+                    <div className="overflow-x-auto overscroll-x-contain touch-pan-x">
 
                         <table className="w-full text-left text-sm">
 
@@ -338,7 +379,10 @@ export default function AdminProducts() {
 
                                                 <button
                                                     type="button"
-                                                    onClick={() => handleStatusChange(product)}
+                                                    onClick={() => {
+                                                        setStatusError("");
+                                                        setPendingStatusChange(product);
+                                                    }}
                                                     className="rounded-lg border border-zinc-200 px-3 py-2 text-xs font-semibold hover:bg-zinc-50"
                                                 >
                                                     {product.status === "ACTIVE"
@@ -364,6 +408,20 @@ export default function AdminProducts() {
 
             </div>
 
+            <AdminConfirmDialog
+                open={Boolean(pendingStatusChange)}
+                title={`${pendingStatusChange?.status === "ACTIVE" ? "Deactivate" : "Activate"} product?`}
+                description={`“${pendingStatusChange?.name || "This product"}” will be ${pendingStatusChange?.status === "ACTIVE" ? "hidden from" : "made available in"} the storefront.`}
+                error={statusError}
+                confirmLabel={pendingStatusChange?.status === "ACTIVE" ? "Deactivate" : "Activate"}
+                danger={pendingStatusChange?.status === "ACTIVE"}
+                loading={savingStatus}
+                onCancel={() => {
+                    setPendingStatusChange(null);
+                    setStatusError("");
+                }}
+                onConfirm={handleStatusChange}
+            />
 
             <div className="flex items-center justify-between">
 

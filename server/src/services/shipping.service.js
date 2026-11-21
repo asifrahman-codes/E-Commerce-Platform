@@ -13,15 +13,29 @@ import {
   findShipmentById,
   insertTrackingEvent,
   updateShipment,
+  updateShipmentDetailsRepo,
   listTrackingEvents,
   listOrderShipments,
+  findExistingShipmentForOrder,
+  hasUnfinishedShipmentForOrder,
 } from "../repositories/shipping.repository.js";
+import {
+  updateOrderStatus,
+  updatePaymentStatus,
+  markOrderShippedFromShipment,
+  markOrderDeliveredFromShipment,
+} from "../repositories/order.repository.js";
+import {
+  findPaymentByOrderId,
+  markPaymentSucceededById,
+} from "../repositories/payment.repository.js";
 
 import {
   notifyShipmentDispatched,
   notifyShipmentInTransit,
   notifyShipmentDelivered,
 } from "./notification.service.js";
+import { awardCompletedOrderPoints } from "./loyalty.service.js";
 
 // --------------------------------------------------
 // Allowed Shipment Status Transitions
@@ -162,10 +176,19 @@ export async function createShipmentService(data) {
       throw new ApiError(404, "Order not found");
     }
 
-    if (order.payment_status !== "PAID") {
+    const isCOD = order.payment_gateway === "COD";
+
+    if (!isCOD && order.payment_status !== "PAID") {
       throw new ApiError(
         409,
         "Order must be paid before shipment"
+      );
+    }
+
+    if (isCOD && !["CONFIRMED", "PROCESSING"].includes(order.status)) {
+      throw new ApiError(
+        409,
+        "COD order must be confirmed or processing before shipment"
       );
     }
 
@@ -190,16 +213,12 @@ export async function createShipmentService(data) {
 
     // Prevent duplicate shipments for the same order.
     // Replace this policy if split shipments are implemented later.
-    const [existing] = await connection.execute(
-      `SELECT shipment_id
-       FROM shipments
-       WHERE order_id = ?
-       LIMIT 1
-       FOR UPDATE`,
-      [data.order_id]
+    const existing = await findExistingShipmentForOrder(
+      connection,
+      data.order_id
     );
 
-    if (existing.length > 0) {
+    if (existing) {
       throw new ApiError(
         409,
         "A shipment already exists for this order"
@@ -227,6 +246,10 @@ export async function createShipmentService(data) {
       },
       connection
     );
+
+    if (order.status === "CONFIRMED") {
+      await updateOrderStatus(connection, data.order_id, "PROCESSING");
+    }
 
     await connection.commit();
 
@@ -303,43 +326,34 @@ export async function updateShipmentStatusService(
       data.status === "SHIPPED" ||
       data.status === "IN_TRANSIT"
     ) {
-      await connection.execute(
-        `UPDATE orders
-         SET status = 'SHIPPED'
-         WHERE order_id = ?
-           AND status IN (
-             'CONFIRMED',
-             'PROCESSING',
-             'SHIPPED'
-           )`,
-        [shipment.order_id]
-      );
+      await markOrderShippedFromShipment(connection, shipment.order_id);
     }
 
     if (data.status === "DELIVERED") {
       // Don't mark an order delivered while another shipment is unfinished.
-      const [unfinished] = await connection.execute(
-        `SELECT shipment_id
-         FROM shipments
-         WHERE order_id = ?
-           AND shipment_id <> ?
-           AND status <> 'DELIVERED'
-         LIMIT 1`,
-        [shipment.order_id, shipmentId]
+      const hasUnfinishedShipment = await hasUnfinishedShipmentForOrder(
+        connection,
+        shipment.order_id,
+        shipmentId
       );
 
-      if (unfinished.length === 0) {
-        await connection.execute(
-          `UPDATE orders
-           SET status = 'DELIVERED'
-           WHERE order_id = ?
-             AND status IN (
-               'SHIPPED',
-               'PROCESSING',
-               'CONFIRMED'
-             )`,
-          [shipment.order_id]
+      if (!hasUnfinishedShipment) {
+        await markOrderDeliveredFromShipment(connection, shipment.order_id);
+
+        // If order was Cash on Delivery (COD), mark order and payment as PAID upon delivery
+        const payment = await findPaymentByOrderId(
+          connection,
+          shipment.order_id
         );
+
+        if (payment?.payment_gateway === "COD") {
+          await updatePaymentStatus(connection, shipment.order_id, "PAID");
+          await markPaymentSucceededById(
+            connection,
+            payment.payment_id
+          );
+        }
+        await awardCompletedOrderPoints(connection, shipment.order_id);
       }
     }
 
@@ -386,6 +400,8 @@ export async function updateShipmentStatusService(
       ) {
         await notifyShipmentInTransit({
           userId: notificationData.userId,
+          orderId: notificationData.orderId,
+          orderNumber: notificationData.orderNumber,
           shipmentId: notificationData.shipmentId,
           trackingStatus: notificationData.trackingStatus,
         });
@@ -455,3 +471,38 @@ export async function getCustomerOrderShipmentsService(
 
   return result;
 }
+
+// --------------------------------------------------
+// Update Shipment Details (Admin)
+// --------------------------------------------------
+
+export async function updateShipmentDetailsService(shipmentId, data) {
+  const shipment = await findShipmentById(shipmentId);
+
+  if (!shipment) {
+    throw new ApiError(404, "Shipment not found");
+  }
+
+  const allowedFields = [
+    "carrier",
+    "tracking_number",
+    "tracking_url",
+    "estimated_delivery_date",
+  ];
+
+  const payload = {};
+  for (const field of allowedFields) {
+    if (data[field] !== undefined) {
+      payload[field] = data[field] === "" ? null : data[field];
+    }
+  }
+
+  if (Object.keys(payload).length === 0) {
+    throw new ApiError(400, "No valid shipment fields provided for update");
+  }
+
+  await updateShipmentDetailsRepo(shipmentId, payload);
+
+  return getShipmentTrackingService(shipmentId);
+}
+

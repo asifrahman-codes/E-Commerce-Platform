@@ -1,6 +1,7 @@
 import { Router } from "express";
 
 import authMiddleware from "../middleware/auth.middleware.js";
+import authorizeRoles from "../middleware/role.middleware.js";
 
 import {
     getOverview,
@@ -14,13 +15,7 @@ import {
 
 const router = Router();
 
-// Authentication required.
-// Admin authorization must also be applied here.
-
-router.use(authMiddleware);
-
-// Add your existing admin-role middleware here if your
-// auth middleware does not already enforce administrator access.
+router.use(authMiddleware, authorizeRoles("ADMIN"));
 
 router.get("/overview", getOverview);
 

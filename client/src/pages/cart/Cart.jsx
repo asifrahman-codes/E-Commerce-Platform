@@ -7,8 +7,8 @@ import { useCart } from "../../context/CartContext";
 import CartItem from "../../components/cart/CartItem";
 import CartSummary from "../../components/cart/CartSummary";
 
-import LoadingSpinner from "../../components/common/LoadingSpinner";
 import ErrorMessage from "../../components/common/ErrorMessage";
+import StorefrontSkeleton from "../../components/common/StorefrontSkeleton";
 
 export default function Cart() {
   const {
@@ -52,7 +52,7 @@ export default function Cart() {
 
   if (!localStorage.getItem("accessToken")) {
     return (
-      <div className="mx-auto max-w-7xl px-4 py-20 text-center">
+      <div className="shop-page mx-auto max-w-7xl px-4 py-20 text-center">
         <ShoppingBag className="mx-auto text-zinc-400" size={48} />
 
         <h1 className="mt-5 text-2xl font-bold text-zinc-900 dark:text-white">
@@ -65,7 +65,7 @@ export default function Cart() {
 
         <Link
           to="/login?redirect=/cart"
-          className="mt-6 inline-flex rounded-xl bg-indigo-600 px-6 py-3 font-semibold text-white hover:bg-indigo-700"
+          className="shop-button shop-button-primary mt-6"
         >
           Sign In
         </Link>
@@ -74,12 +74,12 @@ export default function Cart() {
   }
 
   if (loading && cart.items.length === 0) {
-    return <LoadingSpinner />;
+    return <StorefrontSkeleton label="Loading your cart" layout="split" />;
   }
 
   if (error && cart.items.length === 0) {
     return (
-      <div className="mx-auto max-w-7xl px-4 py-12">
+      <div className="container-custom py-12">
         <ErrorMessage message={error} />
         <button
           onClick={() => refreshCart().catch(() => {})}
@@ -92,15 +92,16 @@ export default function Cart() {
   }
 
   return (
-    <main className="mx-auto min-h-screen max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+    <div className="shop-page">
+    <div className="container-custom py-10 sm:py-14">
       <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-zinc-900 dark:text-white">
+          <h1 className="text-3xl font-semibold tracking-tight text-ink">
             Shopping Cart
           </h1>
 
           <p className="mt-2 text-zinc-500">
-            {cart.total_items} item(s) in your cart
+            {cart.total_items} {cart.total_items === 1 ? "item" : "items"} in your cart
           </p>
         </div>
 
@@ -124,13 +125,13 @@ export default function Cart() {
       )}
 
       {cart.items.length === 0 ? (
-        <div className="rounded-2xl border border-zinc-200 px-6 py-16 text-center dark:border-zinc-800">
+        <div className="shop-panel px-6 py-16 text-center">
           <ShoppingBag
             size={52}
             className="mx-auto text-zinc-400"
           />
 
-          <h2 className="mt-5 text-xl font-bold text-zinc-900 dark:text-white">
+          <h2 className="mt-5 text-xl font-semibold text-ink">
             Your cart is empty
           </h2>
 
@@ -140,14 +141,14 @@ export default function Cart() {
 
           <Link
             to="/products"
-            className="mt-6 inline-flex rounded-xl bg-indigo-600 px-6 py-3 font-semibold text-white hover:bg-indigo-700"
+            className="shop-button shop-button-primary mt-6"
           >
             Continue Shopping
           </Link>
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
-          <section className="lg:col-span-2">
+          <section className="shop-panel divide-y divide-line px-5 sm:px-7 lg:col-span-2">
             {cart.items.map((item) => (
               <CartItem
                 key={item.cart_item_id}
@@ -163,6 +164,7 @@ export default function Cart() {
           </aside>
         </div>
       )}
-    </main>
+    </div>
+    </div>
   );
 }

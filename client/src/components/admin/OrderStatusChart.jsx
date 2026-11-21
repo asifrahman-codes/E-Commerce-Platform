@@ -1,25 +1,17 @@
-const statusStyles = {
+import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
+import { AdminCard, AdminEmptyState } from "./AdminPrimitives";
 
-    PENDING: "bg-amber-500",
-
-    CONFIRMED: "bg-blue-500",
-
-    PROCESSING: "bg-indigo-500",
-
-    SHIPPED: "bg-purple-500",
-
-    IN_TRANSIT: "bg-violet-500",
-
-    DELIVERED: "bg-emerald-500",
-
-    CANCELLED: "bg-red-500",
-
-    FAILED: "bg-red-700",
-
-    RETURNED: "bg-zinc-500"
-
+const statusColors = {
+    PENDING: "#d99b2b",
+    CONFIRMED: "#5285bf",
+    PROCESSING: "#527d65",
+    SHIPPED: "#7862b8",
+    IN_TRANSIT: "#8b76c4",
+    DELIVERED: "#3d9b73",
+    CANCELLED: "#d66c6c",
+    FAILED: "#b54747",
+    RETURNED: "#89928c"
 };
-
 
 export default function OrderStatusChart({
     data = []
@@ -31,70 +23,32 @@ export default function OrderStatusChart({
     );
 
     return (
-
-        <section className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
-
-            <h2 className="text-lg font-semibold text-zinc-900">
-                Order Status
-            </h2>
-
-            <p className="mt-1 text-sm text-zinc-500">
-                Distribution of all orders
-            </p>
-
-            <div className="mt-7 space-y-5">
-
-                {data.length === 0 ? (
-
-                    <p className="text-sm text-zinc-500">
-                        No order data available.
-                    </p>
-
-                ) : data.map(item => {
-
-                    const percentage = total > 0
-                        ? (Number(item.total) / total) * 100
-                        : 0;
-
-                    return (
-
-                        <div key={item.status}>
-
-                            <div className="mb-2 flex items-center justify-between text-sm">
-
-                                <span className="font-medium text-zinc-700">
-                                    {item.status.replaceAll("_", " ")}
-                                </span>
-
-                                <span className="text-zinc-500">
-                                    {item.total}
-                                </span>
-
+        <AdminCard title="Order status" description="Distribution across all recorded orders">
+            {data.length === 0 ? (
+                <AdminEmptyState title="No order data yet" description="Order status distribution will appear here when orders are placed." />
+            ) : (
+                <div className="grid gap-3 p-5 sm:grid-cols-[1fr_1fr] sm:items-center">
+                    <div className="h-[220px]">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <PieChart>
+                                <Pie data={data} dataKey="total" nameKey="status" innerRadius={58} outerRadius={86} paddingAngle={3} stroke="white" strokeWidth={3}>
+                                    {data.map((item) => <Cell key={item.status} fill={statusColors[item.status] || "#89928c"} />)}
+                                </Pie>
+                                <Tooltip formatter={(value, name) => [value, String(name).replaceAll("_", " ")]} />
+                            </PieChart>
+                        </ResponsiveContainer>
+                    </div>
+                    <div className="space-y-2.5">
+                        {data.map((item) => (
+                            <div key={item.status} className="flex items-center justify-between gap-3 text-xs">
+                                <span className="flex items-center gap-2 text-slate-600"><i className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: statusColors[item.status] || "#89928c" }} />{String(item.status).replaceAll("_", " ")}</span>
+                                <span className="font-semibold tabular-nums text-slate-800">{Number(item.total).toLocaleString()} <span className="font-normal text-slate-400">({total ? Math.round((Number(item.total) / total) * 100) : 0}%)</span></span>
                             </div>
-
-                            <div className="h-2 overflow-hidden rounded-full bg-zinc-100">
-
-                                <div
-                                    className={`h-full rounded-full ${
-                                        statusStyles[item.status] || "bg-zinc-500"
-                                    }`}
-                                    style={{
-                                        width: `${percentage}%`
-                                    }}
-                                />
-
-                            </div>
-
-                        </div>
-
-                    );
-
-                })}
-
-            </div>
-
-        </section>
-
+                        ))}
+                    </div>
+                </div>
+            )}
+        </AdminCard>
     );
 
 }

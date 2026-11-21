@@ -9,8 +9,8 @@ import {
     findProductVariantsForAdmin,
     findProductImagesForAdmin
 } from "../repositories/admin-product.repository.js";
-
-import { query } from "../database/index.js";
+import { findCategoryById } from "../repositories/category.repository.js";
+import { findBrandById } from "../repositories/brand.repository.js";
 
 function validateId(value, name) {
     const id = Number(value);
@@ -64,9 +64,34 @@ function normalizeProduct(input) {
     };
 }
 
+async function assertActiveCategory(categoryId) {
+    const category = await findCategoryById(categoryId);
+
+    if (!category || category.status !== "ACTIVE") {
+        throw new ApiError(400, "Invalid or inactive category.");
+    }
+}
+
+async function assertActiveBrand(brandId) {
+    const brand = await findBrandById(brandId);
+
+    if (!brand || brand.status !== "ACTIVE") {
+        throw new ApiError(400, "Invalid or inactive brand.");
+    }
+}
+
 export const getAdminProductsService = async (filters) => {
     const page = Number(filters.page || 1);
     const limit = Number(filters.limit || 10);
+    const sort = String(filters.sort || "newest");
+    const allowedSorts = new Set([
+        "newest",
+        "oldest",
+        "price_asc",
+        "price_desc",
+        "name_asc",
+        "name_desc"
+    ]);
 
     if (!Number.isInteger(page) || page < 1) {
         throw new ApiError(400, "Invalid page.");
@@ -76,10 +101,15 @@ export const getAdminProductsService = async (filters) => {
         throw new ApiError(400, "Limit must be between 1 and 50.");
     }
 
+    if (!allowedSorts.has(sort)) {
+        throw new ApiError(400, "Invalid product sort order.");
+    }
+
     return findAllAdminProducts({
         search: String(filters.search || "").trim(),
         status: filters.status || "",
         category_id: filters.category_id || null,
+        sort,
         page,
         limit
     });
@@ -109,26 +139,10 @@ export const getAdminProductDetailsService = async (productId) => {
 export const createAdminProductService = async (input) => {
     const data = normalizeProduct(input);
 
-    const [categories, brands] = await Promise.all([
-        query(
-            "SELECT category_id FROM categories WHERE category_id = ? AND status = 'ACTIVE'",
-            [data.category_id]
-        ),
-        data.brand_id
-            ? query(
-                "SELECT brand_id FROM brands WHERE brand_id = ? AND status = 'ACTIVE'",
-                [data.brand_id]
-            )
-            : Promise.resolve([{}])
+    await Promise.all([
+        assertActiveCategory(data.category_id),
+        data.brand_id ? assertActiveBrand(data.brand_id) : Promise.resolve(),
     ]);
-
-    if (!categories.length) {
-        throw new ApiError(400, "Invalid or inactive category.");
-    }
-
-    if (!brands.length) {
-        throw new ApiError(400, "Invalid or inactive brand.");
-    }
 
     try {
         const productId = await createAdminProduct(data);
@@ -157,25 +171,10 @@ export const updateAdminProductService = async (
 
     const data = normalizeProduct(input);
 
-    const categories = await query(
-        "SELECT category_id FROM categories WHERE category_id = ? AND status = 'ACTIVE'",
-        [data.category_id]
-    );
-
-    if (!categories.length) {
-        throw new ApiError(400, "Invalid or inactive category.");
-    }
-
-    if (data.brand_id) {
-        const brands = await query(
-            "SELECT brand_id FROM brands WHERE brand_id = ? AND status = 'ACTIVE'",
-            [data.brand_id]
-        );
-
-        if (!brands.length) {
-            throw new ApiError(400, "Invalid or inactive brand.");
-        }
-    }
+    await Promise.all([
+        assertActiveCategory(data.category_id),
+        data.brand_id ? assertActiveBrand(data.brand_id) : Promise.resolve(),
+    ]);
 
     try {
         await updateAdminProduct(id, data);

@@ -49,7 +49,7 @@ const Register = () => {
       await registerUser(userData);
 
       setSuccessMessage(
-        "Account created successfully. Please log in."
+        "If registration can be completed for this email, you can now sign in. If an account already exists, use your existing password."
       );
 
       setTimeout(() => {

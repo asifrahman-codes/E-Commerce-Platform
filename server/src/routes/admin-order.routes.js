@@ -6,11 +6,17 @@ import validate from "../middleware/validation.middleware.js";
 
 import {
     getAdminOrdersController,
-    getAdminOrderDetailsController
+    getAdminOrderDetailsController,
+    updateAdminOrderStatusController,
+    updateAdminPaymentStatusController,
+    cancelAdminOrderController
 } from "../controllers/admin-order.controller.js";
 
 import {
-    adminOrdersQuerySchema
+    adminOrdersQuerySchema,
+    updateOrderStatusSchema,
+    updatePaymentStatusSchema,
+    cancelAdminOrderSchema
 } from "../validations/admin-order.validation.js";
 
 const router = Router();
@@ -26,6 +32,24 @@ router.get(
 router.get(
     "/:orderId",
     getAdminOrderDetailsController
+);
+
+router.patch(
+    "/:orderId/status",
+    validate(updateOrderStatusSchema),
+    updateAdminOrderStatusController
+);
+
+router.patch(
+    "/:orderId/payment-status",
+    validate(updatePaymentStatusSchema),
+    updateAdminPaymentStatusController
+);
+
+router.post(
+    "/:orderId/cancel",
+    validate(cancelAdminOrderSchema),
+    cancelAdminOrderController
 );
 
 export default router;

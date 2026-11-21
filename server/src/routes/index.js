@@ -27,6 +27,12 @@ import adminOrderRoutes from "./admin-order.routes.js";
 import adminProductRoutes from "./admin-product.routes.js";
 import adminInventoryRoutes from "./admin-inventory.routes.js";
 import adminDashboardRoutes from "./admin-dashboard.routes.js";
+import recommendationRoutes from "./recommendation.routes.js";
+import loyaltyRoutes from "./loyalty.routes.js";
+import flashSaleRoutes from "./flash-sale.routes.js";
+import adminFlashSaleRoutes from "./admin-flash-sale.routes.js";
+import productQaRoutes from "./product-qa.routes.js";
+import supportTicketRoutes from "./support-ticket.routes.js";
 
 const router = Router();
 
@@ -62,6 +68,12 @@ router.use("/pricing", pricingRoutes);
 router.use("/shipping", shippingRoutes);
 router.use("/payments/online", onlinePaymentRoutes);
 router.use("/notifications", notificationRoutes);
+router.use("/recommendations", recommendationRoutes);
+router.use("/loyalty", loyaltyRoutes);
+router.use("/flash-sales", flashSaleRoutes);
+router.use("/admin/flash-sales", adminFlashSaleRoutes);
+router.use("/product-qa", productQaRoutes);
+router.use("/support", supportTicketRoutes);
 router.use("/addresses", addressRoutes);
 router.use("/admin", adminRoutes);
 router.use("/admin/orders", adminOrderRoutes);

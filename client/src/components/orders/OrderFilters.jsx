@@ -9,7 +9,7 @@ const OrderFilters = ({
   statuses,
 }) => {
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-4">
+    <div className="shop-panel p-4">
       <div className="flex flex-col gap-3 sm:flex-row">
         <div className="relative flex-1">
           <Search
@@ -22,7 +22,7 @@ const OrderFilters = ({
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search by order number..."
-            className="w-full rounded-lg border border-gray-300 py-2.5 pl-10 pr-4 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
+            className="shop-input py-2.5 pl-10 pr-4 text-sm"
           />
         </div>
 
@@ -35,7 +35,7 @@ const OrderFilters = ({
           <select
             value={status}
             onChange={(e) => setStatus(e.target.value)}
-            className="w-full appearance-none rounded-lg border border-gray-300 bg-white py-2.5 pl-10 pr-4 text-sm outline-none focus:border-indigo-500"
+            className="shop-input appearance-none py-2.5 pl-10 pr-4 text-sm"
           >
             <option value="ALL">All Orders</option>
 

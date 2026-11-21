@@ -30,7 +30,7 @@ const FormInput = ({
           type={inputType}
           placeholder={placeholder}
           autoComplete={autoComplete}
-          className={`w-full rounded-xl border bg-white px-4 py-3 text-sm outline-none transition
+          className={`min-h-11 w-full rounded-xl border bg-white px-4 py-3 text-base outline-none transition sm:text-sm
             ${
               error
                 ? "border-red-400 focus:ring-2 focus:ring-red-100"

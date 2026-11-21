@@ -15,6 +15,31 @@ export async function findUserEmail(userId) {
   return rows[0]?.email ?? null;
 }
 
+export async function upsertNotificationFromOutbox({
+  userId,
+  eventKey,
+  type,
+  title,
+  message,
+  data,
+}) {
+  await pool.execute(
+    `INSERT INTO notifications
+      (user_id, event_key, type, title, message, data, is_read)
+     VALUES (?, ?, ?, ?, ?, ?, FALSE)
+     ON DUPLICATE KEY UPDATE
+       notification_id = LAST_INSERT_ID(notification_id)`,
+    [
+      userId,
+      eventKey,
+      type,
+      title,
+      message,
+      JSON.stringify(data ?? {}),
+    ]
+  );
+}
+
 export async function createNotification({
   userId,
   eventKey,

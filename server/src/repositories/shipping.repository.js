@@ -107,15 +107,47 @@ export async function findOrderForShipment(
   lock = false
 ) {
   const [rows] = await connection.execute(
-    `SELECT order_id, user_id, status, payment_status
-     FROM orders
-     WHERE order_id = ?
+    `SELECT o.order_id, o.user_id, o.order_number, o.status, o.payment_status, p.payment_gateway
+     FROM orders o
+     LEFT JOIN payments p ON p.order_id = o.order_id
+     WHERE o.order_id = ?
      ${lock ? "FOR UPDATE" : ""}
      LIMIT 1`,
     [orderId]
   );
 
   return rows[0] ?? null;
+}
+
+export async function findExistingShipmentForOrder(connection, orderId) {
+  const [rows] = await connection.execute(
+    `SELECT shipment_id
+     FROM shipments
+     WHERE order_id = ?
+     LIMIT 1
+     FOR UPDATE`,
+    [orderId]
+  );
+
+  return rows[0] ?? null;
+}
+
+export async function hasUnfinishedShipmentForOrder(
+  connection,
+  orderId,
+  exceptShipmentId
+) {
+  const [rows] = await connection.execute(
+    `SELECT shipment_id
+     FROM shipments
+     WHERE order_id = ?
+       AND shipment_id <> ?
+       AND status <> 'DELIVERED'
+     LIMIT 1`,
+    [orderId, exceptShipmentId]
+  );
+
+  return rows.length > 0;
 }
 
 export async function insertShipment(data, connection) {
@@ -216,6 +248,42 @@ export async function updateShipment(
       data.status,
       shipmentId,
     ]
+  );
+
+  return result.affectedRows > 0;
+}
+
+export async function updateShipmentDetailsRepo(
+  shipmentId,
+  data,
+  connection = pool
+) {
+  const allowedFields = [
+    "carrier",
+    "tracking_number",
+    "tracking_url",
+    "estimated_delivery_date",
+  ];
+
+  const fields = [];
+  const values = [];
+
+  for (const field of allowedFields) {
+    if (Object.hasOwn(data, field)) {
+      fields.push(`${field} = ?`);
+      values.push(data[field]);
+    }
+  }
+
+  if (!fields.length) return false;
+
+  values.push(shipmentId);
+
+  const [result] = await connection.execute(
+    `UPDATE shipments
+     SET ${fields.join(", ")}
+     WHERE shipment_id = ?`,
+    values
   );
 
   return result.affectedRows > 0;

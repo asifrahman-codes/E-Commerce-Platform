@@ -1,30 +1,22 @@
 
-import nodemailer from "nodemailer";
 import { notificationConfig } from "../config/notification.config.js";
 import { buildNotificationEmail } from "../utils/email/notification-email.template.js";
+import { smtpEmailProvider } from "../providers/smtp-email.provider.js";
 
-let transporter;
+const providers = new Map([
+  ["smtp", smtpEmailProvider],
+]);
 
-function getTransporter() {
-  const smtp = notificationConfig.smtp;
-
-  if (!smtp.host || !smtp.user || !smtp.pass) {
-    throw new Error("SMTP configuration is incomplete.");
+export function registerEmailProvider(name, provider) {
+  if (!/^[a-z][a-z0-9_-]*$/i.test(String(name))) {
+    throw new Error("Email provider name is invalid.");
   }
 
-  if (!transporter) {
-    transporter = nodemailer.createTransport({
-      host: smtp.host,
-      port: smtp.port,
-      secure: smtp.secure,
-      auth: {
-        user: smtp.user,
-        pass: smtp.pass,
-      },
-    });
+  if (!provider || typeof provider.send !== "function") {
+    throw new Error("Email providers must implement send(message).");
   }
 
-  return transporter;
+  providers.set(String(name).toLowerCase(), provider);
 }
 
 export async function sendNotificationEmail({
@@ -40,9 +32,16 @@ export async function sendNotificationEmail({
     return { skipped: true, reason: "Recipient email is missing." };
   }
 
+  const providerName = notificationConfig.emailProvider;
+  const provider = providers.get(providerName);
+
+  if (!provider) {
+    throw new Error(`Email provider "${providerName}" is not registered.`);
+  }
+
   const email = buildNotificationEmail({ title, message });
 
-  return getTransporter().sendMail({
+  return provider.send({
     from: notificationConfig.emailFrom,
     to,
     subject: title,

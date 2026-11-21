@@ -7,6 +7,7 @@ import { getUserOrders } from "../../services/order.service";
 import OrderCard from "../../components/orders/OrderCard";
 import OrderFilters from "../../components/orders/OrderFilters";
 import OrderPagination from "../../components/orders/OrderPagination";
+import StorefrontSkeleton from "../../components/common/StorefrontSkeleton";
 
 import { getOrderErrorMessage } from "../../utils/order.utils";
 
@@ -95,17 +96,7 @@ const MyOrders = () => {
   }, [currentPage, totalPages]);
 
   if (loading) {
-    return (
-      <div className="flex min-h-[50vh] items-center justify-center">
-        <div className="text-center">
-          <div className="mx-auto h-10 w-10 animate-spin rounded-full border-4 border-indigo-100 border-t-indigo-600" />
-
-          <p className="mt-4 text-sm text-gray-500">
-            Loading your orders...
-          </p>
-        </div>
-      </div>
-    );
+    return <StorefrontSkeleton label="Loading your orders" layout="list" />;
   }
 
   if (error) {
@@ -134,14 +125,14 @@ const MyOrders = () => {
   }
 
   return (
-    <section className="min-h-screen bg-gray-50 px-4 py-10 sm:px-6">
+    <section className="shop-page px-4 py-10 sm:px-6 sm:py-14">
       <div className="mx-auto max-w-5xl">
         <div className="mb-8">
           <p className="text-sm font-semibold text-indigo-600">
             Your Account
           </p>
 
-          <h1 className="mt-2 text-3xl font-bold text-gray-900">
+          <h1 className="mt-2 text-3xl font-semibold tracking-tight text-ink">
             My Orders
           </h1>
 
@@ -151,22 +142,22 @@ const MyOrders = () => {
         </div>
 
         <div className="mb-6 grid grid-cols-2 gap-4">
-          <div className="rounded-xl border border-gray-200 bg-white p-4">
-            <p className="text-sm text-gray-500">
+          <div className="shop-panel p-5">
+            <p className="text-sm text-muted">
               Total Orders
             </p>
 
-            <p className="mt-1 text-2xl font-bold text-gray-900">
+            <p className="mt-1 text-2xl font-semibold text-ink">
               {orders.length}
             </p>
           </div>
 
-          <div className="rounded-xl border border-gray-200 bg-white p-4">
-            <p className="text-sm text-gray-500">
+          <div className="shop-panel p-5">
+            <p className="text-sm text-muted">
               Active Orders
             </p>
 
-            <p className="mt-1 text-2xl font-bold text-indigo-600">
+            <p className="mt-1 text-2xl font-semibold text-indigo-700">
               {
                 orders.filter((order) =>
                   ["PENDING", "CONFIRMED", "PROCESSING", "SHIPPED"]
@@ -194,7 +185,7 @@ const MyOrders = () => {
               />
             ))
           ) : (
-            <div className="rounded-xl border border-gray-200 bg-white px-5 py-16 text-center">
+            <div className="shop-panel px-5 py-16 text-center">
               <PackageOpen
                 size={45}
                 className="mx-auto text-gray-300"

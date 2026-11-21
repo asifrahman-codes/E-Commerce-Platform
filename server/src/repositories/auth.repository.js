@@ -17,6 +17,7 @@ export const findUserByEmail = async (email) => {
             u.profile_image,
             u.email_verified,
             u.status,
+            u.token_version,
             r.name AS role
         FROM users u
         INNER JOIN roles r

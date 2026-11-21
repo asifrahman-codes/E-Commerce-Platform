@@ -17,7 +17,7 @@ const METHODS = [
 
 export default function PaymentMethodSelector({ value, onChange }) {
   return (
-    <section aria-labelledby="payment-heading" className="rounded-2xl border border-zinc-200 bg-white p-5 sm:p-6">
+    <section aria-labelledby="payment-heading" className="shop-panel p-5 sm:p-6">
       <h2 id="payment-heading" className="flex items-center gap-2 text-lg font-bold text-zinc-900">
         <CreditCard size={20} className="text-indigo-600" /> Payment method
       </h2>

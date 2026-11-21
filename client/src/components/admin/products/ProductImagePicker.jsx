@@ -89,7 +89,7 @@ export default function ProductImagePicker({
                 type="button"
                 onClick={() => inputRef.current?.click()}
                 disabled={disabled || files.length >= maxFiles}
-                className="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-dashed border-zinc-300 p-6 text-sm font-semibold text-zinc-600 hover:border-indigo-400 hover:text-indigo-600 disabled:cursor-not-allowed disabled:opacity-50"
+                className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border-2 border-dashed border-zinc-300 p-6 text-sm font-semibold text-zinc-600 hover:border-indigo-400 hover:text-indigo-600 disabled:cursor-not-allowed disabled:opacity-50"
             >
                 <ImagePlus size={20} />
                 Choose images (JPEG, PNG, WebP — max 5 MB each)
@@ -129,7 +129,7 @@ export default function ProductImagePicker({
                                 onClick={() => removeAt(index)}
                                 disabled={disabled}
                                 aria-label={`Remove ${item.file.name}`}
-                                className="absolute right-2 top-2 rounded-full bg-white p-1 text-zinc-600 shadow hover:text-red-600"
+                                className="absolute right-2 top-2 inline-flex h-11 w-11 items-center justify-center rounded-full bg-white text-zinc-600 shadow hover:text-red-600"
                             >
                                 <X size={16} />
                             </button>

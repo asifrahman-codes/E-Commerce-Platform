@@ -19,6 +19,7 @@ import {
 
 import {
     getVariantForUpdate,
+    lockProductsForUpdate,
     updateVariantStockWithTransaction,
     createInventoryTransactionWithTransaction,
     restoreVariantStockWithTransaction
@@ -42,8 +43,7 @@ import {
 } from "../utils/pricing.js";
 
 import {
-    validateCouponForOrder,
-    validateCouponService
+    validateCouponForOrder
 } from "./coupon.service.js";
 
 import {
@@ -54,6 +54,16 @@ import {
 import {
   notifyOrderCancelled,
 } from "./notification.service.js";
+import {
+    resolveFlashSalesForItems,
+    recordFlashSaleRedemptions,
+    releaseFlashSaleUsageForOrder
+} from "./flash-sale.service.js";
+import {
+    quoteLoyaltyRedemption,
+    redeemPointsForOrder,
+    restoreRedeemedPointsForOrder
+} from "./loyalty.service.js";
 
 
 /*
@@ -197,7 +207,8 @@ export const createOrderService = async (
 
     const {
         address_id,
-        coupon_code = ""
+        coupon_code = "",
+        loyalty_points = 0
     } = orderData;
 
     const address =
@@ -255,6 +266,11 @@ export const createOrderService = async (
                             Number(b.variant_id)
                     );
 
+                await lockProductsForUpdate(
+                    connection,
+                    sortedItems.map((item) => item.product_id)
+                );
+
                 for (const item of sortedItems) {
 
                     const variant =
@@ -284,6 +300,13 @@ export const createOrderService = async (
 
                     }
 
+                    if (variant.product_status !== "ACTIVE") {
+                        throw new ApiError(
+                            400,
+                            `${item.product_name} is no longer available`
+                        );
+                    }
+
                     if (
                         Number(variant.stock) <
                         Number(item.quantity)
@@ -303,6 +326,13 @@ export const createOrderService = async (
 
                 }
 
+                const flashPricing = await resolveFlashSalesForItems(
+                    connection,
+                    sortedItems,
+                    userId,
+                    { lock: true }
+                );
+
                 /*
                 -----------------------------------------
                 Coupon (validated on the backend only)
@@ -316,6 +346,12 @@ export const createOrderService = async (
                     String(coupon_code || "").trim();
 
                 if (code) {
+                    if (flashPricing.has_flash_sale || Number(loyalty_points) > 0) {
+                        throw new ApiError(
+                            400,
+                            "Flash-sale prices, coupons, and loyalty points cannot be combined."
+                        );
+                    }
 
                     const result =
                         await validateCouponForOrder(
@@ -331,6 +367,25 @@ export const createOrderService = async (
                     discount = result.discount;
 
                 }
+
+                if (Number(loyalty_points) > 0) {
+                    if (flashPricing.has_flash_sale || coupon) {
+                        throw new ApiError(
+                            400,
+                            "Flash-sale prices, coupons, and loyalty points cannot be combined."
+                        );
+                    }
+                }
+
+                const pointsQuote = await quoteLoyaltyRedemption(
+                    connection,
+                    {
+                        userId,
+                        points: loyalty_points,
+                        maximumDiscount: subtotal - flashPricing.discount
+                    }
+                );
+                discount += flashPricing.discount + pointsQuote.discount;
 
                 /*
                 -----------------------------------------
@@ -382,6 +437,35 @@ export const createOrderService = async (
 
                 }
 
+                if (pointsQuote.points > 0) {
+                    const redeemed = await redeemPointsForOrder(connection, {
+                        userId,
+                        orderId: newOrderId,
+                        points: pointsQuote.points,
+                        maximumDiscount: subtotal - flashPricing.discount
+                    });
+                    if (redeemed.discount !== pointsQuote.discount) {
+                        throw new ApiError(
+                            409,
+                            "Loyalty redemption changed during checkout. Please try again."
+                        );
+                    }
+                }
+
+                await recordFlashSaleRedemptions(
+                    connection,
+                    flashPricing.items,
+                    userId,
+                    newOrderId
+                );
+
+                const flashPriceByCartItem = new Map(
+                    flashPricing.items.map((entry) => [
+                        Number(entry.item.cart_item_id),
+                        entry.unitPrice
+                    ])
+                );
+
                 for (const item of items) {
 
                     const variant =
@@ -389,8 +473,12 @@ export const createOrderService = async (
                             Number(item.variant_id)
                         );
 
-                    const unitPrice =
-                        calculateItemPrice(item);
+                    const salePrice = flashPriceByCartItem.get(
+                        Number(item.cart_item_id)
+                    );
+                    const unitPrice = salePrice !== undefined
+                        ? salePrice
+                        : calculateItemPrice(item);
 
                     const totalPrice =
                         Math.round(
@@ -673,7 +761,6 @@ export const cancelOrderService = async (
                     Number(item.quantity)
                 );
 
-
                 /*
                 |--------------------------------------------------------------------------
                 | Record RETURN Inventory Transaction
@@ -719,9 +806,25 @@ export const cancelOrderService = async (
                 connection,
                 orderId
             );
+            await releaseFlashSaleUsageForOrder(connection, orderId);
+            await restoreRedeemedPointsForOrder(connection, orderId, userId);
 
         }
     );
+
+
+    try {
+        await notifyOrderCancelled({
+            userId: order.user_id,
+            orderId,
+            orderNumber: order.order_number,
+        });
+    } catch (notificationError) {
+        console.error(
+            "Order cancellation notification failed:",
+            notificationError.message
+        );
+    }
 
 
     /*
@@ -746,61 +849,77 @@ export const cancelOrderService = async (
 
 export const previewOrderService = async (
     userId,
-    { coupon_code = "" } = {}
+    { coupon_code = "", loyalty_points = 0 } = {}
 ) => {
-
-    const { items } = await getValidCart(userId);
-
-    const subtotal =
-        Math.round(
+    return withTransaction(async (connection) => {
+        const { items } = await getValidCart(userId);
+        const subtotal = Math.round(
             (calculateSubtotal(items) + Number.EPSILON) * 100
         ) / 100;
+        const code = String(coupon_code || "").trim();
+        const points = Number(loyalty_points || 0);
+        const flashPricing = await resolveFlashSalesForItems(
+            connection,
+            items,
+            userId
+        );
 
-    let discount = 0;
-    let coupon = null;
+        if (
+            (code && (flashPricing.has_flash_sale || points > 0)) ||
+            (points > 0 && flashPricing.has_flash_sale)
+        ) {
+            throw new ApiError(
+                400,
+                "Flash-sale prices, coupons, and loyalty points cannot be combined."
+            );
+        }
 
-    const code = String(coupon_code || "").trim();
-
-    if (code) {
-
-        const result =
-            await validateCouponService({
+        let coupon = null;
+        let couponDiscount = 0;
+        if (code) {
+            const result = await validateCouponForOrder(connection, {
                 code,
                 userId,
                 subtotal
             });
+            couponDiscount = result.discount;
+            coupon = {
+                code: result.coupon.code,
+                discount_type: result.coupon.discount_type,
+                discount: result.discount
+            };
+        }
 
-        discount = result.discount;
-
-        coupon = {
-            code: result.code,
-            discount_type: result.discount_type,
-            discount: result.discount
-        };
-
-    }
-
-    const settings =
-        await getActivePricingSettings();
-
-    const pricing =
-        calculateOrderPricing({
+        const pointsQuote = await quoteLoyaltyRedemption(connection, {
+            userId,
+            points,
+            maximumDiscount: subtotal - flashPricing.discount
+        });
+        const discount = couponDiscount + flashPricing.discount + pointsQuote.discount;
+        const settings = await getActivePricingSettings(connection);
+        const pricing = calculateOrderPricing({
             subtotal,
             discount,
             settings
         });
 
-    return {
-        ...pricing,
-        coupon,
-        free_shipping_threshold:
-            settings.free_shipping_threshold === null
+        return {
+            ...pricing,
+            coupon,
+            flash_sale_savings: flashPricing.discount,
+            has_flash_sale: flashPricing.has_flash_sale,
+            loyalty: {
+                points: pointsQuote.points,
+                discount: pointsQuote.discount
+            },
+            free_shipping_threshold: settings.free_shipping_threshold === null
                 ? null
                 : Number(settings.free_shipping_threshold),
-        item_count: items.reduce(
-            (sum, item) => sum + Number(item.quantity),
-            0
-        )
-    };
+            item_count: items.reduce(
+                (sum, item) => sum + Number(item.quantity),
+                0
+            )
+        };
+    });
 
 };

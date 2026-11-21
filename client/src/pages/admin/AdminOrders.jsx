@@ -1,12 +1,13 @@
 import { useCallback, useEffect, useState } from "react";
 
-import { RefreshCw, ShoppingBag } from "lucide-react";
+import { RefreshCw } from "lucide-react";
 
 import adminOrderService from "../../services/admin-order.service";
 
 import OrderFilters from "../../components/admin/orders/OrderFilters";
 
 import OrdersTable from "../../components/admin/orders/OrdersTable";
+import { AdminPageHeader, AdminPagination, AdminSkeleton } from "../../components/admin/AdminPrimitives";
 
 export default function AdminOrders() {
 
@@ -22,7 +23,8 @@ export default function AdminOrders() {
     const [filters, setFilters] = useState({
         search: "",
         status: "",
-        payment_status: ""
+        payment_status: "",
+        sort: "newest"
     });
 
     const [loading, setLoading] = useState(true);
@@ -51,6 +53,7 @@ export default function AdminOrders() {
         } catch (err) {
 
             setError(
+                err.message ||
                 err.response?.data?.message ||
                 "Unable to load orders."
             );
@@ -93,7 +96,8 @@ export default function AdminOrders() {
         setFilters({
             search: "",
             status: "",
-            payment_status: ""
+            payment_status: "",
+            sort: "newest"
         });
 
         setPagination(previous => ({
@@ -105,46 +109,26 @@ export default function AdminOrders() {
 
     return (
 
-        <div className="space-y-7 m-6">
+        <div className="space-y-6">
 
             {/* Header */}
 
-            <div className="flex flex-wrap items-center justify-between gap-4">
-
-                <div>
-
-                    <div className="flex items-center gap-3">
-
-                        <ShoppingBag
-                            size={28}
-                            className="text-indigo-600"
-                        />
-
-                        <h1 className="text-2xl font-bold text-zinc-900 sm:text-3xl">
-                            Order Management
-                        </h1>
-
-                    </div>
-
-                    <p className="mt-2 text-sm text-zinc-500">
-                        Manage and monitor customer orders.
-                    </p>
-
-                </div>
-
-                <button
-                    onClick={loadOrders}
-                    disabled={loading}
-                    className="flex items-center gap-2 rounded-xl border border-zinc-200 bg-white px-4 py-3 text-sm font-semibold hover:bg-zinc-50 disabled:opacity-60"
-                >
-                    <RefreshCw
-                        size={16}
-                        className={loading ? "animate-spin" : ""}
-                    />
-                    Refresh
-                </button>
-
-            </div>
+            <AdminPageHeader
+                eyebrow="Sales operations"
+                title="Orders"
+                description="Search, filter, and review customer orders and their payment state."
+                actions={
+                    <button
+                        type="button"
+                        onClick={loadOrders}
+                        disabled={loading}
+                        className="inline-flex h-10 items-center gap-2 rounded-xl border border-zinc-200 bg-white px-4 text-sm font-semibold text-zinc-700 hover:bg-zinc-50 disabled:opacity-60"
+                    >
+                        <RefreshCw size={16} className={loading ? "animate-spin" : ""} />
+                        Refresh
+                    </button>
+                }
+            />
 
             {/* Order count */}
 
@@ -186,8 +170,8 @@ export default function AdminOrders() {
 
             {loading ? (
 
-                <div className="flex min-h-60 items-center justify-center">
-                    <div className="h-9 w-9 animate-spin rounded-full border-4 border-zinc-200 border-t-indigo-600" />
+                <div className="overflow-hidden rounded-2xl border border-zinc-200 bg-white">
+                    <AdminSkeleton rows={5} columns={7} />
                 </div>
 
             ) : (
@@ -199,41 +183,12 @@ export default function AdminOrders() {
             {/* Pagination */}
 
             {!loading && pagination.total_pages > 1 && (
-
-                <div className="flex flex-wrap items-center justify-between gap-4">
-
-                    <p className="text-sm text-zinc-500">
-                        Page {pagination.page} of {pagination.total_pages}
-                    </p>
-
-                    <div className="flex gap-2">
-
-                        <button
-                            disabled={pagination.page <= 1}
-                            onClick={() => setPagination(p => ({
-                                ...p,
-                                page: p.page - 1
-                            }))}
-                            className="rounded-lg border px-4 py-2 text-sm font-semibold disabled:opacity-40"
-                        >
-                            Previous
-                        </button>
-
-                        <button
-                            disabled={pagination.page >= pagination.total_pages}
-                            onClick={() => setPagination(p => ({
-                                ...p,
-                                page: p.page + 1
-                            }))}
-                            className="rounded-lg border px-4 py-2 text-sm font-semibold disabled:opacity-40"
-                        >
-                            Next
-                        </button>
-
-                    </div>
-
-                </div>
-
+                <AdminPagination
+                    page={pagination.page}
+                    totalPages={pagination.total_pages}
+                    total={pagination.total}
+                    onPageChange={(nextPage) => setPagination((current) => ({ ...current, page: nextPage }))}
+                />
             )}
 
         </div>

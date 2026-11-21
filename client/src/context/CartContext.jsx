@@ -2,6 +2,7 @@ import {
   createContext,
   useCallback,
   useContext,
+  useMemo,
   useState,
 } from "react";
 
@@ -53,7 +54,7 @@ export function CartProvider({ children }) {
     }
   }, []);
 
-  const addToCart = async (variantId, quantity = 1) => {
+  const addToCart = useCallback(async (variantId, quantity = 1) => {
     try {
       setError("");
 
@@ -73,9 +74,9 @@ export function CartProvider({ children }) {
       setError(message);
       throw err;
     }
-  };
+  }, []);
 
-  const updateCartItem = async (cartItemId, quantity) => {
+  const updateCartItem = useCallback(async (cartItemId, quantity) => {
     try {
       setError("");
 
@@ -95,9 +96,9 @@ export function CartProvider({ children }) {
       setError(message);
       throw err;
     }
-  };
+  }, []);
 
-  const removeCartItem = async (cartItemId) => {
+  const removeCartItem = useCallback(async (cartItemId) => {
     try {
       setError("");
 
@@ -116,9 +117,9 @@ export function CartProvider({ children }) {
       setError(message);
       throw err;
     }
-  };
+  }, []);
 
-  const clearCart = async () => {
+  const clearCart = useCallback(async () => {
     try {
       setError("");
 
@@ -135,27 +136,37 @@ export function CartProvider({ children }) {
       setError(message);
       throw err;
     }
-  };
+  }, []);
 
-  const resetCart = () => {
+  const resetCart = useCallback(() => {
     setCart(emptyCart);
     setError("");
-  };
+  }, []);
+
+  const value = useMemo(() => ({
+    cart,
+    loading,
+    error,
+    refreshCart,
+    addToCart,
+    updateCartItem,
+    removeCartItem,
+    clearCart,
+    resetCart,
+  }), [
+    cart,
+    loading,
+    error,
+    refreshCart,
+    addToCart,
+    updateCartItem,
+    removeCartItem,
+    clearCart,
+    resetCart,
+  ]);
 
   return (
-    <CartContext.Provider
-      value={{
-        cart,
-        loading,
-        error,
-        refreshCart,
-        addToCart,
-        updateCartItem,
-        removeCartItem,
-        clearCart,
-        resetCart,
-      }}
-    >
+    <CartContext.Provider value={value}>
       {children}
     </CartContext.Provider>
   );

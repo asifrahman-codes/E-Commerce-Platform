@@ -1,222 +1,59 @@
+import asyncHandler from "../utils/asyncHandler.js";
 import {
-    createOrderService,
-    getOrderByIdService,
-    getUserOrdersService,
-    cancelOrderService,
-    previewOrderService
+  createOrderService,
+  getOrderByIdService,
+  getUserOrdersService,
+  cancelOrderService,
+  previewOrderService,
 } from "../services/order.service.js";
 
+function success(res, data, message, status = 200) {
+  return res.status(status).json({ success: true, message, data });
+}
 
-/*
-|--------------------------------------------------------------------------
-| Create Order
-|--------------------------------------------------------------------------
-*/
-
-export const createOrderController = async (
-    req,
+export const createOrderController = asyncHandler(async (req, res) =>
+  success(
     res,
-    next
-) => {
+    await createOrderService(req.user.user_id, req.body),
+    "Order created successfully",
+    201
+  )
+);
 
-    try {
-
-        const userId =
-            req.user.user_id;
-
-
-        const order =
-            await createOrderService(
-                userId,
-                req.body
-            );
-
-
-        return res.status(201).json({
-
-            success: true,
-
-            message:
-                "Order created successfully",
-
-            data: order
-
-        });
-
-    } catch (error) {
-
-        next(error);
-
-    }
-
-};
-
-
-/*
-|--------------------------------------------------------------------------
-| Get Order By ID
-|--------------------------------------------------------------------------
-*/
-
-export const getOrderByIdController = async (
-    req,
+export const getOrderByIdController = asyncHandler(async (req, res) =>
+  success(
     res,
-    next
-) => {
+    await getOrderByIdService(
+      Number(req.params.orderId),
+      req.user.user_id
+    ),
+    "Order retrieved successfully"
+  )
+);
 
-    try {
-
-        const userId =
-            req.user.user_id;
-
-
-        const orderId =
-            Number(req.params.orderId);
-
-
-        const order =
-            await getOrderByIdService(
-                orderId,
-                userId
-            );
-
-
-        return res.status(200).json({
-
-            success: true,
-
-            message:
-                "Order retrieved successfully",
-
-            data: order
-
-        });
-
-    } catch (error) {
-
-        next(error);
-
-    }
-
-};
-
-
-/*
-|--------------------------------------------------------------------------
-| Get User Orders
-|--------------------------------------------------------------------------
-*/
-
-export const getUserOrdersController = async (
-    req,
+export const getUserOrdersController = asyncHandler(async (req, res) =>
+  success(
     res,
-    next
-) => {
+    await getUserOrdersService(req.user.user_id),
+    "Orders retrieved successfully"
+  )
+);
 
-    try {
-
-        const userId =
-            req.user.user_id;
-
-
-        const orders =
-            await getUserOrdersService(
-                userId
-            );
-
-
-        return res.status(200).json({
-
-            success: true,
-
-            message:
-                "Orders retrieved successfully",
-
-            data: orders
-
-        });
-
-    } catch (error) {
-
-        next(error);
-
-    }
-
-};
-
-
-/*
-|--------------------------------------------------------------------------
-| Cancel Order
-|--------------------------------------------------------------------------
-*/
-
-export const cancelOrderController = async (
-    req,
+export const cancelOrderController = asyncHandler(async (req, res) =>
+  success(
     res,
-    next
-) => {
+    await cancelOrderService(
+      Number(req.params.orderId),
+      req.user.user_id
+    ),
+    "Order cancelled successfully"
+  )
+);
 
-    try {
-
-        const userId =
-            req.user.user_id;
-
-
-        const orderId =
-            Number(req.params.orderId);
-
-
-        const order =
-            await cancelOrderService(
-                orderId,
-                userId
-            );
-
-
-        return res.status(200).json({
-
-            success: true,
-
-            message:
-                "Order cancelled successfully",
-
-            data: order
-
-        });
-
-    } catch (error) {
-
-        next(error);
-
-    }
-
-};
-
-export const previewOrderController = async (
-    req,
+export const previewOrderController = asyncHandler(async (req, res) =>
+  success(
     res,
-    next
-) => {
-
-    try {
-
-        const preview =
-            await previewOrderService(
-                req.user.user_id,
-                req.body
-            );
-
-        return res.status(200).json({
-            success: true,
-            message: "Order preview calculated",
-            data: preview
-        });
-
-    } catch (error) {
-
-        next(error);
-
-    }
-
-};
+    await previewOrderService(req.user.user_id, req.body),
+    "Order preview calculated"
+  )
+);

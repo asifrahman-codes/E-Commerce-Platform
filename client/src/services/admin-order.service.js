@@ -114,13 +114,89 @@ const getShipmentTracking = async (shipmentId) => {
 };
 
 
+/*
+|--------------------------------------------------------------------------
+| Update Order Status
+|--------------------------------------------------------------------------
+*/
+
+const updateOrderStatus = async (orderId, data) => {
+
+    const response = await api.patch(
+        API_ENDPOINTS.ADMIN_ORDERS.STATUS(orderId),
+        data
+    );
+
+    return unwrap(response);
+
+};
+
+
+/*
+|--------------------------------------------------------------------------
+| Update Payment Status
+|--------------------------------------------------------------------------
+*/
+
+const updatePaymentStatus = async (orderId, data) => {
+
+    const response = await api.patch(
+        API_ENDPOINTS.ADMIN_ORDERS.PAYMENT_STATUS(orderId),
+        data
+    );
+
+    return unwrap(response);
+
+};
+
+
+/*
+|--------------------------------------------------------------------------
+| Cancel Order (Admin)
+|--------------------------------------------------------------------------
+*/
+
+const cancelOrder = async (orderId, data) => {
+
+    const response = await api.post(
+        API_ENDPOINTS.ADMIN_ORDERS.CANCEL(orderId),
+        data
+    );
+
+    return unwrap(response);
+
+};
+
+
+/*
+|--------------------------------------------------------------------------
+| Update Shipment Details
+|--------------------------------------------------------------------------
+*/
+
+const updateShipmentDetails = async (shipmentId, data) => {
+
+    const response = await api.patch(
+        API_ENDPOINTS.SHIPPING.UPDATE_SHIPMENT_DETAILS(shipmentId),
+        data
+    );
+
+    return unwrap(response);
+
+};
+
+
 const adminOrderService = {
     getOrders,
     getOrderById,
     getShippingMethods,
     createShipment,
     updateShipmentStatus,
-    getShipmentTracking
+    updateShipmentDetails,
+    getShipmentTracking,
+    updateOrderStatus,
+    updatePaymentStatus,
+    cancelOrder,
 };
 
 export default adminOrderService;

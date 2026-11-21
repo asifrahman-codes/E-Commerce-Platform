@@ -1,5 +1,3 @@
-import "dotenv/config";
-
 import { validateEnvironment } from "./config/env.js";
 import { pool } from "./database/index.js";
 import { logger } from "./utils/logger.js";

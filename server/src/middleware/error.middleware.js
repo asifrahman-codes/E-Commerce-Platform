@@ -1,4 +1,5 @@
 import multer from "multer";
+import { logger } from "../utils/logger.js";
 
 const errorHandler = (err, req, res, next) => {
   if (res.headersSent) {
@@ -30,8 +31,7 @@ const errorHandler = (err, req, res, next) => {
   const isProduction = process.env.NODE_ENV === "production";
 
   if (statusCode >= 500) {
-    console.error({
-      message: "API request failed",
+    logger.error("API request failed", {
       requestId,
       statusCode,
       error: err.message,
@@ -47,6 +47,7 @@ const errorHandler = (err, req, res, next) => {
         ? "An unexpected server error occurred."
         : err.message || "Internal Server Error",
     requestId,
+    ...(Array.isArray(err.errors) ? { errors: err.errors } : {}),
     ...(isProduction ? {} : { stack: err.stack }),
   });
 };

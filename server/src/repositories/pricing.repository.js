@@ -47,6 +47,20 @@ export const getPricingSettingsForUpdate = async (connection) => {
     return rows[0];
 };
 
+export const findPricingSettingsById = async (
+    connection,
+    settingsId
+) => {
+    const [rows] = await connection.execute(
+        `SELECT *
+         FROM shipping_tax_settings
+         WHERE settings_id = ?`,
+        [settingsId]
+    );
+
+    return rows[0] ?? null;
+};
+
 export const updatePricingSettings = async (
     connection,
     settingsId,

@@ -1,9 +1,10 @@
 import { useState } from "react";
-import { Minus, Plus, Trash2 } from "lucide-react";
+import { Minus, Package, Plus, Trash2 } from "lucide-react";
 
 import {
   getImageUrl,
   formatPrice,
+  getResponsiveImageProps,
 } from "../../utils/product.utils";
 
 export default function CartItem({
@@ -62,17 +63,27 @@ export default function CartItem({
     item.variant_status !== "ACTIVE" || stock <= 0;
 
   return (
-    <div className="flex flex-col gap-4 border-b border-zinc-200 py-6 sm:flex-row sm:items-center dark:border-zinc-800">
-      <div className="h-28 w-full shrink-0 overflow-hidden rounded-xl bg-zinc-100 sm:w-28 dark:bg-zinc-800">
-        <img
-          src={getImageUrl(item.primary_image_url)}
-          alt={item.product_name}
-          className="h-full w-full object-cover"
-        />
+    <div className="flex flex-col gap-4 py-6 first:pt-0 last:pb-0 sm:flex-row sm:items-center">
+      <div className="flex h-28 w-full shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-[#f2f4ef] sm:w-28">
+        {getImageUrl(item.primary_image_url) ? (
+          <img
+            {...getResponsiveImageProps(item.primary_image_url, {
+              sizes: "(min-width: 640px) 112px, 100vw",
+              widths: [128, 256, 384],
+              fallbackWidth: 256,
+            })}
+            alt={item.product_name}
+            loading="lazy"
+            decoding="async"
+            className="h-full w-full object-contain p-2"
+          />
+        ) : (
+          <Package size={32} strokeWidth={1.2} className="text-[#b9c3ba]" aria-hidden="true" />
+        )}
       </div>
 
       <div className="min-w-0 flex-1">
-        <h3 className="font-semibold text-zinc-900 dark:text-white">
+        <h3 className="font-medium text-ink">
           {item.product_name}
         </h3>
 
@@ -82,7 +93,7 @@ export default function CartItem({
           {item.sku && <p>SKU: {item.sku}</p>}
         </div>
 
-        <p className="mt-3 font-semibold text-zinc-900 dark:text-white">
+        <p className="mt-3 font-semibold text-ink">
           {formatPrice(item.unit_price)}
         </p>
 
@@ -100,18 +111,18 @@ export default function CartItem({
       </div>
 
       <div className="flex items-center justify-between gap-4 sm:flex-col sm:items-end">
-        <div className="flex items-center rounded-lg border border-zinc-200 dark:border-zinc-700">
+        <div className="flex items-center rounded-full border border-line bg-white">
           <button
             type="button"
             disabled={updating || quantity <= 1 || unavailable}
             onClick={() => handleQuantityChange(quantity - 1)}
-            className="p-2 text-zinc-600 hover:text-indigo-600 disabled:cursor-not-allowed disabled:opacity-40 dark:text-zinc-300"
+            className="inline-flex h-11 w-11 items-center justify-center text-zinc-600 hover:text-indigo-600 disabled:cursor-not-allowed disabled:opacity-40 dark:text-zinc-300"
             aria-label="Decrease quantity"
           >
             <Minus size={16} />
           </button>
 
-          <span className="min-w-8 text-center text-sm font-medium">
+          <span className="min-w-8 text-center text-sm font-medium text-ink">
             {quantity}
           </span>
 
@@ -119,7 +130,7 @@ export default function CartItem({
             type="button"
             disabled={updating || quantity >= stock || unavailable}
             onClick={() => handleQuantityChange(quantity + 1)}
-            className="p-2 text-zinc-600 hover:text-indigo-600 disabled:cursor-not-allowed disabled:opacity-40 dark:text-zinc-300"
+            className="inline-flex h-11 w-11 items-center justify-center text-zinc-600 hover:text-indigo-600 disabled:cursor-not-allowed disabled:opacity-40 dark:text-zinc-300"
             aria-label="Increase quantity"
           >
             <Plus size={16} />
@@ -127,7 +138,7 @@ export default function CartItem({
         </div>
 
         <div className="text-right">
-          <p className="font-bold text-zinc-900 dark:text-white">
+          <p className="font-semibold text-ink">
             {formatPrice(item.item_subtotal)}
           </p>
 

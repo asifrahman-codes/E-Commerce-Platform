@@ -1,147 +1,67 @@
 import { Link } from "react-router-dom";
-
-import {
-  ShoppingBag,
-  Mail,
-  MapPin,
-  Phone,
-} from "lucide-react";
-
-import {
-  FaFacebookF,
-  FaInstagram,
-  FaTwitter,
-} from "react-icons/fa";
+import { ArrowUpRight, Headset, MapPin, ShoppingBag } from "lucide-react";
 
 const Footer = () => {
   return (
-    <footer className="bg-gray-950 text-gray-300">
-
-      <div className="container-custom grid gap-12 py-14 sm:grid-cols-2 lg:grid-cols-4">
-
-        {/* Brand */}
+    <footer className="mt-16 bg-[#1d3026] text-white">
+      <div className="container-custom grid gap-10 py-14 sm:grid-cols-2 lg:grid-cols-[1.4fr_1fr_1fr_1fr] lg:gap-16 lg:py-16">
         <div>
-
-          <Link to="/" className="flex items-center gap-2">
-
-            <ShoppingBag size={27} className="text-indigo-400" />
-
-            <span className="text-xl font-bold text-white">
-              Shop<span className="text-indigo-400">Sphere</span>
+          <Link to="/" className="inline-flex items-center gap-2.5">
+            <span className="flex h-10 w-10 items-center justify-center rounded-[14px] bg-white/10 text-[#d3dfce]">
+              <ShoppingBag size={19} />
             </span>
-
+            <span className="text-xl font-semibold tracking-tight text-white">ShopSphere</span>
           </Link>
-
-          <p className="mt-5 max-w-xs text-sm leading-7 text-gray-400">
-            Discover products and enjoy a convenient online shopping experience with ShopSphere.
+          <p className="mt-5 max-w-sm text-sm leading-7 text-white/65">
+            A considered collection for the things you use, love, and keep.
           </p>
-
-          <div className="mt-6 flex gap-3">
-
-            {[FaFacebookF, FaInstagram, FaTwitter].map((Icon, index) => (
-              <a
-                key={index}
-                href="#"
-                aria-label={`Social media ${index + 1}`}
-                onClick={(event) => event.preventDefault()}
-                className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-800 transition hover:bg-indigo-600"
-              >
-                <Icon size={18} />
-              </a>
-            ))}
-
-          </div>
-
         </div>
 
-        {/* Shopping */}
         <div>
-
-          <h3 className="font-semibold text-white">
-            Shopping
-          </h3>
-
-          <ul className="mt-5 space-y-3 text-sm">
-
-            <li><Link to="/products" className="hover:text-white">All Products</Link></li>
-
-            <li><Link to="/categories" className="hover:text-white">Categories</Link></li>
-
-            <li><Link to="/cart" className="hover:text-white">Shopping Cart</Link></li>
-
-            <li><Link to="/wishlist" className="hover:text-white">Wishlist</Link></li>
-
+          <h2 className="text-sm font-semibold tracking-wide text-white">Discover</h2>
+          <ul className="mt-5 space-y-3 text-sm text-white/65">
+            <li><Link to="/products" className="transition hover:text-white">Shop all</Link></li>
+            <li><Link to="/categories" className="transition hover:text-white">Categories</Link></li>
+            <li><Link to="/flash-sales" className="transition hover:text-white">Current offers</Link></li>
+            <li><Link to="/wishlist" className="transition hover:text-white">Your wishlist</Link></li>
           </ul>
-
         </div>
 
-        {/* Account */}
         <div>
-
-          <h3 className="font-semibold text-white">
-            My Account
-          </h3>
-
-          <ul className="mt-5 space-y-3 text-sm">
-
-            <li><Link to="/account" className="hover:text-white">My Profile</Link></li>
-
-            <li><Link to="/orders" className="hover:text-white">My Orders</Link></li>
-
-            <li><Link to="/login" className="hover:text-white">Login</Link></li>
-
-            <li><Link to="/register" className="hover:text-white">Register</Link></li>
-
+          <h2 className="text-sm font-semibold tracking-wide text-white">Your account</h2>
+          <ul className="mt-5 space-y-3 text-sm text-white/65">
+            <li><Link to="/account" className="transition hover:text-white">Profile & settings</Link></li>
+            <li><Link to="/orders" className="transition hover:text-white">Orders & tracking</Link></li>
+            <li><Link to="/my-reviews" className="transition hover:text-white">Your reviews</Link></li>
+            <li><Link to="/account/notifications" className="transition hover:text-white">Notifications</Link></li>
           </ul>
-
         </div>
 
-        {/* Contact */}
         <div>
-
-          <h3 className="font-semibold text-white">
-            Contact
-          </h3>
-
-          <ul className="mt-5 space-y-4 text-sm">
-
-            <li className="flex items-center gap-3">
-              <Mail size={17} className="text-indigo-400" />
-              Customer support
+          <h2 className="text-sm font-semibold tracking-wide text-white">Here to help</h2>
+          <ul className="mt-5 space-y-4 text-sm text-white/65">
+            <li>
+              <Link to="/support" className="inline-flex items-center gap-2 transition hover:text-white">
+                <Headset size={16} className="text-[#c7d7bd]" />
+                Customer support
+                <ArrowUpRight size={14} />
+              </Link>
             </li>
-
-            <li className="flex items-center gap-3">
-              <Phone size={17} className="text-indigo-400" />
-              Contact information coming soon
+            <li className="inline-flex items-center gap-2">
+              <MapPin size={16} className="text-[#c7d7bd]" />
+              Online store
             </li>
-
-            <li className="flex items-center gap-3">
-              <MapPin size={17} className="text-indigo-400" />
-              Online Store
-            </li>
-
           </ul>
-
+          <p className="mt-5 text-xs leading-5 text-white/45">Support is available through your ShopSphere account.</p>
         </div>
-
       </div>
 
-      <div className="border-t border-gray-800">
-
-        <div className="container-custom flex flex-col items-center justify-between gap-3 py-6 text-xs text-gray-500 sm:flex-row">
-
-          <p>
-            © {new Date().getFullYear()} ShopSphere. All rights reserved.
-          </p>
-
-          <p>
-            Built with React, Node.js and MySQL.
-          </p>
-
+      <div className="border-t border-white/10">
+        <div className="container-custom flex flex-col gap-2 py-5 text-xs text-white/45 sm:flex-row sm:items-center sm:justify-between">
+          <p>© {new Date().getFullYear()} ShopSphere. All rights reserved.</p>
+          <p>Thoughtful shopping, made simple.</p>
         </div>
-
       </div>
-
     </footer>
   );
 };

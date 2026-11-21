@@ -21,7 +21,7 @@ export default function VariantTable({
     }
 
     return (
-        <div className="overflow-x-auto rounded-xl border border-zinc-200 dark:border-zinc-800">
+        <div className="overflow-x-auto overscroll-x-contain touch-pan-x rounded-xl border border-zinc-200 dark:border-zinc-800">
 
             <table className="w-full min-w-[850px] text-left text-sm">
 

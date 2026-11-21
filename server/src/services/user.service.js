@@ -1,13 +1,17 @@
-import bcrypt from "bcryptjs";
-
 import ApiError from "../utils/ApiError.js";
+import withTransaction from "../utils/transaction.js";
 
 import {
     findUserById,
+    findUserByIdForAuth,
     updateUserProfile,
     findUserPasswordById,
-    updateUserPassword,
+    updateUserPasswordWithTransaction,
+    deactivateUserAccount,
 } from "../repositories/user.repository.js";
+import {
+    revokeAllUserTokensWithTransaction,
+} from "../repositories/token.repository.js";
 
 import {
     comparePassword,
@@ -21,9 +25,9 @@ import {
 |--------------------------------------------------------------------------
 */
 
-export const getAuthenticatedUser = async (userId) => {
+export const getAuthenticatedUser = async (userId, tokenVersion) => {
 
-    const user = await findUserById(userId);
+    const user = await findUserByIdForAuth(userId);
 
     if (!user) {
         throw new ApiError(401, "User not found");
@@ -33,7 +37,15 @@ export const getAuthenticatedUser = async (userId) => {
         throw new ApiError(403, "Account is not active");
     }
 
-    return user;
+    if (
+        tokenVersion !== undefined &&
+        Number(tokenVersion) !== Number(user.token_version)
+    ) {
+        throw new ApiError(401, "Session has been revoked");
+    }
+
+    const { token_version, ...authenticatedUser } = user;
+    return authenticatedUser;
 };
 
 
@@ -47,6 +59,7 @@ export const updateMyProfileService = async (userId, data) => {
 
     const first_name = data.first_name?.trim();
     const last_name = data.last_name?.trim();
+    const phone = data.phone?.trim() || null;
 
     if (!first_name || !last_name) {
         throw new ApiError(
@@ -62,6 +75,13 @@ export const updateMyProfileService = async (userId, data) => {
         );
     }
 
+    if (phone && phone.length > 20) {
+        throw new ApiError(
+            400,
+            "Phone number must not exceed 20 characters"
+        );
+    }
+
     const user = await findUserById(userId);
 
     if (!user) {
@@ -71,6 +91,7 @@ export const updateMyProfileService = async (userId, data) => {
     return updateUserProfile(userId, {
         first_name,
         last_name,
+        phone,
     });
 };
 
@@ -158,7 +179,67 @@ export const changeMyPasswordService = async (userId, data) => {
 
     // Update database
 
-    await updateUserPassword(userId, hashedPassword);
+    await withTransaction(async (connection) => {
+        const updated = await updateUserPasswordWithTransaction(
+            connection,
+            userId,
+            hashedPassword
+        );
+
+        if (!updated) {
+            throw new ApiError(404, "User not found");
+        }
+
+        await revokeAllUserTokensWithTransaction(connection, userId);
+    });
+
+    return true;
+};
+
+
+/*
+|--------------------------------------------------------------------------
+| Deactivate My Account
+|--------------------------------------------------------------------------
+*/
+
+export const deactivateMyAccountService = async (userId, data) => {
+
+    const { password } = data;
+
+    if (!password) {
+        throw new ApiError(
+            400,
+            "Password is required to deactivate your account"
+        );
+    }
+
+    const user = await findUserPasswordById(userId);
+
+    if (!user) {
+        throw new ApiError(404, "User not found");
+    }
+
+    const isPasswordValid = await comparePassword(
+        password,
+        user.password
+    );
+
+    if (!isPasswordValid) {
+        throw new ApiError(
+            400,
+            "Password is incorrect"
+        );
+    }
+
+    const deactivated = await deactivateUserAccount(userId);
+
+    if (!deactivated) {
+        throw new ApiError(
+            400,
+            "Account could not be deactivated"
+        );
+    }
 
     return true;
 };

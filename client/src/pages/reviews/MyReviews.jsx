@@ -9,6 +9,7 @@ import {
 
 import ReviewForm from "../../components/reviews/ReviewForm";
 import StarRating from "../../components/reviews/StarRating";
+import StorefrontSkeleton from "../../components/common/StorefrontSkeleton";
 
 export default function MyReviews() {
   const [reviews, setReviews] = useState([]);
@@ -95,20 +96,21 @@ export default function MyReviews() {
   };
 
   return (
-    <div className="container-custom py-10">
+    <div className="shop-page">
+    <div className="container-custom py-10 sm:py-14">
       <div className="mb-8">
         <Link
           to="/products"
-          className="text-sm font-medium text-indigo-600 hover:text-indigo-700"
+          className="text-sm font-semibold text-indigo-700 hover:text-indigo-800"
         >
           ← Continue shopping
         </Link>
 
-        <h1 className="mt-4 text-3xl font-bold text-zinc-900">
+        <h1 className="mt-4 text-3xl font-semibold tracking-tight text-ink">
           My Reviews
         </h1>
 
-        <p className="mt-2 text-sm text-zinc-500">
+        <p className="mt-2 text-sm text-muted">
           Manage the reviews you have submitted.
         </p>
       </div>
@@ -137,11 +139,9 @@ export default function MyReviews() {
       )}
 
       {loading ? (
-        <p className="py-10 text-center text-zinc-500">
-          Loading your reviews...
-        </p>
+        <StorefrontSkeleton label="Loading your reviews" layout="list" embedded />
       ) : reviews.length === 0 ? (
-        <div className="rounded-xl border border-zinc-200 p-10 text-center">
+        <div className="shop-panel p-10 text-center">
           <h2 className="font-semibold text-zinc-800">
             You haven't submitted any reviews.
           </h2>
@@ -158,7 +158,7 @@ export default function MyReviews() {
           {reviews.map((review) => (
             <article
               key={review.review_id}
-              className="rounded-xl border border-zinc-200 p-5"
+              className="shop-panel p-5 sm:p-6"
             >
               <div className="flex flex-wrap items-start justify-between gap-4">
                 <div>
@@ -220,6 +220,7 @@ export default function MyReviews() {
           ))}
         </div>
       )}
+    </div>
     </div>
   );
 }

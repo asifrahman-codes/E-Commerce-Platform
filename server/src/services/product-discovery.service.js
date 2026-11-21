@@ -1,10 +1,9 @@
 
+import ApiError from "../utils/ApiError.js";
 import * as productDiscoveryRepository from "../repositories/product-discovery.repository.js";
 
 function createError(statusCode, message) {
-  const error = new Error(message);
-  error.statusCode = statusCode;
-  return error;
+  return new ApiError(statusCode, message);
 }
 
 function parseOptionalPositiveInteger(value, fieldName) {
@@ -80,6 +79,13 @@ export async function searchProducts(query = {}) {
     );
   }
 
+  if (/[\u0000-\u001f\u007f]/.test(q)) {
+    throw createError(
+      400,
+      "Search query contains unsupported characters."
+    );
+  }
+
   const page = query.page === undefined
     ? 1
     : Number(query.page);
@@ -104,6 +110,10 @@ export async function searchProducts(query = {}) {
       400,
       "Limit must be between 1 and 50."
     );
+  }
+
+  if (!Number.isSafeInteger((page - 1) * limit)) {
+    throw createError(400, "Page is too large.");
   }
 
   const minPrice = parseOptionalPrice(
@@ -140,6 +150,8 @@ export async function searchProducts(query = {}) {
     "price_desc",
     "rating_asc",
     "rating_desc",
+    "popularity",
+    "best_selling",
   ];
 
   if (!allowedSorts.includes(sort)) {

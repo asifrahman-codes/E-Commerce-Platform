@@ -41,6 +41,55 @@ export const getImageUrl = (image) => {
   );
 };
 
+export const getResponsiveImageProps = (
+  image,
+  {
+    sizes = "100vw",
+    widths = [320, 640, 960, 1280],
+    fallbackWidth = 960,
+  } = {}
+) => {
+  const src = getImageUrl(image);
+  if (!src) return {};
+
+  try {
+    const url = new URL(src, window.location.origin);
+    const isProductUpload =
+      url.hostname === "res.cloudinary.com" &&
+      url.pathname.includes("/image/upload/") &&
+      url.pathname.includes("/ecommerce/products/");
+    const uploadMarker = "/image/upload/";
+    const uploadIndex = url.pathname.indexOf(uploadMarker);
+    const pathAfterUpload = uploadIndex < 0
+      ? ""
+      : url.pathname.slice(uploadIndex + uploadMarker.length);
+    const firstSegment = pathAfterUpload.split("/")[0];
+    const alreadyTransformed = /,|^(?:c_|e_|f_|g_|h_|q_|r_|w_|x_|y_|z_)/.test(firstSegment);
+
+    if (!isProductUpload || alreadyTransformed) {
+      return { src, sizes };
+    }
+
+    const withWidth = (width) => {
+      const path = `${url.pathname.slice(0, uploadIndex + uploadMarker.length)}f_auto,q_auto,w_${width}/${pathAfterUpload}`;
+      return `${url.origin}${path}${url.search}`;
+    };
+    const responsiveWidths = [...new Set(widths)]
+      .filter((width) => Number.isSafeInteger(width) && width > 0)
+      .sort((left, right) => left - right);
+
+    return {
+      src: withWidth(fallbackWidth),
+      srcSet: responsiveWidths
+        .map((width) => `${withWidth(width)} ${width}w`)
+        .join(", "),
+      sizes,
+    };
+  } catch {
+    return { src, sizes };
+  }
+};
+
 export const getPrimaryImage = (images = []) => {
   return (
     images.find((image) => Number(image.is_primary) === 1) ??

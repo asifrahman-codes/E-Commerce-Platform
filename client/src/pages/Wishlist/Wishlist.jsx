@@ -1,15 +1,16 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Heart, ShoppingBag, Trash2 } from "lucide-react";
+import { Heart, Package, ShoppingBag, Trash2 } from "lucide-react";
 
 import { useWishlist } from "../../context/WishlistContext";
 
-import LoadingSpinner from "../../components/common/LoadingSpinner";
 import ErrorMessage from "../../components/common/ErrorMessage";
+import StorefrontSkeleton from "../../components/common/StorefrontSkeleton";
 
 import {
   getImageUrl,
   formatPrice,
+  getResponsiveImageProps,
 } from "../../utils/product.utils";
 
 export default function Wishlist() {
@@ -65,7 +66,7 @@ export default function Wishlist() {
 
   if (!localStorage.getItem("accessToken")) {
     return (
-      <div className="mx-auto max-w-7xl px-4 py-20 text-center">
+      <div className="shop-page mx-auto max-w-7xl px-4 py-20 text-center">
         <Heart size={48} className="mx-auto text-zinc-400" />
 
         <h1 className="mt-5 text-2xl font-bold text-zinc-900 dark:text-white">
@@ -78,7 +79,7 @@ export default function Wishlist() {
 
         <Link
           to="/login?redirect=/wishlist"
-          className="mt-6 inline-flex rounded-xl bg-indigo-600 px-6 py-3 font-semibold text-white hover:bg-indigo-700"
+          className="shop-button shop-button-primary mt-6"
         >
           Sign In
         </Link>
@@ -87,12 +88,12 @@ export default function Wishlist() {
   }
 
   if (loading && wishlist.items.length === 0) {
-    return <LoadingSpinner />;
+    return <StorefrontSkeleton label="Loading your wishlist" />;
   }
 
   if (error && wishlist.items.length === 0) {
     return (
-      <div className="mx-auto max-w-7xl px-4 py-12">
+      <div className="container-custom py-12">
         <ErrorMessage message={error} />
 
         <button
@@ -106,15 +107,16 @@ export default function Wishlist() {
   }
 
   return (
-    <main className="mx-auto min-h-screen max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+    <div className="shop-page">
+    <div className="container-custom py-10 sm:py-14">
       <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-zinc-900 dark:text-white">
+          <h1 className="text-3xl font-semibold tracking-tight text-ink">
             My Wishlist
           </h1>
 
-          <p className="mt-2 text-zinc-500">
-            {wishlist.total_items} saved product(s)
+          <p className="mt-2 text-muted">
+            {wishlist.total_items} saved {wishlist.total_items === 1 ? "product" : "products"}
           </p>
         </div>
 
@@ -138,13 +140,13 @@ export default function Wishlist() {
       )}
 
       {wishlist.items.length === 0 ? (
-        <div className="rounded-2xl border border-zinc-200 px-6 py-16 text-center dark:border-zinc-800">
+        <div className="shop-panel px-6 py-16 text-center">
           <Heart
             size={52}
             className="mx-auto text-zinc-400"
           />
 
-          <h2 className="mt-5 text-xl font-bold text-zinc-900 dark:text-white">
+          <h2 className="mt-5 text-xl font-semibold text-ink">
             Your wishlist is empty
           </h2>
 
@@ -154,7 +156,7 @@ export default function Wishlist() {
 
           <Link
             to="/products"
-            className="mt-6 inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-6 py-3 font-semibold text-white hover:bg-indigo-700"
+            className="shop-button shop-button-primary mt-6"
           >
             <ShoppingBag size={18} />
             Explore Products
@@ -165,35 +167,44 @@ export default function Wishlist() {
           {wishlist.items.map((item) => (
             <article
               key={item.wishlist_id}
-              className="overflow-hidden rounded-2xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900"
+              className="overflow-hidden rounded-[1.35rem] border border-line bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-lg"
             >
               <Link
                 to={`/products/${item.product_id}`}
-                className="block aspect-square overflow-hidden bg-zinc-100 dark:bg-zinc-800"
+                aria-label={`View ${item.product_name}`}
+                className="flex aspect-[4/5] items-center justify-center overflow-hidden bg-[#f2f4ef]"
               >
-                <img
-                  src={getImageUrl(item.primary_image_url)}
-                  alt={item.product_name}
-                  className="h-full w-full object-cover transition duration-300 hover:scale-105"
-                />
+                {getImageUrl(item.primary_image_url) ? (
+                  <img
+                    {...getResponsiveImageProps(item.primary_image_url, {
+                      sizes: "(min-width: 1280px) 25vw, (min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw",
+                    })}
+                    alt={item.product_name}
+                    loading="lazy"
+                    decoding="async"
+                    className="h-full w-full object-contain p-5 transition duration-500 hover:scale-[1.04]"
+                  />
+                ) : (
+                  <Package size={44} strokeWidth={1.2} className="text-[#b9c3ba]" />
+                )}
               </Link>
 
               <div className="p-4">
                 <Link
                   to={`/products/${item.product_id}`}
-                  className="font-semibold text-zinc-900 hover:text-indigo-600 dark:text-white"
+                  className="font-medium text-ink hover:text-indigo-700"
                 >
                   {item.product_name}
                 </Link>
 
-                <p className="mt-2 font-bold text-zinc-900 dark:text-white">
+                <p className="mt-2 font-semibold text-ink">
                   {formatPrice(item.base_price)}
                 </p>
 
                 <div className="mt-4 flex items-center gap-2">
                   <Link
                     to={`/products/${item.product_id}`}
-                    className="flex-1 rounded-lg bg-indigo-600 px-3 py-2 text-center text-sm font-semibold text-white hover:bg-indigo-700"
+                    className="shop-button shop-button-primary min-h-10 flex-1 rounded-lg px-3 py-2 text-center"
                   >
                     View Product
                   </Link>
@@ -212,6 +223,7 @@ export default function Wishlist() {
           ))}
         </div>
       )}
-    </main>
+    </div>
+    </div>
   );
 }

@@ -4,14 +4,14 @@ import AccountSidebar from "../../components/account/AccountSidebar";
 
 export default function AccountLayout() {
     return (
-        <div className="min-h-screen bg-zinc-50">
-            <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+        <div className="shop-page">
+            <div className="container-custom py-8 sm:py-12">
                 <div className="mb-8">
-                    <h1 className="text-2xl font-bold text-zinc-900">
+                    <h1 className="text-2xl font-semibold tracking-tight text-ink">
                         My Account
                     </h1>
 
-                    <p className="mt-1 text-sm text-zinc-500">
+                    <p className="mt-1 text-sm text-muted">
                         Manage your profile, addresses and account security.
                     </p>
                 </div>
@@ -19,9 +19,9 @@ export default function AccountLayout() {
                 <div className="grid grid-cols-1 gap-6 lg:grid-cols-[260px_1fr]">
                     <AccountSidebar />
 
-                    <main className="min-w-0">
+                    <div className="min-w-0">
                         <Outlet />
-                    </main>
+                    </div>
                 </div>
             </div>
         </div>

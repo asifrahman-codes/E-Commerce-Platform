@@ -1,6 +1,8 @@
 import jwt from "jsonwebtoken";
 
 import ApiError from "../utils/ApiError.js";
+import jwtConfig from "../config/jwt.js";
+import withTransaction from "../utils/transaction.js";
 
 import {
     generateAccessToken,
@@ -9,15 +11,16 @@ import {
 } from "../utils/security/jwt.helper.js";
 
 import {
-    saveRefreshToken,
     findRefreshToken,
     revokeRefreshToken,
-    revokeAllUserTokens
+    revokeAllUserTokens,
+    revokeRefreshTokenIfActive,
+    saveRefreshTokenWithTransaction,
+    revokeAllUserTokensWithTransaction
 } from "../repositories/token.repository.js";
 
 import {
-    findUserById,
-    updateLastLogin
+    findUserByIdForAuth
 } from "../repositories/user.repository.js";
 
 
@@ -95,7 +98,7 @@ export const refreshAccessToken = async (
 
             refreshToken,
 
-            process.env.JWT_REFRESH_SECRET || process.env.REFRESH_TOKEN_SECRET
+            jwtConfig.refreshSecret
 
         );
 
@@ -114,7 +117,7 @@ export const refreshAccessToken = async (
     -----------------------------------------
     */
 
-    const user = await findUserById(
+    const user = await findUserByIdForAuth(
         decoded.userId
     );
 
@@ -125,6 +128,21 @@ export const refreshAccessToken = async (
             "User not found"
         );
 
+    }
+
+    if (Number(storedToken.user_id) !== Number(user.user_id)) {
+        throw new ApiError(
+            401,
+            "Invalid refresh token"
+        );
+    }
+
+    if (Number(decoded.tokenVersion ?? 0) !== Number(user.token_version)) {
+        await revokeAllUserTokens(user.user_id);
+        throw new ApiError(
+            401,
+            "Refresh token has been revoked"
+        );
     }
 
     if (user.status !== "ACTIVE") {
@@ -142,35 +160,49 @@ export const refreshAccessToken = async (
     -----------------------------------------
     */
 
-    await revokeRefreshToken(
-        refreshToken
-    );
-
     const payload = {
 
         userId: user.user_id,
 
         roleId: user.role_id,
 
-        email: user.email
+        email: user.email,
+
+        tokenVersion: user.token_version
 
     };
 
-    const newAccessToken =
-        generateAccessToken(payload);
+    const newAccessToken = generateAccessToken(payload);
+    const newRefreshToken = generateRefreshToken(payload);
+    const rotationSucceeded = await withTransaction(async (connection) => {
+        const revoked = await revokeRefreshTokenIfActive(
+            connection,
+            refreshToken
+        );
 
-    const newRefreshToken =
-        generateRefreshToken(payload);
+        if (!revoked) {
+            await revokeAllUserTokensWithTransaction(
+                connection,
+                user.user_id
+            );
+            return false;
+        }
 
-    await saveRefreshToken({
+        await saveRefreshTokenWithTransaction(connection, {
+            userId: user.user_id,
+            token: newRefreshToken,
+            expiresAt: getTokenExpiryDate(newRefreshToken)
+        });
 
-        userId: user.user_id,
-
-        token: newRefreshToken,
-
-        expiresAt: getTokenExpiryDate(newRefreshToken)
-
+        return true;
     });
+
+    if (!rotationSucceeded) {
+        throw new ApiError(
+            401,
+            "Refresh token has already been used"
+        );
+    }
 
     return {
 

@@ -18,7 +18,13 @@ export const createOrderSchema = Joi.object({
         .trim()
         .max(50)
         .allow("")
-        .optional()
+        .optional(),
+
+    loyalty_points: Joi.number()
+        .integer()
+        .min(0)
+        .max(Number.MAX_SAFE_INTEGER)
+        .default(0)
 
 });
 
@@ -44,5 +50,10 @@ export const previewOrderSchema = Joi.object({
         .trim()
         .max(50)
         .allow("")
-        .optional()
+        .optional(),
+    loyalty_points: Joi.number()
+        .integer()
+        .min(0)
+        .max(Number.MAX_SAFE_INTEGER)
+        .default(0)
 });

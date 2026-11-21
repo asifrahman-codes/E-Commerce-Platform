@@ -142,7 +142,7 @@ export default function AdminOrderDetails() {
 
     return (
 
-        <div className="space-y-7 m-6">
+        <div className="space-y-6">
 
             {/* Header */}
 

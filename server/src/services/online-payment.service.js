@@ -6,6 +6,7 @@ import { getPaymentGateway } from "../utils/gateways/payment-gateway.factory.js"
 
 import {
   findOrderForUpdate,
+  findOrderForPaymentAttempt,
   findAttemptForUpdate,
   findActiveAttemptForOrder,
   createAttempt,
@@ -14,11 +15,19 @@ import {
   findAttemptByIdForUser,
   findAttemptsByUser,
   findOrderAttempts,
+  insertPaymentWebhookEvent,
+  markWebhookEventIgnored,
+  updateAttemptFromWebhook,
+  markOrderPaidFromWebhook,
+  markOrderFailedFromWebhook,
+  markWebhookEventProcessed,
 } from "../repositories/online-payment.repository.js";
 
 import {
   notifyOrderConfirmed,
+  notifyPaymentStatusUpdated,
 } from "./notification.service.js";
+import { awardCompletedOrderPoints } from "./loyalty.service.js";
 
 // --------------------------------------------------
 // Helpers
@@ -209,29 +218,14 @@ export async function processVerifiedGatewayEvent({
   const connection = await pool.getConnection();
 
   let orderConfirmationNotification = null;
+  let paymentStatusNotification = null;
 
   try {
     await connection.beginTransaction();
 
     // Record the event in the same transaction as its effects.
     // A unique provider/event ID prevents duplicate processing.
-    await connection.execute(
-      `INSERT INTO payment_webhook_events (
-         provider,
-         provider_event_id,
-         attempt_id,
-         event_type,
-         payload
-       )
-       VALUES (?, ?, ?, ?, ?)`,
-      [
-        provider,
-        event.eventId,
-        event.attemptId,
-        event.eventType,
-        JSON.stringify(event.rawEvent ?? {}),
-      ]
-    );
+    await insertPaymentWebhookEvent(connection, { provider, event });
 
     const attempt = await findAttemptForUpdate(
       connection,
@@ -242,20 +236,10 @@ export async function processVerifiedGatewayEvent({
       throw httpError(404, "Payment attempt not found");
     }
 
-    const [orderRows] = await connection.execute(
-      `SELECT
-         order_id,
-         order_number,
-         total,
-         status,
-         payment_status
-       FROM orders
-       WHERE order_id = ?
-       FOR UPDATE`,
-      [attempt.order_id]
+    const order = await findOrderForPaymentAttempt(
+      connection,
+      attempt.order_id
     );
-
-    const order = orderRows[0];
 
     if (!order) {
       throw httpError(
@@ -284,13 +268,10 @@ export async function processVerifiedGatewayEvent({
       isFinalStatus(attempt.status) ||
       order.payment_status === "PAID"
     ) {
-      await connection.execute(
-        `UPDATE payment_webhook_events
-         SET processing_status = 'IGNORED',
-             processed_at = CURRENT_TIMESTAMP
-         WHERE provider = ?
-           AND provider_event_id = ?`,
-        [provider, event.eventId]
+      await markWebhookEventIgnored(
+        connection,
+        provider,
+        event.eventId
       );
 
       await connection.commit();
@@ -325,69 +306,62 @@ export async function processVerifiedGatewayEvent({
     }
 
     // Update the payment attempt.
-    await connection.execute(
-      `UPDATE online_payment_attempts
-       SET status = ?,
-           gateway_reference = COALESCE(
-             ?,
-             gateway_reference
-           ),
-           failure_reason = ?,
-           completed_at = CURRENT_TIMESTAMP
-       WHERE attempt_id = ?`,
-      [
-        event.status,
-        event.gatewayReference ?? null,
-        event.status === "FAILED"
-          ? "Payment failed at gateway"
-          : null,
-        attempt.attempt_id,
-      ]
-    );
+    await updateAttemptFromWebhook(connection, {
+      status: event.status,
+      gatewayReference: event.gatewayReference ?? null,
+      failureReason: event.status === "FAILED"
+        ? "Payment failed at gateway"
+        : null,
+      attemptId: attempt.attempt_id,
+    });
 
     // Handle successful payment.
     if (event.status === "SUCCEEDED") {
-      const [updateResult] = await connection.execute(
-        `UPDATE orders
-         SET payment_status = 'PAID',
-             status = CASE
-               WHEN status = 'PENDING' THEN 'CONFIRMED'
-               ELSE status
-             END
-         WHERE order_id = ?
-           AND payment_status = 'PENDING'`,
-        [order.order_id]
+      const affectedRows = await markOrderPaidFromWebhook(
+        connection,
+        order.order_id
       );
 
       // Prepare the notification only if this operation
       // actually changed the order to PAID.
-      if (updateResult.affectedRows === 1) {
+      if (affectedRows === 1) {
         orderConfirmationNotification = {
           userId: attempt.user_id,
           orderId: order.order_id,
           orderNumber: order.order_number,
         };
       }
+      if (order.status === "DELIVERED") {
+        await awardCompletedOrderPoints(connection, order.order_id);
+      }
     } else if (event.status === "FAILED") {
       // A failed attempt must not overwrite an already-paid order.
-      await connection.execute(
-        `UPDATE orders
-         SET payment_status = 'FAILED'
-         WHERE order_id = ?
-           AND payment_status = 'PENDING'`,
-        [order.order_id]
-      );
+      await markOrderFailedFromWebhook(connection, order.order_id);
+
+      paymentStatusNotification = {
+        userId: attempt.user_id,
+        orderId: order.order_id,
+        orderNumber: order.order_number,
+        paymentStatus: "FAILED",
+        attemptId: attempt.attempt_id,
+      };
+    } else if (event.status === "CANCELLED") {
+      paymentStatusNotification = {
+        userId: attempt.user_id,
+        orderId: order.order_id,
+        orderNumber: order.order_number,
+        paymentStatus: "CANCELLED",
+        attemptId: attempt.attempt_id,
+      };
     }
 
     // CANCELLED attempts do not change the order here.
     // Order cancellation should be handled by the order module.
 
-    await connection.execute(
-      `UPDATE payment_webhook_events
-       SET processed_at = CURRENT_TIMESTAMP
-       WHERE provider = ?
-         AND provider_event_id = ?`,
-      [provider, event.eventId]
+    await markWebhookEventProcessed(
+      connection,
+      provider,
+      event.eventId
     );
 
     // Commit payment and order changes first.
@@ -403,6 +377,17 @@ export async function processVerifiedGatewayEvent({
       } catch (error) {
         console.error(
           "Order confirmation notification failed:",
+          error.message
+        );
+      }
+    }
+
+    if (paymentStatusNotification) {
+      try {
+        await notifyPaymentStatusUpdated(paymentStatusNotification);
+      } catch (error) {
+        console.error(
+          "Payment status notification failed:",
           error.message
         );
       }

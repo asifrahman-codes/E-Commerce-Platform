@@ -53,7 +53,7 @@ export default function ReviewForm({
   return (
     <form
       onSubmit={handleSubmit}
-      className="rounded-2xl border border-zinc-200 bg-white p-5"
+      className="shop-panel p-5 sm:p-6"
     >
       <h3 className="text-lg font-semibold text-zinc-900">
         {initialReview ? "Edit your review" : "Write a review"}
@@ -87,7 +87,7 @@ export default function ReviewForm({
           value={title}
           onChange={(event) => setTitle(event.target.value)}
           placeholder="Summarize your experience"
-          className="w-full rounded-lg border border-zinc-300 px-4 py-3 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
+          className="shop-input px-4 py-3 text-sm"
         />
       </div>
 
@@ -106,7 +106,7 @@ export default function ReviewForm({
           value={comment}
           onChange={(event) => setComment(event.target.value)}
           placeholder="Tell others about your experience..."
-          className="w-full resize-y rounded-lg border border-zinc-300 px-4 py-3 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
+          className="shop-input resize-y px-4 py-3 text-sm"
         />
 
         <p className="mt-1 text-right text-xs text-zinc-400">
@@ -124,7 +124,7 @@ export default function ReviewForm({
         <button
           type="submit"
           disabled={submitting}
-          className="rounded-lg bg-indigo-600 px-5 py-3 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-50"
+          className="shop-button shop-button-primary disabled:cursor-not-allowed disabled:opacity-50"
         >
           {submitting
             ? "Submitting..."
@@ -137,7 +137,7 @@ export default function ReviewForm({
           <button
             type="button"
             onClick={onCancel}
-            className="rounded-lg border border-zinc-300 px-5 py-3 text-sm font-semibold text-zinc-700 hover:bg-zinc-50"
+            className="shop-button shop-button-secondary"
           >
             Cancel
           </button>

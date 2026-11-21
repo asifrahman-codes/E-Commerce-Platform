@@ -1,23 +1,23 @@
-import "./config/env.js";
-
-import app from "./app.js";
 import { validateEnvironment } from "./config/env.js";
+import serverConfig from "./config/server.js";
+import app from "./app.js";
 import { pool } from "./database/index.js";
+import { logger } from "./utils/logger.js";
 
 let server;
 let shuttingDown = false;
 
 async function startServer() {
-  const { port } = validateEnvironment();
+  validateEnvironment();
+  const { port } = serverConfig;
 
   await pool.query("SELECT 1");
 
   server = app.listen(port, () => {
-    console.log("=========================================");
-    console.log("Server Started Successfully");
-    console.log("Environment :", process.env.NODE_ENV || "development");
-    console.log("Port        :", port);
-    console.log("=========================================");
+    logger.info("Server started", {
+      environment: serverConfig.nodeEnv,
+      port,
+    });
   });
 }
 
@@ -25,10 +25,10 @@ async function shutdown(signal) {
   if (shuttingDown) return;
   shuttingDown = true;
 
-  console.log(`Received ${signal}. Shutting down gracefully...`);
+  logger.info("Graceful shutdown started", { signal });
 
   const timeout = setTimeout(() => {
-    console.error("Shutdown timed out.");
+    logger.error("Shutdown timed out");
     process.exit(1);
   }, 15000);
 
@@ -49,7 +49,7 @@ async function shutdown(signal) {
     clearTimeout(timeout);
     process.exit(0);
   } catch (error) {
-    console.error("Shutdown failed:", error.message);
+    logger.error("Shutdown failed", { message: error.message });
     process.exit(1);
   }
 }
@@ -58,6 +58,6 @@ process.on("SIGTERM", () => void shutdown("SIGTERM"));
 process.on("SIGINT", () => void shutdown("SIGINT"));
 
 startServer().catch((error) => {
-  console.error("Server startup failed:", error.message);
+  logger.error("Server startup failed", { message: error.message });
   process.exit(1);
 });

@@ -4,6 +4,7 @@ import ApiError from "../utils/ApiError.js";
 import {
     getActivePricingSettings,
     getPricingSettingsForUpdate,
+    findPricingSettingsById,
     updatePricingSettings
 } from "../repositories/pricing.repository.js";
 
@@ -150,14 +151,12 @@ export const updatePricingSettingsService = async (data) => {
             cleanData
         );
 
-        const [rows] = await connection.execute(
-            `SELECT *
-             FROM shipping_tax_settings
-             WHERE settings_id = ?`,
-            [existing.settings_id]
+        const updated = await findPricingSettingsById(
+            connection,
+            existing.settings_id
         );
 
-        if (rows.length !== 1) {
+        if (!updated) {
             throw new ApiError(
                 500,
                 "Updated pricing settings could not be retrieved."
@@ -166,7 +165,7 @@ export const updatePricingSettingsService = async (data) => {
 
         await connection.commit();
 
-        return rows[0];
+        return updated;
     } catch (error) {
         try {
             await connection.rollback();

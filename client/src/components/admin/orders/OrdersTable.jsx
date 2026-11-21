@@ -55,7 +55,7 @@ export default function OrdersTable({ orders = [] }) {
 
         <div className="overflow-hidden rounded-2xl border border-zinc-200 bg-white">
 
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto overscroll-x-contain touch-pan-x">
 
                 <table className="w-full min-w-[850px] text-left text-sm">
 

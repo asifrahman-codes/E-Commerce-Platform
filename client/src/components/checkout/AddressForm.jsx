@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { X } from "lucide-react";
@@ -6,9 +6,12 @@ import { X } from "lucide-react";
 import FormInput from "../ui/FormInput";
 import { addressSchema } from "../../validations/address.validation";
 import { getErrorMessage } from "../../utils/error.utils";
+import useDialogFocus from "../../hooks/useDialogFocus";
 
 export default function AddressForm({ address, isFirst, onSubmit, onClose }) {
   const [serverError, setServerError] = useState("");
+  const dialogRef = useRef(null);
+  useDialogFocus(dialogRef, true, onClose);
 
   const {
     register,
@@ -25,12 +28,6 @@ export default function AddressForm({ address, isFirst, onSubmit, onClose }) {
       is_default: Boolean(address?.is_default) || isFirst,
     },
   });
-
-  useEffect(() => {
-    const onKey = (event) => event.key === "Escape" && onClose();
-    document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
-  }, [onClose]);
 
   const submit = async (values) => {
     try {
@@ -49,9 +46,11 @@ export default function AddressForm({ address, isFirst, onSubmit, onClose }) {
       role="dialog"
       aria-modal="true"
       aria-labelledby="address-form-title"
+      tabIndex={-1}
+      ref={dialogRef}
       onMouseDown={(event) => event.target === event.currentTarget && onClose()}
     >
-      <div className="max-h-[92vh] w-full overflow-y-auto rounded-t-2xl bg-white p-6 shadow-xl sm:max-w-lg sm:rounded-2xl">
+      <div className="max-h-[92dvh] w-full overflow-y-auto overscroll-contain rounded-t-2xl bg-white p-4 pb-[max(1rem,env(safe-area-inset-bottom))] shadow-xl sm:max-h-[92vh] sm:max-w-lg sm:rounded-2xl sm:p-6">
         <div className="flex items-center justify-between">
           <h2 id="address-form-title" className="text-lg font-bold text-gray-900">
             {address ? "Edit address" : "Add a delivery address"}
@@ -60,7 +59,7 @@ export default function AddressForm({ address, isFirst, onSubmit, onClose }) {
             type="button"
             onClick={onClose}
             aria-label="Close"
-            className="rounded-lg p-1.5 text-gray-500 hover:bg-gray-100"
+            className="inline-flex h-11 w-11 items-center justify-center rounded-lg text-gray-500 hover:bg-gray-100"
           >
             <X size={20} />
           </button>
@@ -93,10 +92,10 @@ export default function AddressForm({ address, isFirst, onSubmit, onClose }) {
           )}
 
           <div className="flex flex-col-reverse gap-3 pt-2 sm:flex-row sm:justify-end">
-            <button type="button" onClick={() => { reset(); onClose(); }} className="rounded-xl border border-gray-200 px-5 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50">
+            <button type="button" onClick={() => { reset(); onClose(); }} className="min-h-11 rounded-xl border border-gray-200 px-5 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50">
               Cancel
             </button>
-            <button type="submit" disabled={isSubmitting} className="rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60">
+            <button type="submit" disabled={isSubmitting} className="min-h-11 rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60">
               {isSubmitting ? "Saving..." : "Save address"}
             </button>
           </div>

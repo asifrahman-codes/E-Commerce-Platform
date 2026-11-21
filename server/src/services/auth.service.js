@@ -32,26 +32,6 @@ import {
  * Register User
  */
 export const registerUser = async (userData) => {
-
-    /*
-    -----------------------------------------
-    Check Email
-    -----------------------------------------
-    */
-
-    const existingUser = await findUserByEmail(
-        userData.email
-    );
-
-    if (existingUser) {
-
-        throw new ApiError(
-            409,
-            "Email already exists"
-        );
-
-    }
-
     /*
     -----------------------------------------
     Customer Role
@@ -87,21 +67,20 @@ export const registerUser = async (userData) => {
     -----------------------------------------
     */
 
-    const userId = await createUser({
-
-        roleId: customerRole.role_id,
-
-        firstName: userData.firstName,
-
-        lastName: userData.lastName,
-
-        email: userData.email,
-
-        password: hashedPassword,
-
-        phone: userData.phone ?? null
-
-    });
+    try {
+        await createUser({
+            roleId: customerRole.role_id,
+            firstName: userData.firstName,
+            lastName: userData.lastName,
+            email: userData.email,
+            password: hashedPassword,
+            phone: userData.phone ?? null
+        });
+    } catch (error) {
+        if (error.code !== "ER_DUP_ENTRY") {
+            throw error;
+        }
+    }
 
     /*
     -----------------------------------------
@@ -109,13 +88,7 @@ export const registerUser = async (userData) => {
     -----------------------------------------
     */
 
-    return {
-
-        userId,
-
-        email: userData.email
-
-    };
+    return { accepted: true };
 
 };
 
@@ -149,8 +122,8 @@ export const loginUser = async ({ email, password }) => {
     if (user.status !== "ACTIVE") {
 
         throw new ApiError(
-            403,
-            "Account is not active"
+            401,
+            "Invalid email or password"
         );
     }
 
@@ -186,7 +159,8 @@ export const loginUser = async ({ email, password }) => {
 
         userId: user.user_id,
         roleId: user.role_id,
-        email: user.email
+        email: user.email,
+        tokenVersion: user.token_version
     };
 
     /*

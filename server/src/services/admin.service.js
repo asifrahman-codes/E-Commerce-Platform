@@ -5,6 +5,10 @@ import {
     getOrderStatusStatistics,
     getLowStockVariants
 } from "../repositories/admin.repository.js";
+import {
+    getTopSellingProducts,
+    getCustomerAnalytics
+} from "../repositories/admin-dashboard.repository.js";
 
 
 /*
@@ -20,7 +24,9 @@ export const getAdminDashboardService = async () => {
         recentOrders,
         monthlyRevenue,
         orderStatuses,
-        lowStockVariants
+        lowStockVariants,
+        topSellingProducts,
+        customerAnalytics
     ] = await Promise.all([
 
         getDashboardStatistics(),
@@ -31,7 +37,11 @@ export const getAdminDashboardService = async () => {
 
         getOrderStatusStatistics(),
 
-        getLowStockVariants(5)
+        getLowStockVariants(5),
+
+        getTopSellingProducts(5),
+
+        getCustomerAnalytics()
 
     ]);
 
@@ -87,8 +97,19 @@ export const getAdminDashboardService = async () => {
             ...item,
 
             stock: Number(item.stock)
+        })),
 
-        }))
+        top_selling_products: topSellingProducts.map(item => ({
+            ...item,
+            total_sold: Number(item.total_sold || 0),
+            total_sales: Number(item.total_sales || 0)
+        })),
+
+        customer_analytics: {
+            total_customers: Number(customerAnalytics.total_customers || 0),
+            new_customers: Number(customerAnalytics.new_customers || 0),
+            customers_with_orders: Number(customerAnalytics.customers_with_orders || 0)
+        }
 
     };
 
