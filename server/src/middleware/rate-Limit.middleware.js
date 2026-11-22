@@ -33,3 +33,15 @@ export const refreshLimiter = rateLimit({
     message: "Too many token refresh attempts. Try again later.",
   },
 });
+
+// AI-specific rate limiting
+export const aiAssistantLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  limit: 10,
+  standardHeaders: "draft-8",
+  legacyHeaders: false,
+  message: {
+    success: false,
+    message: "AI assistant limit reached. Please try again in a minute.",
+  },
+});

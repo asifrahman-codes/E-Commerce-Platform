@@ -33,6 +33,7 @@ import flashSaleRoutes from "./flash-sale.routes.js";
 import adminFlashSaleRoutes from "./admin-flash-sale.routes.js";
 import productQaRoutes from "./product-qa.routes.js";
 import supportTicketRoutes from "./support-ticket.routes.js";
+import aiRoutes from "./ai.routes.js";
 
 const router = Router();
 
@@ -80,5 +81,6 @@ router.use("/admin/orders", adminOrderRoutes);
 router.use("/admin/products", adminProductRoutes);
 router.use("/admin/inventory", adminInventoryRoutes);
 router.use("/admin/dashboard", adminDashboardRoutes);
+router.use("/ai", aiRoutes);
 
 export default router;
