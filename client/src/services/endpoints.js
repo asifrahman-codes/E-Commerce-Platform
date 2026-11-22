@@ -167,6 +167,10 @@ const API_ENDPOINTS = {
     RECENT_ORDERS: "/admin/dashboard/recent-orders",
     CUSTOMERS: "/admin/dashboard/customers",
   },
+
+  AI: {
+  ASSISTANT: "/ai/assistant",
+ },
 };
 
 export default API_ENDPOINTS;
