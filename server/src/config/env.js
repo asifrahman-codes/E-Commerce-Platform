@@ -71,6 +71,24 @@ export function validateEnvironment() {
   ) {
     errors.push("JWT_SECRET must be at least 32 characters in production.");
   }
+// AI integration
+  if (process.env.AI_ENABLED === "true") {
+    if (!process.env.OPENROUTER_API_KEY) {
+      errors.push("OPENROUTER_API_KEY is required when AI_ENABLED=true.");
+    }
+
+    if (!process.env.OPENROUTER_MODEL) {
+      errors.push("OPENROUTER_MODEL is required when AI_ENABLED=true.");
+    }
+
+    if (
+      process.env.AI_PROVIDER &&
+      process.env.AI_PROVIDER !== "openrouter"
+    ) {
+      errors.push("Currently, only the openrouter AI provider is supported.");
+    }
+  }
+
 
   if (errors.length > 0) {
     throw new Error(errors.join("\n"));
