@@ -122,7 +122,45 @@ export async function getNewArrivalProducts(limit) {
   );
 }
 
-export async function getPersonalizedProducts(userId, limit) {
+export async function getPersonalizedProducts(userId, limit, recentlyViewedIds = []) {
+  const viewedIds = [...new Set(
+    recentlyViewedIds
+      .map(Number)
+      .filter((id) => Number.isSafeInteger(id) && id > 0)
+  )].slice(0, 8);
+
+  const viewedPlaceholders = viewedIds.map(() => "?").join(", ");
+  const viewedJoins = viewedIds.length
+    ? `
+      LEFT JOIN (
+        SELECT category_id, COUNT(*) AS view_weight
+        FROM products
+        WHERE product_id IN (${viewedPlaceholders})
+        GROUP BY category_id
+      ) viewed_category_preferences
+        ON viewed_category_preferences.category_id = p.category_id
+      LEFT JOIN (
+        SELECT brand_id, COUNT(*) AS view_weight
+        FROM products
+        WHERE product_id IN (${viewedPlaceholders})
+        GROUP BY brand_id
+      ) viewed_brand_preferences
+        ON viewed_brand_preferences.brand_id = p.brand_id
+    `
+    : "";
+  const viewedPreferenceCondition = viewedIds.length
+    ? `
+          OR viewed_category_preferences.category_id IS NOT NULL
+          OR viewed_brand_preferences.brand_id IS NOT NULL
+    `
+    : "";
+  const viewedRanking = viewedIds.length
+    ? `
+          COALESCE(viewed_category_preferences.view_weight, 0) +
+          COALESCE(viewed_brand_preferences.view_weight, 0) +
+    `
+    : "";
+
   const [products] = await pool.query(
     `
       SELECT ${PRODUCT_FIELDS}
@@ -159,10 +197,12 @@ export async function getPersonalizedProducts(userId, limit) {
         GROUP BY preference_product.brand_id
       ) brand_preferences
         ON brand_preferences.brand_id = p.brand_id
+      ${viewedJoins}
       WHERE ${AVAILABLE_PRODUCT}
         AND (
           category_preferences.category_id IS NOT NULL
           OR brand_preferences.brand_id IS NOT NULL
+          ${viewedPreferenceCondition}
         )
         AND NOT EXISTS (
           SELECT 1
@@ -175,8 +215,25 @@ export async function getPersonalizedProducts(userId, limit) {
             AND purchased_order.status = 'DELIVERED'
             AND purchased_variant.product_id = p.product_id
         )
+        AND NOT EXISTS (
+          SELECT 1
+          FROM wishlists wishlist
+          WHERE wishlist.user_id = ?
+            AND wishlist.product_id = p.product_id
+        )
+        AND NOT EXISTS (
+          SELECT 1
+          FROM carts cart
+          INNER JOIN cart_items cart_item
+            ON cart_item.cart_id = cart.cart_id
+          INNER JOIN product_variants cart_variant
+            ON cart_variant.variant_id = cart_item.variant_id
+          WHERE cart.user_id = ?
+            AND cart_variant.product_id = p.product_id
+        )
       ORDER BY
         (
+          ${viewedRanking}
           COALESCE(category_preferences.purchase_weight, 0) +
           COALESCE(brand_preferences.purchase_weight, 0)
         ) DESC,
@@ -184,7 +241,16 @@ export async function getPersonalizedProducts(userId, limit) {
         p.product_id DESC
       LIMIT ?
     `,
-    [userId, userId, userId, limit]
+    [
+      userId,
+      userId,
+      userId,
+      userId,
+      userId,
+      ...viewedIds,
+      ...viewedIds,
+      limit,
+    ]
   );
   return products;
 }

@@ -168,7 +168,7 @@ export const getTopSellingProducts = async (limit = 5) => {
         INNER JOIN orders o
             ON o.order_id = oi.order_id
 
-        WHERE o.status <> 'CANCELLED'
+        WHERE o.status NOT IN ('CANCELLED', 'REFUNDED')
 
         GROUP BY
             oi.variant_id,

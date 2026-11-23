@@ -18,9 +18,13 @@ export async function getPublicRecommendations(req, res, next) {
 
 export async function getPersonalizedRecommendations(req, res, next) {
   try {
+    const personalizedParams = { limit: req.query.limit };
+    if (req.query.recent_ids) {
+      personalizedParams.recent_ids = req.query.recent_ids;
+    }
     const data = await recommendationService.getPersonalizedRecommendations(
       req.user.user_id,
-      { limit: req.query.limit }
+      personalizedParams
     );
 
     return res.status(200).json({

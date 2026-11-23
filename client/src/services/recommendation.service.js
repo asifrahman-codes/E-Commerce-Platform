@@ -16,9 +16,14 @@ const recommendationService = {
   },
 
   async getPersonalizedRecommendations(params = {}) {
-    return unwrap(
-      await api.get(ENDPOINTS.RECOMMENDATIONS.PERSONALIZED, { params })
-    );
+    const result = unwrap(await api.get(
+      ENDPOINTS.RECOMMENDATIONS.PERSONALIZED,
+      { params }
+    ));
+    return {
+      ...result,
+      products: result?.recommendations ?? result?.products ?? [],
+    };
   },
 
   async getProductRecommendations(productId, params = {}) {

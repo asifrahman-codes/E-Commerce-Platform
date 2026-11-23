@@ -78,6 +78,11 @@ export default function RecommendationCarousel({
                 className="w-64 shrink-0 snap-start sm:w-72"
               >
                 <ProductCard product={product} showRating={false} />
+                {product.recommendation_reason && (
+                  <p className="mt-2 rounded-xl bg-indigo-50 px-3 py-2 text-xs leading-5 text-indigo-800">
+                    {product.recommendation_reason}
+                  </p>
+                )}
               </div>
             ))}
           </div>

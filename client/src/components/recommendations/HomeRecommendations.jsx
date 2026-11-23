@@ -68,7 +68,15 @@ export default function HomeRecommendations() {
     setPersonalizedLoading(true);
     setPersonalizedError("");
     setPersonalizedLoaded(false);
-    recommendationService.getPersonalizedRecommendations()
+    const recentIds = [...new Set(
+      getRecentlyViewedProducts()
+        .map((product) => Number(product.product_id ?? product.id))
+        .filter((id) => Number.isSafeInteger(id) && id > 0)
+    )].slice(0, 8);
+
+    recommendationService.getPersonalizedRecommendations(
+      recentIds.length ? { recent_ids: recentIds.join(",") } : {}
+    )
       .then((result) => {
         if (active) setPersonalized(result?.products ?? []);
       })
