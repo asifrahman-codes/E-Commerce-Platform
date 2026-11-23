@@ -52,7 +52,7 @@ export default function Cart() {
 
   if (!localStorage.getItem("accessToken")) {
     return (
-      <div className="shop-page mx-auto max-w-7xl px-4 py-20 text-center">
+      <div className="premium-page mx-auto max-w-7xl px-4 py-20 text-center">
         <ShoppingBag className="mx-auto text-zinc-400" size={48} />
 
         <h1 className="mt-5 text-2xl font-bold text-zinc-900 dark:text-white">
@@ -92,7 +92,7 @@ export default function Cart() {
   }
 
   return (
-    <div className="shop-page">
+    <div className="premium-page">
     <div className="container-custom py-10 sm:py-14">
       <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
         <div>

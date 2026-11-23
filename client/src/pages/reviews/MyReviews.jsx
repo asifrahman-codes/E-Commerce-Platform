@@ -96,7 +96,7 @@ export default function MyReviews() {
   };
 
   return (
-    <div className="shop-page">
+    <div className="premium-page">
     <div className="container-custom py-10 sm:py-14">
       <div className="mb-8">
         <Link

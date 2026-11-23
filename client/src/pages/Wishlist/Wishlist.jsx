@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Heart, Package, ShoppingBag, Trash2 } from "lucide-react";
+import { Heart, Package, Share2, ShoppingBag, Trash2 } from "lucide-react";
 
 import { useWishlist } from "../../context/WishlistContext";
 
@@ -12,6 +12,7 @@ import {
   formatPrice,
   getResponsiveImageProps,
 } from "../../utils/product.utils";
+import { shareWishlist } from "../../services/platform.service";
 
 export default function Wishlist() {
   const {
@@ -25,6 +26,24 @@ export default function Wishlist() {
 
   const [actionError, setActionError] = useState("");
   const [clearing, setClearing] = useState(false);
+  const [sharing, setSharing] = useState(false);
+  const [shareMessage, setShareMessage] = useState("");
+
+  const handleShare = async () => {
+    setSharing(true);
+    setShareMessage("");
+    try {
+      const result = await shareWishlist("My ShopSphere wishlist");
+      const data = result?.data ?? result;
+      const url = `${window.location.origin}${data.share_url}`;
+      await navigator.clipboard?.writeText(url);
+      setShareMessage("Share link copied to clipboard.");
+    } catch (shareError) {
+      setShareMessage(shareError.message || "Unable to create a wishlist share link.");
+    } finally {
+      setSharing(false);
+    }
+  };
 
   useEffect(() => {
     refreshWishlist().catch(() => {});
@@ -66,7 +85,7 @@ export default function Wishlist() {
 
   if (!localStorage.getItem("accessToken")) {
     return (
-      <div className="shop-page mx-auto max-w-7xl px-4 py-20 text-center">
+      <div className="premium-page mx-auto max-w-7xl px-4 py-20 text-center">
         <Heart size={48} className="mx-auto text-zinc-400" />
 
         <h1 className="mt-5 text-2xl font-bold text-zinc-900 dark:text-white">
@@ -107,7 +126,7 @@ export default function Wishlist() {
   }
 
   return (
-    <div className="shop-page">
+    <div className="premium-page">
     <div className="container-custom py-10 sm:py-14">
       <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
         <div>
@@ -121,17 +140,23 @@ export default function Wishlist() {
         </div>
 
         {wishlist.items.length > 0 && (
-          <button
-            type="button"
-            onClick={handleClearWishlist}
-            disabled={clearing}
-            className="inline-flex items-center gap-2 text-sm font-medium text-red-600 hover:text-red-700 disabled:opacity-50"
-          >
-            <Trash2 size={16} />
-            {clearing ? "Clearing..." : "Clear Wishlist"}
-          </button>
+          <div className="flex items-center gap-3">
+            <button type="button" onClick={handleShare} disabled={sharing} className="inline-flex min-h-11 items-center gap-2 rounded-lg border border-zinc-200 px-3 text-sm font-medium text-zinc-700 hover:bg-zinc-50 disabled:opacity-50">
+              <Share2 size={16} /> {sharing ? "Creating…" : "Share"}
+            </button>
+            <button
+              type="button"
+              onClick={handleClearWishlist}
+              disabled={clearing}
+              className="inline-flex items-center gap-2 text-sm font-medium text-red-600 hover:text-red-700 disabled:opacity-50"
+            >
+              <Trash2 size={16} />
+              {clearing ? "Clearing..." : "Clear Wishlist"}
+            </button>
+          </div>
         )}
       </div>
+      {shareMessage && <p role="status" className="mb-5 rounded-lg bg-indigo-50 p-3 text-sm text-indigo-700">{shareMessage}</p>}
 
       {actionError && (
         <div className="mb-5 rounded-lg bg-red-50 p-3 text-sm text-red-700 dark:bg-red-950/30 dark:text-red-300">

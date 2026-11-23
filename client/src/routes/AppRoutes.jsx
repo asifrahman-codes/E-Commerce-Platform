@@ -9,6 +9,8 @@ import LoadingScreen from "../components/common/LoadingScreen";
 import ProtectedRoute from "./ProtectedRoute";
 import GuestRoute from "./GuestRoute";
 
+import AdminAIAssistant from "../pages/admin/AdminAIAssistant";
+
 const Home = lazy(() => import("../pages/home/Home"));
 const Login = lazy(() => import("../pages/auth/Login"));
 const Register = lazy(() => import("../pages/auth/Register"));
@@ -32,6 +34,7 @@ const SupportTicketDetails = lazy(() => import("../pages/support/SupportTicketDe
 
 const Cart = lazy(() => import("../pages/cart/Cart"));
 const Wishlist = lazy(() => import("../pages/wishlist/Wishlist"));
+const SharedWishlist = lazy(() => import("../pages/wishlist/SharedWishlist"));
 const Checkout = lazy(() => import("../pages/checkout/Checkout"));
 const OrderConfirmation = lazy(() => import("../pages/checkout/OrderConfirmation"));
 const MockPayment = lazy(() => import("../pages/checkout/MockPayment"));
@@ -58,6 +61,7 @@ const AdminPayments = lazy(() => import("../pages/admin/AdminPayments"));
 const AdminShipments = lazy(() => import("../pages/admin/AdminShipments"));
 const AdminCustomers = lazy(() => import("../pages/admin/AdminCustomers"));
 const AdminReports = lazy(() => import("../pages/admin/AdminReports"));
+const AdminPlatform = lazy(() => import("../pages/admin/AdminPlatform"));
 
 const AdminProducts = lazy(() => import("../pages/admin/products/AdminProducts"));
 const CreateProduct = lazy(() => import("../pages/admin/products/CreateProduct"));
@@ -94,6 +98,7 @@ const AppRoutes = () => (
         <Route path="/cart" element={routePage(Cart)} />
 
         <Route path="/wishlist" element={routePage(Wishlist)} />
+        <Route path="/wishlist/shared/:token" element={routePage(SharedWishlist)} />
 
 
         {/* Authenticated customer routes */}
@@ -142,7 +147,7 @@ const AppRoutes = () => (
           <Route path="/admin/payments" element={routePage(AdminPayments)} />
           <Route path="/admin/shipments" element={routePage(AdminShipments)} />
           <Route path="/admin/rewards-sales" element={routePage(AdminRewardsSales)} />
-          <Route path="/admin/settings" element={routePage(AdminRewardsSales)} />
+          <Route path="/admin/settings" element={routePage(AdminPlatform)} />
           <Route path="/admin/notifications" element={routePage(Notifications)} />
           <Route path="/admin/product-questions" element={routePage(ProductQuestionManagement)} />
           <Route path="/admin/support" element={routePage(AdminSupportTickets)} />
@@ -162,6 +167,10 @@ const AppRoutes = () => (
           <Route path="/admin/inventory/adjust" element={routePage(StockAdjustment)} />
           <Route path="/admin/inventory/history" element={routePage(InventoryHistory)} />
           <Route path="/admin/inventory/low-stock" element={routePage(LowStockProducts)} />
+          <Route
+            path="/admin/ai-assistant"
+            element={routePage(AdminAIAssistant)}
+          />
         </Route>
       </Route>
 

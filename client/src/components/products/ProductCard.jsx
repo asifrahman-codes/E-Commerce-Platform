@@ -35,6 +35,9 @@ function ProductCard({
       0
   );
   const hasDiscount = originalPrice > price && price > 0;
+  const discountPercent = hasDiscount
+    ? Math.max(1, Math.round(((originalPrice - price) / originalPrice) * 100))
+    : 0;
   const image = getImageUrl(
     product?.primary_image ??
       product?.primary_image_url ??
@@ -47,7 +50,7 @@ function ProductCard({
 
   return (
     <article
-      className={`group overflow-hidden rounded-[1.35rem] border border-line bg-white transition duration-300 hover:-translate-y-1 hover:shadow-[0_16px_38px_rgba(27,60,46,0.10)] ${
+      className={`premium-card-hover group overflow-hidden rounded-[1.35rem] border border-line bg-white ${
         isList ? "flex flex-col sm:flex-row" : ""
       }`}
     >
@@ -84,6 +87,11 @@ function ProductCard({
         >
           {stock > 0 ? "In stock" : "Out of stock"}
         </span>
+        {hasDiscount && (
+          <span className="pointer-events-none absolute bottom-3 left-3 z-10 rounded-full bg-[#173727] px-2.5 py-1 text-[10px] font-bold text-white shadow-sm">
+            −{discountPercent}%
+          </span>
+        )}
         <div className="absolute right-3 top-3 z-20">
           <WishlistButton productId={productId} />
         </div>

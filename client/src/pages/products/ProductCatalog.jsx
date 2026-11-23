@@ -6,6 +6,7 @@ import {
   List,
   Search,
   SlidersHorizontal,
+  Sparkles,
   X,
 } from "lucide-react";
 
@@ -17,6 +18,7 @@ import ErrorMessage from "../../components/common/ErrorMessage";
 import { formatPrice, getResponsiveImageProps } from "../../utils/product.utils";
 import { getRecentlyViewedProducts } from "../../utils/recentlyViewed";
 import useDialogFocus from "../../hooks/useDialogFocus";
+import { semanticSearchProducts } from "../../services/semantic-search.service";
 
 const DEFAULT_FILTERS = {
   q: "",
@@ -87,6 +89,9 @@ export default function ProductCatalog() {
   const [focusedSearch, setFocusedSearch] = useState(false);
   const [suggestions, setSuggestions] = useState([]);
   const [suggestionsLoading, setSuggestionsLoading] = useState(false);
+  const [aiSearch, setAiSearch] = useState(false);
+  const [aiInterpretation, setAiInterpretation] = useState(null);
+  const [searchMethod, setSearchMethod] = useState("");
 
   useDialogFocus(filtersDialogRef, showFilters, () => setShowFilters(false));
 
@@ -137,10 +142,23 @@ export default function ProductCatalog() {
           }
         });
 
-        const result = await productService.getProducts(params);
+        const result = aiSearch && appliedFilters.q
+          ? await semanticSearchProducts(params)
+          : await productService.getProducts(params);
         if (!active) return;
         setProducts(result.products);
         setPagination(result.pagination);
+        if (aiSearch && appliedFilters.q) {
+          setAiInterpretation(result.interpreted_search_intent || result.interpreted_intent);
+          setSearchMethod(result.used_ai_interpretation
+            ? "AI interpretation"
+            : result.fallback_used
+              ? "Keyword fallback"
+              : "AI interpretation");
+        } else {
+          setAiInterpretation(null);
+          setSearchMethod("");
+        }
       } catch (loadError) {
         if (active) {
           setError(
@@ -157,7 +175,7 @@ export default function ProductCatalog() {
       active = false;
       window.clearTimeout(timer);
     };
-  }, [appliedFilters, page]);
+  }, [appliedFilters, page, aiSearch]);
 
   useEffect(() => {
     let active = true;
@@ -292,7 +310,7 @@ export default function ProductCatalog() {
   const selectedCategory = appliedFilters.category_id;
 
   return (
-    <div className="shop-page">
+    <div className="premium-page">
       <div className="container-custom py-8 sm:py-10">
         <div className="mb-7">
           <p className="shop-eyebrow mb-2">
@@ -307,6 +325,19 @@ export default function ProductCatalog() {
         </div>
 
         <div className="mb-6 flex flex-col gap-3 sm:flex-row">
+          <button
+            type="button"
+            onClick={() => setAiSearch((current) => !current)}
+            aria-pressed={aiSearch}
+            className={`flex min-h-11 items-center justify-center gap-2 rounded-2xl border px-4 text-sm font-semibold transition ${
+              aiSearch
+                ? "border-indigo-600 bg-indigo-600 text-white"
+                : "border-zinc-200 bg-white text-zinc-700"
+            }`}
+          >
+            <Sparkles size={16} />
+            AI search
+          </button>
           <form
             onSubmit={applyFilters}
             className="relative flex flex-1 items-center gap-3 rounded-2xl border border-zinc-200 bg-white px-4 shadow-sm focus-within:border-indigo-400 focus-within:ring-4 focus-within:ring-indigo-50"
@@ -416,6 +447,24 @@ export default function ProductCatalog() {
             Filters
           </button>
         </div>
+
+        {aiSearch && aiInterpretation && (
+          <div className="mb-5 flex flex-wrap items-center gap-2 rounded-2xl border border-indigo-100 bg-indigo-50/60 px-4 py-3 text-xs text-indigo-950">
+            <Sparkles size={15} className="text-indigo-600" />
+            <span className="font-semibold">{searchMethod}</span>
+            {aiInterpretation.category && <span className="rounded-full bg-white px-2.5 py-1">Category: {aiInterpretation.category}</span>}
+            {aiInterpretation.brand_preferences?.length > 0 && (
+              <span className="rounded-full bg-white px-2.5 py-1">
+                Brand: {aiInterpretation.brand_preferences.join(", ")}
+              </span>
+            )}
+            {(aiInterpretation.budget_range?.min != null || aiInterpretation.budget_range?.max != null) && (
+              <span className="rounded-full bg-white px-2.5 py-1">
+                Budget: {aiInterpretation.budget_range.min ?? 0}–{aiInterpretation.budget_range.max ?? "Any"}
+              </span>
+            )}
+          </div>
+        )}
 
         {categories.length > 0 && (
           <nav aria-label="Shop by category" className="mb-7 flex gap-2 overflow-x-auto pb-2">

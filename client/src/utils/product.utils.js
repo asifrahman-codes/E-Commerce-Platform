@@ -108,6 +108,7 @@ export const getProductPrice = (product) =>
   Number(
     product?.display_price ??
     product?.base_price ??
+    product?.price ??
     0
   );
 

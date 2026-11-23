@@ -3,7 +3,7 @@ import { ArrowUpRight, Headset, MapPin, ShoppingBag } from "lucide-react";
 
 const Footer = () => {
   return (
-    <footer className="mt-16 bg-[#1d3026] text-white">
+    <footer className="mt-16 border-t border-white/5 bg-[#173727] text-white">
       <div className="container-custom grid gap-10 py-14 sm:grid-cols-2 lg:grid-cols-[1.4fr_1fr_1fr_1fr] lg:gap-16 lg:py-16">
         <div>
           <Link to="/" className="inline-flex items-center gap-2.5">

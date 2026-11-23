@@ -43,13 +43,13 @@ const HeroSection = () => {
   return (
     <section className="overflow-hidden bg-canvas">
       <div className="container-custom py-6 sm:py-10 lg:py-12">
-        <div className="relative grid min-h-[500px] overflow-hidden rounded-[2rem] bg-[#e9ede5] lg:grid-cols-[1.02fr_0.98fr]">
+        <div className="premium-enter relative grid min-h-[500px] overflow-hidden rounded-[2rem] border border-white/70 bg-[#e7eee7] lg:grid-cols-[1.02fr_0.98fr]">
           <div className="relative z-10 flex flex-col justify-center px-6 py-12 sm:px-10 sm:py-16 lg:px-14">
             <p className="shop-eyebrow flex items-center gap-2">
               <span className="h-px w-7 bg-indigo-600" />
               The ShopSphere edit
             </p>
-            <h1 className="mt-5 max-w-xl text-[2.7rem] font-semibold leading-[1.05] tracking-[-0.045em] text-ink sm:text-5xl lg:text-[3.7rem]">
+            <h1 className="mt-5 max-w-xl text-[2.7rem] font-semibold leading-[1.02] tracking-[-0.052em] text-ink sm:text-5xl lg:text-[4.1rem]">
               Find good things.
               <span className="mt-1 block font-normal text-indigo-700">Make them yours.</span>
             </h1>

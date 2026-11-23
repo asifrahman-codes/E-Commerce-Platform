@@ -228,7 +228,7 @@ export default function Checkout() {
 
   if (items.length === 0) {
     return (
-      <div className="shop-page mx-auto max-w-7xl px-4 py-20 text-center">
+      <div className="premium-page mx-auto max-w-7xl px-4 py-20 text-center">
         <ShoppingBag className="mx-auto text-zinc-400" size={48} />
         <h1 className="mt-5 text-2xl font-bold text-zinc-900">Your cart is empty</h1>
         <p className="mt-2 text-zinc-600">Add something to your cart before checking out.</p>
@@ -243,7 +243,7 @@ export default function Checkout() {
   const canPlace = Boolean(addressId) && Boolean(preview);
 
   return (
-    <div className="shop-page">
+    <div className="premium-page">
     <div className={`container-custom pt-8 lg:pb-12 ${keyboardOpen ? "pb-8" : "pb-32"}`}>
       <nav aria-label="Breadcrumb" className="text-sm text-zinc-500">
         <Link to="/cart" className="hover:text-zinc-800">Cart</Link>

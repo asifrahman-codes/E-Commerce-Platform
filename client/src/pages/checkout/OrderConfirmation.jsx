@@ -78,7 +78,7 @@ export default function OrderConfirmation() {
   const iconColor = cancelled ? "text-red-500" : needsPayment ? "text-amber-500" : "text-emerald-500";
 
   return (
-    <div className="shop-page">
+    <div className="premium-page">
     <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6 sm:py-14">
       <div className="rounded-[2rem] bg-[#e9ede5] px-5 py-10 text-center sm:px-8 sm:py-12">
         <Icon className={`mx-auto ${iconColor}`} size={52} aria-hidden="true" />

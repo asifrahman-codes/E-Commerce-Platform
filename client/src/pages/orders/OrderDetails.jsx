@@ -183,7 +183,7 @@ const OrderDetails = () => {
     payment.payment_reference;
 
   return (
-    <section className="shop-page px-4 py-10 sm:px-6 sm:py-14">
+    <section className="premium-page px-4 py-10 sm:px-6 sm:py-14">
       <div className="mx-auto max-w-6xl">
         <Link
           to="/orders"

@@ -18,7 +18,7 @@ const GuestRoute = () => {
     const destination =
       user?.role?.toLowerCase() === "admin"
         ? "/admin"
-        : "/account";
+        : "/";
 
     return <Navigate to={destination} replace />;
   }

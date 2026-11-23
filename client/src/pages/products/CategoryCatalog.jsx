@@ -35,7 +35,7 @@ export default function CategoryCatalog() {
   }, [loadCategories]);
 
   return (
-    <div className="shop-page">
+    <div className="premium-page">
       <div className="container-custom py-10 sm:py-14">
         <header className="mb-9 max-w-2xl">
           <p className="shop-eyebrow">Explore ShopSphere</p>

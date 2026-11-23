@@ -43,7 +43,7 @@ const CategorySection = () => {
   }, []);
 
   return (
-    <section className="container-custom py-14 sm:py-16">
+    <section className="container-custom py-14 sm:py-16 premium-enter">
 
       <SectionHeading
         eyebrow="Browse Collection"
@@ -94,7 +94,7 @@ const CategorySection = () => {
               <Link
                 key={id ?? index}
                 to={`/products?category_id=${id}`}
-                className="group overflow-hidden rounded-[1.4rem] border border-line bg-white transition duration-300 hover:-translate-y-1 hover:shadow-[0_16px_38px_rgba(27,60,46,0.10)]"
+                className="premium-card-hover group overflow-hidden rounded-[1.4rem] border border-line bg-white"
               >
 
                 <div className="flex aspect-[5/4] items-center justify-center overflow-hidden bg-[#f0f3ed]">

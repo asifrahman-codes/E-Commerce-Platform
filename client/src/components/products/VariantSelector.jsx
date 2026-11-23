@@ -132,7 +132,7 @@ export default function VariantSelector({
 
     if (!activeVariants.length) {
         return (
-            <div className="rounded-lg border border-zinc-200 p-4 text-sm text-zinc-500 dark:border-zinc-800">
+            <div className="rounded-lg border border-zinc-200 p-4 text-sm font-medium text-zinc-700 dark:border-zinc-800">
                 No variants are currently available for this product.
             </div>
         );
@@ -155,7 +155,7 @@ export default function VariantSelector({
 
             {sizes.length > 0 && (
                 <div>
-                    <h3 className="mb-3 text-sm font-semibold text-zinc-900 dark:text-white">
+                    <h3 className="mb-3 text-sm font-semibold text-zinc-900">
                         Select Size / Storage
                     </h3>
 
@@ -180,7 +180,7 @@ export default function VariantSelector({
                                         isSelected
                                             ? "border-indigo-600 bg-indigo-600 text-white"
                                             : "border-zinc-300 text-zinc-700 hover:border-indigo-500 dark:border-zinc-700 dark:text-zinc-300"
-                                    } disabled:cursor-not-allowed disabled:opacity-40`}
+                                    } disabled:cursor-not-allowed disabled:border-zinc-200 disabled:bg-zinc-100 disabled:text-zinc-600`}
                                 >
                                     {size}
                                 </button>
@@ -194,7 +194,7 @@ export default function VariantSelector({
 
             {colors.length > 0 && (
                 <div>
-                    <h3 className="mb-3 text-sm font-semibold text-zinc-900 dark:text-white">
+                    <h3 className="mb-3 text-sm font-semibold text-zinc-900">
                         Select Color
                     </h3>
 
@@ -219,7 +219,7 @@ export default function VariantSelector({
                                         isSelected
                                             ? "border-indigo-600 bg-indigo-600 text-white"
                                             : "border-zinc-300 text-zinc-700 hover:border-indigo-500 dark:border-zinc-700 dark:text-zinc-300"
-                                    } disabled:cursor-not-allowed disabled:opacity-40`}
+                                    } disabled:cursor-not-allowed disabled:border-zinc-200 disabled:bg-zinc-100 disabled:text-zinc-600`}
                                 >
                                     {color}
                                     {isSelected && (
@@ -241,17 +241,17 @@ export default function VariantSelector({
                 <div className="space-y-3 rounded-xl border border-zinc-200 p-4 dark:border-zinc-800">
 
                     <div className="flex flex-wrap items-center justify-between gap-3">
-                        <span className="text-sm text-zinc-500">
+                        <span className="text-sm font-medium text-zinc-700">
                             Selected SKU
                         </span>
 
-                        <span className="min-w-0 break-all text-right text-sm font-medium text-zinc-900 dark:text-white">
+                        <span className="min-w-0 break-all text-right text-sm font-medium text-zinc-900">
                             {selectedVariant.sku}
                         </span>
                     </div>
 
                     <div className="flex flex-wrap items-center justify-between gap-3">
-                        <span className="text-sm text-zinc-500">
+                        <span className="text-sm font-medium text-zinc-700">
                             Price
                         </span>
 
@@ -261,7 +261,7 @@ export default function VariantSelector({
                     </div>
 
                     <div className="flex flex-wrap items-center justify-between gap-3">
-                        <span className="text-sm text-zinc-500">
+                        <span className="text-sm font-medium text-zinc-700">
                             Stock
                         </span>
 

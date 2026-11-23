@@ -36,6 +36,8 @@ import { rememberRecentlyViewedProduct } from "../../utils/recentlyViewed";
 import { setPageMetadata } from "../../utils/seo.utils";
 import WishlistButton from "../../components/wishlist/WishlistButton";
 import StorefrontSkeleton from "../../components/common/StorefrontSkeleton";
+import { subscribeBackInStock } from "../../services/platform.service";
+import AIReviewSummary from "../../components/reviews/AIReviewSummary";
 
 export default function ProductDetails() {
   const { id } = useParams();
@@ -59,6 +61,23 @@ export default function ProductDetails() {
   const [addingToCart, setAddingToCart] = useState(false);
   const [cartMessage, setCartMessage] = useState("");
   const [cartError, setCartError] = useState("");
+  const [backInStockEmail, setBackInStockEmail] = useState("");
+  const [backInStockMessage, setBackInStockMessage] = useState("");
+
+  const handleBackInStock = async (event) => {
+    event.preventDefault();
+    setBackInStockMessage("");
+    try {
+      await subscribeBackInStock({
+        email: backInStockEmail || user?.email,
+        product_id: product.product_id,
+        variant_id: selectedVariant?.variant_id,
+      });
+      setBackInStockMessage("You will be notified when this item is back in stock.");
+    } catch (subscribeError) {
+      setBackInStockMessage(subscribeError.message || "Unable to save notification.");
+    }
+  };
 
     const userRole = String(
     user?.role ?? user?.user_role ?? ""
@@ -368,7 +387,7 @@ export default function ProductDetails() {
     selectedStock > 0;
 
   return (
-    <div className="shop-page">
+    <div className="premium-page">
       <div className="container-custom py-6 sm:py-10">
 
         {/* Breadcrumb */}
@@ -471,14 +490,14 @@ export default function ProductDetails() {
               {name}
             </h1>
 
-            <p className="mt-3 text-sm text-zinc-500">
+            <p className="mt-3 text-sm font-medium text-zinc-700">
               Brand: {product.brand_name ?? "Not specified"}
             </p>
 
             {/* Price */}
 
             <div className="shop-panel mt-6 p-5 sm:p-6">
-              <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">
+              <p className="text-xs font-medium uppercase tracking-wide text-zinc-700">
                 {selectedVariant ? "Variant price" : "Base price"}
               </p>
 
@@ -487,7 +506,7 @@ export default function ProductDetails() {
               </p>
 
               {selectedVariant && (
-                <p className="mt-1 text-xs text-zinc-500">
+                <p className="mt-1 text-xs font-medium text-zinc-700">
                   Includes variant price adjustment
                 </p>
               )}
@@ -505,7 +524,7 @@ export default function ProductDetails() {
                 </h2>
 
                 {variants.length > 0 && (
-                  <span className="text-xs text-zinc-500">
+                  <span className="text-xs font-medium text-zinc-700">
                     {variants.length} available variants
                   </span>
                 )}
@@ -532,7 +551,7 @@ export default function ProductDetails() {
                   <div className="flex flex-wrap items-center justify-between gap-3">
 
                     <div>
-                      <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">
+                      <p className="text-xs font-medium uppercase tracking-wide text-zinc-700">
                         SKU
                       </p>
 
@@ -542,7 +561,7 @@ export default function ProductDetails() {
                     </div>
 
                     <div className="text-right">
-                      <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">
+                      <p className="text-xs font-medium uppercase tracking-wide text-zinc-700">
                         Availability
                       </p>
 
@@ -620,9 +639,15 @@ export default function ProductDetails() {
             </div>
 
             {!isVariantAvailable && selectedVariant && (
-              <p className="mt-2 text-center text-sm text-red-600">
-                This variant is currently out of stock.
-              </p>
+              <form onSubmit={handleBackInStock} className="mt-3 rounded-xl border border-amber-200 bg-amber-50 p-3">
+                <p className="text-sm font-medium text-amber-900">This variant is currently out of stock.</p>
+                <label className="sr-only" htmlFor="back-in-stock-email">Email for stock notification</label>
+                <div className="mt-2 flex gap-2">
+                  <input id="back-in-stock-email" type="email" required={!isAuthenticated} value={backInStockEmail} onChange={(event) => setBackInStockEmail(event.target.value)} placeholder={user?.email || "you@example.com"} className="h-11 min-w-0 flex-1 rounded-lg border border-amber-200 bg-white px-3 text-sm" />
+                  <button type="submit" className="h-11 rounded-lg bg-amber-700 px-3 text-sm font-semibold text-white">Notify me</button>
+                </div>
+                {backInStockMessage && <p role="status" className="mt-2 text-xs text-amber-900">{backInStockMessage}</p>}
+              </form>
             )}
 
             {/* =================================================
@@ -663,7 +688,10 @@ export default function ProductDetails() {
         <ProductQuestions productId={id} />
 
         <div className="mt-12 border-t border-line pt-8">
+          <AIReviewSummary productId={id} />
+          <div className="mt-8">
           <ReviewList productId={id} />
+          </div>
         </div>
 
         {!authLoading && isAdmin && (

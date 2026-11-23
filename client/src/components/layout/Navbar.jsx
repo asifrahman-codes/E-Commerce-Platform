@@ -46,8 +46,8 @@ function SearchBox({ value, onChange, onSubmit, mobile = false }) {
     <form
       role="search"
       onSubmit={onSubmit}
-      className={`flex items-center rounded-full border border-line bg-[#f7f8f5] transition focus-within:border-indigo-400 focus-within:bg-white focus-within:ring-4 focus-within:ring-indigo-50 ${
-        mobile ? "h-11 w-full px-3" : "h-12 w-full max-w-[33rem] px-4"
+      className={`flex items-center rounded-full border border-[#dfe7e1] bg-[#f7f9f6] transition duration-200 focus-within:border-indigo-400 focus-within:bg-white focus-within:ring-4 focus-within:ring-indigo-50 ${
+        mobile ? "h-12 w-full px-3" : "h-12 w-full max-w-[34rem] px-4"
       }`}
     >
       <Search size={18} className="shrink-0 text-muted" aria-hidden="true" />
@@ -131,7 +131,7 @@ const Navbar = () => {
 
   return (
     <header className="sticky top-0 z-50 border-b border-line bg-white/95 shadow-[0_3px_16px_rgba(29,40,34,0.04)] backdrop-blur-xl">
-      <div className="bg-[#1d3026] text-white">
+      <div className="bg-[#173727] text-white">
         <div className="container-custom flex min-h-8 items-center justify-center gap-2 text-center text-[11px] font-medium tracking-wide sm:text-xs">
           <ShoppingBag size={13} className="text-[#c7d7bd]" aria-hidden="true" />
           <span>Thoughtful finds, delivered with care</span>
@@ -149,7 +149,7 @@ const Navbar = () => {
             aria-label="ShopSphere home"
             className="flex shrink-0 items-center gap-2.5"
           >
-            <span className="flex h-10 w-10 items-center justify-center rounded-[14px] bg-indigo-700 text-white shadow-sm">
+            <span className="flex h-11 w-11 items-center justify-center rounded-[15px] bg-[#315d47] text-white shadow-[0_8px_20px_rgba(49,93,71,.16)]">
               <ShoppingBag size={19} strokeWidth={1.8} />
             </span>
             <span className="text-[19px] font-semibold tracking-tight text-ink sm:text-xl">
@@ -185,9 +185,10 @@ const Navbar = () => {
                   <Link
                     to="/admin"
                     aria-label="Admin dashboard"
-                    className="inline-flex h-10 w-10 items-center justify-center rounded-full text-zinc-700 transition hover:bg-[#f1f3ee]"
+                    className="inline-flex h-10 items-center gap-2 rounded-full px-3 text-sm font-semibold text-zinc-700 transition hover:bg-[#f1f3ee] hover:text-[#315d47]"
                   >
                     <LayoutDashboard size={18} />
+                    <span className="hidden xl:inline">Admin</span>
                   </Link>
                 ) : null}
                 <Link
