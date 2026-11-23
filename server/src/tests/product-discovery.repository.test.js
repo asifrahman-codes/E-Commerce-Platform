@@ -33,7 +33,7 @@ describe("product discovery repository", () => {
     const [countSql, countParams] = pool.execute.mock.calls[0];
     const [productsSql, productParams] = pool.query.mock.calls[0];
 
-    expect(countSql).toContain("MATCH(p.name, p.description, p.slug)");
+    expect(countSql).toContain("p.name LIKE ?");
     expect(countSql).toContain("EXISTS");
     expect(countSql).toContain("available_variant.stock > 0");
     expect(productsSql).toContain("o.status = 'DELIVERED'");

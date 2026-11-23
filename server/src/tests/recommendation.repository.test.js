@@ -39,7 +39,19 @@ describe("recommendation repository", () => {
     expect(sql).toContain("purchased_order.user_id = ?");
     expect(sql).toContain("purchased_variant.product_id = p.product_id");
     expect(sql).toContain("purchased_order.status = 'DELIVERED'");
-    expect(params).toEqual([27, 27, 27, 6]);
+    expect(sql).toContain("FROM wishlists wishlist");
+    expect(sql).toContain("FROM carts cart");
+    expect(params).toEqual([27, 27, 27, 27, 27, 6]);
+  });
+
+  it("uses recently viewed product IDs as a preference signal", async () => {
+    await getPersonalizedProducts(27, 6, [12, 13]);
+
+    const [sql, params] = pool.query.mock.calls[0];
+    expect(sql).toContain("viewed_category_preferences");
+    expect(sql).toContain("viewed_brand_preferences");
+    expect(sql).toContain("product_id IN (?, ?)");
+    expect(params).toEqual([27, 27, 27, 27, 27, 12, 13, 12, 13, 6]);
   });
 
   it("finds co-purchases through delivered order items without exposing order owners", async () => {

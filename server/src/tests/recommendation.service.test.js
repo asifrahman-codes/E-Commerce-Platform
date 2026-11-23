@@ -47,7 +47,7 @@ describe("recommendation service", () => {
 
     await expect(
       getPersonalizedRecommendations(29, { limit: "4" })
-    ).resolves.toEqual({ products: [] });
+    ).resolves.toMatchObject({ products: [] });
     expect(mocks.getPersonalizedProducts).toHaveBeenCalledWith(29, 4);
   });
 
