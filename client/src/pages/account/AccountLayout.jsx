@@ -4,7 +4,7 @@ import AccountSidebar from "../../components/account/AccountSidebar";
 
 export default function AccountLayout() {
     return (
-        <div className="shop-page">
+        <div className="premium-page">
             <div className="container-custom py-8 sm:py-12">
                 <div className="mb-8">
                     <h1 className="text-2xl font-semibold tracking-tight text-ink">

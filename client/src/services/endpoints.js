@@ -170,7 +170,16 @@ const API_ENDPOINTS = {
 
   AI: {
   ASSISTANT: "/ai/assistant",
+  REVIEW_SUMMARY: (productId) => `/ai/products/${productId}/review-summary`,
+  SEMANTIC_SEARCH: "/ai/search",
  },
+
+ AI_ADMIN: {
+    INVENTORY_INSIGHTS: "/ai/admin/inventory-insights",
+    CHAT: "/ai/admin/chat",
+    GENERATE_CONTENT: "/ai/admin/generate-content",
+  },
+
 };
 
 export default API_ENDPOINTS;

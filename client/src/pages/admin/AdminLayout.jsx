@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
-import { Bell, ChevronRight, LogOut, Menu, Search, X } from "lucide-react";
+import { Bell, ChevronRight, LogOut, Menu, Search, ShoppingBag, X } from "lucide-react";
 
 import AdminSidebar from "../../components/admin/AdminSidebar";
 import { AdminToastProvider } from "../../components/admin/AdminToastContext";
@@ -28,6 +28,7 @@ const pageNames = {
   "/admin/product-questions": "Product Q&A",
   "/admin/support": "Support tickets",
   "/admin/rewards-sales": "Rewards & flash sales",
+  "/admin/ai-assistant": "AI Assistant",
 };
 
 const quickLinks = Object.entries(pageNames).map(([path, label]) => ({
@@ -78,6 +79,7 @@ export default function AdminLayout() {
   const { user, logout } = useAuth();
   const { unreadCount } = useNotifications();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [search, setSearch] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
   const breadcrumbs = getBreadcrumbs(location.pathname);
@@ -108,10 +110,12 @@ export default function AdminLayout() {
 
       <AdminSidebar
         open={sidebarOpen}
+        collapsed={sidebarCollapsed}
+        onCollapsedChange={setSidebarCollapsed}
         onNavigate={() => setSidebarOpen(false)}
       />
 
-      <div className="min-h-screen lg:pl-[268px]">
+      <div className={`min-h-screen transition-[padding] duration-200 ${sidebarCollapsed ? "lg:pl-[82px]" : "lg:pl-[268px]"}`}>
         <header className="sticky top-0 z-30 border-b border-slate-200/80 bg-white/90 backdrop-blur-xl">
           <div className="flex min-h-[76px] items-center gap-4 px-4 sm:px-7">
             <button
@@ -183,6 +187,16 @@ export default function AdminLayout() {
                 </div>
               )}
             </div>
+
+            <Link
+              to="/"
+              aria-label="View storefront"
+              title="View storefront"
+              className="inline-flex h-11 items-center gap-2 rounded-xl border border-slate-200 px-3 text-sm font-semibold text-slate-600 transition hover:border-[#759c84] hover:bg-slate-50 hover:text-[#315d47]"
+            >
+              <ShoppingBag size={17} />
+              <span className="hidden xl:inline">Storefront</span>
+            </Link>
 
             <Link
               to="/admin/notifications"

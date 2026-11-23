@@ -23,6 +23,7 @@ import {
   Bell,
   Settings,
   X,
+  Sparkles
 } from "lucide-react";
 
 const sections = [
@@ -72,9 +73,15 @@ const sections = [
       { label: "Settings", path: "/admin/settings", icon: Settings },
     ],
   },
+  {
+    title: "AI",
+    links: [
+      { label: "AI Assistant", path: "/admin/ai-assistant", icon: Sparkles },
+    ],
+  },
 ];
 
-export default function AdminSidebar({ open = false, onNavigate }) {
+export default function AdminSidebar({ open = false, collapsed = false, onCollapsedChange, onNavigate }) {
   useEffect(() => {
     if (!open) return undefined;
 
@@ -96,7 +103,7 @@ export default function AdminSidebar({ open = false, onNavigate }) {
       role={open ? "dialog" : undefined}
       aria-label={open ? "Admin navigation" : undefined}
       aria-modal={open ? "true" : undefined}
-      className={`fixed inset-y-0 left-0 z-50 flex w-[268px] flex-col border-r border-slate-200 bg-white transition-transform duration-200 lg:translate-x-0 ${
+      className={`fixed inset-y-0 left-0 z-50 flex ${collapsed ? "lg:w-[82px]" : "lg:w-[268px]"} w-[268px] flex-col border-r border-slate-200/90 bg-white shadow-[12px_0_40px_rgba(15,23,42,.025)] transition-[width,transform] duration-200 lg:translate-x-0 ${
         open ? "visible translate-x-0" : "invisible -translate-x-full lg:visible lg:translate-x-0"
       }`}
     >
@@ -105,9 +112,18 @@ export default function AdminSidebar({ open = false, onNavigate }) {
           <Boxes size={20} />
         </span>
         <div className="min-w-0 flex-1">
-          <p className="text-[15px] font-bold tracking-tight text-slate-900">ShopSphere</p>
-          <p className="mt-0.5 text-[11px] font-medium uppercase tracking-[0.14em] text-slate-400">Admin workspace</p>
+          {(!collapsed || open) && (
+            <>
+              <p className="text-[15px] font-bold tracking-tight text-slate-900">ShopSphere</p>
+              <p className="mt-0.5 text-[11px] font-medium uppercase tracking-[0.14em] text-slate-400">Admin workspace</p>
+            </>
+          )}
         </div>
+        {!open && (
+          <button type="button" onClick={() => onCollapsedChange?.(!collapsed)} aria-label={collapsed ? "Expand admin navigation" : "Collapse admin navigation"} className="hidden h-9 w-9 shrink-0 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-700 lg:inline-flex">
+            {collapsed ? "›" : "‹"}
+          </button>
+        )}
         {open && (
           <button type="button" onClick={onNavigate} aria-label="Close admin navigation" className="inline-flex h-11 w-11 items-center justify-center rounded-xl text-slate-500 hover:bg-slate-100 lg:hidden">
             <X size={19} />
@@ -118,18 +134,21 @@ export default function AdminSidebar({ open = false, onNavigate }) {
       <nav aria-label="Admin navigation" className="flex-1 space-y-6 overflow-y-auto px-3 py-5">
         {sections.map((section) => (
           <div key={section.title}>
-            <p className="px-3 pb-2 text-[10px] font-bold uppercase tracking-[0.16em] text-slate-400">
-              {section.title}
-            </p>
+            {(!collapsed || open) && (
+              <p className="px-3 pb-2 text-[10px] font-bold uppercase tracking-[0.16em] text-slate-400">
+                {section.title}
+              </p>
+            )}
             <div className="space-y-1">
-              {section.links.map(({ label, path, icon: Icon, end }) => (
+              {(Array.isArray(section.links) ? section.links : []).map(({ label, path, icon: Icon, end }) => (
                 <NavLink
                   key={path}
                   to={path}
                   end={end}
                   onClick={onNavigate}
+                  title={collapsed && !open ? label : undefined}
                   className={({ isActive }) =>
-                    `group flex min-h-11 items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] font-medium transition ${
+                    `group flex min-h-11 items-center ${collapsed && !open ? "justify-center" : "gap-3"} rounded-xl ${collapsed && !open ? "px-2" : "px-3"} py-2.5 text-[13px] font-medium transition ${
                       isActive
                         ? "bg-[#eaf1ec] text-[#244b39]"
                         : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
@@ -137,7 +156,7 @@ export default function AdminSidebar({ open = false, onNavigate }) {
                   }
                 >
                   <Icon size={17} className="shrink-0 opacity-80" />
-                  <span>{label}</span>
+                  {(!collapsed || open) && <span>{label}</span>}
                 </NavLink>
               ))}
             </div>
@@ -146,10 +165,12 @@ export default function AdminSidebar({ open = false, onNavigate }) {
       </nav>
 
       <div className="border-t border-slate-100 p-4">
-        <div className="rounded-xl bg-slate-50 px-3 py-3">
-          <p className="text-xs font-semibold text-slate-700">ShopSphere Admin</p>
-          <p className="mt-1 text-[11px] text-slate-500">Store operations workspace</p>
-        </div>
+        {(!collapsed || open) && (
+          <div className="rounded-xl bg-slate-50 px-3 py-3">
+            <p className="text-xs font-semibold text-slate-700">ShopSphere Admin</p>
+            <p className="mt-1 text-[11px] text-slate-500">Store operations workspace</p>
+          </div>
+        )}
       </div>
     </aside>
   );

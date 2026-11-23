@@ -80,7 +80,10 @@ export default function useAIAssistant() {
           {
             intent: result?.intent || null,
             products: result?.products || [],
-            comparison: result?.comparison || null,
+            comparison: Array.isArray(result?.comparison) &&
+              result.comparison.length === 0
+              ? null
+              : result?.comparison || null,
             search: result?.search || null,
           }
         );

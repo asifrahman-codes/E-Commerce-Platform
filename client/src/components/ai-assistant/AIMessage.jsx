@@ -37,7 +37,9 @@ export default function AIMessage({ message }) {
           </div>
         )}
 
-        {message.comparison && (
+        {message.comparison &&
+          (!Array.isArray(message.comparison) ||
+            message.comparison.length > 0) && (
           <div className="rounded-xl border border-indigo-100 bg-indigo-50 p-3 text-xs text-gray-700">
             <p className="mb-1 font-semibold text-indigo-800">
               Product comparison
