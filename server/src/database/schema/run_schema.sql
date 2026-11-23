@@ -3,8 +3,6 @@
 -- NOTE: file numbers do not match dependency order:
 --   orders (18) must exist before order_items (17),
 --   coupon_usage (16) and order_status_history (19).
--- 21_reviews.sql is a duplicate of 19_order_status_history.sql and
--- is intentionally NOT sourced; no real `reviews` table is defined here.
 -- Run from the schema/ directory with the mysql client.
 -- =====================================================
 
@@ -28,6 +26,7 @@ SOURCE ../schema/17_order_items.sql;
 SOURCE ../schema/16_coupon_usage.sql;
 SOURCE ../schema/20_payments.sql;
 SOURCE ../schema/19_order_status_history.sql;
+SOURCE ../schema/21_reviews.sql;
 SOURCE ../indexes/catalog_search_indexes.sql;
 SOURCE ../schema/22_notifications.sql;
 SOURCE ../schema/23_notification_outbox.sql;
@@ -36,3 +35,6 @@ SOURCE ../schema/25_flash_sales.sql;
 SOURCE ../schema/26_product_qa.sql;
 SOURCE ../schema/27_support_tickets.sql;
 SOURCE ../schema/28_token_version_sessions.sql;
+SOURCE ../schema/29_ai_review_search_caches.sql;
+SOURCE ../schema/30_semantic_product_embeddings.sql;
+SOURCE ../schema/31_newsletter_subscribers.sql;

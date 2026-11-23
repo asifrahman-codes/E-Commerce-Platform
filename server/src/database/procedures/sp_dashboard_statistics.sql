@@ -16,7 +16,7 @@ BEGIN
         (SELECT COUNT(*) FROM orders WHERE status = 'pending') AS pending_orders,
         (SELECT COALESCE(SUM(total_amount), 0) FROM orders WHERE status NOT IN ('cancelled', 'refunded')) AS total_revenue,
         (SELECT COUNT(*) FROM product_variants WHERE stock_quantity = 0) AS out_of_stock_variants,
-        (SELECT COUNT(*) FROM reviews WHERE is_approved = FALSE) AS pending_reviews;
+        (SELECT COUNT(*) FROM reviews WHERE status = 'PENDING') AS pending_reviews;
 END $$
 
 DELIMITER ;

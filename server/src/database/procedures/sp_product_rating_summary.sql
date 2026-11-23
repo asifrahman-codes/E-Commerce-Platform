@@ -20,7 +20,7 @@ BEGIN
         SUM(CASE WHEN r.rating = 2 THEN 1 ELSE 0 END) AS two_star,
         SUM(CASE WHEN r.rating = 1 THEN 1 ELSE 0 END) AS one_star
     FROM products p
-    LEFT JOIN reviews r ON r.product_id = p.product_id AND r.is_approved = TRUE
+    LEFT JOIN reviews r ON r.product_id = p.product_id AND r.status = 'APPROVED'
     WHERE p.product_id = p_product_id
     GROUP BY p.product_id;
 END $$

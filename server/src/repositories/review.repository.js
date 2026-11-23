@@ -1,4 +1,5 @@
 import { pool } from "../database/index.js";
+import { deleteCachedSummary } from "./ai-review-summary.repository.js";
 
 export async function findDeliveredPurchase(userId, productId) {
   const [rows] = await pool.execute(
@@ -131,15 +132,22 @@ export async function updateReview(reviewId, data) {
     `,
     [rating, title, comment, reviewId]
   );
-
-  return findReviewById(reviewId);
+  const review = await findReviewById(reviewId);
+  if (review?.product_id) {
+    await deleteCachedSummary(review.product_id);
+  }
+  return review;
 }
 
 export async function deleteReview(reviewId) {
+  const existing = await findReviewById(reviewId);
   const [result] = await pool.execute(
     "DELETE FROM reviews WHERE review_id = ?",
     [reviewId]
   );
+  if (existing?.product_id) {
+    await deleteCachedSummary(existing.product_id);
+  }
 
   return result.affectedRows > 0;
 }
@@ -150,6 +158,7 @@ export async function getProductRatingSummary(productId) {
       SELECT
         COUNT(*) AS total_reviews,
         ROUND(AVG(rating), 2) AS average_rating,
+        MAX(updated_at) AS last_review_at,
         SUM(rating = 5) AS five_star,
         SUM(rating = 4) AS four_star,
         SUM(rating = 3) AS three_star,
@@ -167,6 +176,7 @@ export async function getProductRatingSummary(productId) {
   return {
     total_reviews: Number(row.total_reviews || 0),
     average_rating: Number(row.average_rating || 0),
+    last_review_at: row.last_review_at ?? null,
     distribution: {
       5: Number(row.five_star || 0),
       4: Number(row.four_star || 0),
@@ -335,6 +345,9 @@ export async function moderateReview(
   if (!result.affectedRows) {
     return null;
   }
-
-  return findReviewById(reviewId);
+  const review = await findReviewById(reviewId);
+  if (review?.product_id) {
+    await deleteCachedSummary(review.product_id);
+  }
+  return review;
 }

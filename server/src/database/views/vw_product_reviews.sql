@@ -15,7 +15,7 @@ SELECT
     r.rating,
     r.title,
     r.comment,
-    r.is_approved,
+    r.status,
     r.created_at
 FROM reviews r
 JOIN products p ON r.product_id = p.product_id
