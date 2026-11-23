@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Tag, X, Loader2, ShieldCheck, Lock } from "lucide-react";
 
 import { formatPrice, getResponsiveImageProps } from "../../utils/product.utils";
+import SafeImage from "../common/SafeImage";
 
 export default function OrderSummary({
   items,
@@ -48,7 +49,7 @@ export default function OrderSummary({
           <li key={item.cart_item_id} className="flex gap-3 py-3">
             <div className="h-14 w-14 shrink-0 overflow-hidden rounded-lg bg-zinc-100">
               {item.primary_image_url && (
-                <img
+                <SafeImage
                   {...getResponsiveImageProps(item.primary_image_url, {
                     sizes: "56px",
                     widths: [128, 256],
@@ -58,6 +59,7 @@ export default function OrderSummary({
                   loading="lazy"
                   decoding="async"
                   className="h-full w-full object-cover"
+                  fallbackSize={24}
                 />
               )}
             </div>

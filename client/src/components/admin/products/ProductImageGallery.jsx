@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Star, Trash2 } from "lucide-react";
 
 import adminProductService from "../../../services/admin-product.service";
+import SafeImage from "../../common/SafeImage";
 
 export default function ProductImageGallery({
     productId,
@@ -95,10 +96,12 @@ export default function ProductImageGallery({
 
                             <div className="relative">
 
-                                <img
+                                <SafeImage
                                     src={image.image_url}
                                     alt="Product"
                                     className="h-32 w-full bg-zinc-50 object-contain"
+                                    fallbackClassName="h-32 bg-zinc-50"
+                                    fallbackSize={36}
                                 />
 
                                 {isPrimary && (

@@ -20,6 +20,7 @@ import {
 import { useAdminToast } from "../../../components/admin/AdminToastContext";
 
 import { formatPrice } from "../../../utils/product.utils";
+import SafeImage from "../../../components/common/SafeImage";
 
 
 export default function AdminProducts() {
@@ -302,10 +303,11 @@ export default function AdminProducts() {
 
                                                 {product.image_url ? (
 
-                                                    <img
+                                                    <SafeImage
                                                         src={product.image_url}
                                                         alt={product.name}
                                                         className="h-12 w-12 rounded-lg bg-zinc-50 object-contain"
+                                                        fallbackSize={20}
                                                     />
 
                                                 ) : (

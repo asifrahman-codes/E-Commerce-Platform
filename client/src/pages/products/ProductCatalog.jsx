@@ -19,6 +19,7 @@ import { formatPrice, getResponsiveImageProps } from "../../utils/product.utils"
 import { getRecentlyViewedProducts } from "../../utils/recentlyViewed";
 import useDialogFocus from "../../hooks/useDialogFocus";
 import { semanticSearchProducts } from "../../services/semantic-search.service";
+import SafeImage from "../../components/common/SafeImage";
 
 const DEFAULT_FILTERS = {
   q: "",
@@ -399,7 +400,7 @@ export default function ProductCatalog() {
                         >
                           <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-zinc-100">
                             {(product.primary_image ?? product.primary_image_url) ? (
-                              <img
+                              <SafeImage
                                 {...getResponsiveImageProps(product.primary_image ?? product.primary_image_url, {
                                   sizes: "48px",
                                   widths: [128, 256],
@@ -409,6 +410,7 @@ export default function ProductCatalog() {
                                 loading="lazy"
                                 decoding="async"
                                 className="h-full w-full object-contain p-1"
+                                fallbackSize={16}
                               />
                             ) : (
                               <Search size={16} className="text-zinc-400" />

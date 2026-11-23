@@ -9,6 +9,7 @@ import PromoBanner from "../../components/home/PromoBanner";
 import HomeRecommendations from "../../components/recommendations/HomeRecommendations";
 
 import NewsletterSection from "../../components/home/NewsletterSection";
+import FeaturedProducts from "../../components/home/FeaturedProducts";
 
 const Home = () => {
   return (
@@ -16,6 +17,7 @@ const Home = () => {
       <HeroSection />
       <BenefitsSection />
       <CategorySection />
+      <FeaturedProducts />
       <PromoBanner />
       <HomeRecommendations />
       <NewsletterSection />

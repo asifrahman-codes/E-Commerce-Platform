@@ -5,6 +5,7 @@ import { ArrowRight, ArrowUpRight, Layers3 } from "lucide-react";
 import categoryService from "../../services/category.service";
 import ErrorMessage from "../../components/common/ErrorMessage";
 import { getImageUrl, getResponsiveImageProps } from "../../utils/product.utils";
+import SafeImage from "../../components/common/SafeImage";
 
 export default function CategoryCatalog() {
   const [categories, setCategories] = useState([]);
@@ -84,7 +85,7 @@ export default function CategoryCatalog() {
                 >
                   <div className="relative flex aspect-[5/4] items-center justify-center overflow-hidden bg-[#f0f3ed]">
                     {image ? (
-                      <img
+                      <SafeImage
                         {...getResponsiveImageProps(image, {
                           sizes: "(min-width: 1024px) 25vw, (min-width: 640px) 33vw, 50vw",
                         })}
@@ -92,6 +93,7 @@ export default function CategoryCatalog() {
                         loading="lazy"
                         decoding="async"
                         className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+                        fallbackSize={42}
                       />
                     ) : (
                       <Layers3 size={42} strokeWidth={1.2} className="text-[#96a797]" />

@@ -7,6 +7,7 @@ import { useCart } from "../../context/CartContext";
 import { useProductComparison } from "../../context/ProductComparisonContext";
 import productService from "../../services/product.service";
 import { formatPrice, getImageUrl, getResponsiveImageProps } from "../../utils/product.utils";
+import SafeImage from "../../components/common/SafeImage";
 
 function priceRange(product) {
   const min = Number(product.price_min ?? product.base_price);
@@ -289,7 +290,7 @@ export default function ProductComparison() {
                       <div className="flex h-full flex-col">
                         <div className="relative flex aspect-[4/3] items-center justify-center overflow-hidden rounded-xl bg-zinc-50">
                           {image ? (
-                            <img
+                            <SafeImage
                               {...getResponsiveImageProps(image, {
                                 sizes: "256px",
                                 widths: [256, 512, 768],
@@ -299,6 +300,7 @@ export default function ProductComparison() {
                               loading="lazy"
                               decoding="async"
                               className="h-full w-full object-contain p-3"
+                              fallbackSize={38}
                             />
                           ) : (
                             <Package size={38} className="text-zinc-300" />

@@ -15,6 +15,7 @@ import {
 } from "../../utils/product.utils";
 import WishlistButton from "../wishlist/WishlistButton";
 import CompareButton from "./CompareButton";
+import SafeImage from "../common/SafeImage";
 
 function ProductCard({
   product,
@@ -66,12 +67,14 @@ function ProductCard({
             }`}
           >
           {image ? (
-            <img
+            <SafeImage
               {...imageProps}
               alt={name}
               loading="lazy"
               decoding="async"
               className="h-full w-full object-contain p-5 transition duration-500 group-hover:scale-[1.04]"
+              fallbackClassName="bg-[#f2f4ef]"
+              fallbackSize={50}
             />
           ) : (
             <Package size={50} strokeWidth={1.2} className="text-[#b9c3ba]" />

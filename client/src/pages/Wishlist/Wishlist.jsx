@@ -13,6 +13,7 @@ import {
   getResponsiveImageProps,
 } from "../../utils/product.utils";
 import { shareWishlist } from "../../services/platform.service";
+import SafeImage from "../../components/common/SafeImage";
 
 export default function Wishlist() {
   const {
@@ -200,7 +201,7 @@ export default function Wishlist() {
                 className="flex aspect-[4/5] items-center justify-center overflow-hidden bg-[#f2f4ef]"
               >
                 {getImageUrl(item.primary_image_url) ? (
-                  <img
+                  <SafeImage
                     {...getResponsiveImageProps(item.primary_image_url, {
                       sizes: "(min-width: 1280px) 25vw, (min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw",
                     })}
@@ -208,6 +209,7 @@ export default function Wishlist() {
                     loading="lazy"
                     decoding="async"
                     className="h-full w-full object-contain p-5 transition duration-500 hover:scale-[1.04]"
+                    fallbackSize={44}
                   />
                 ) : (
                   <Package size={44} strokeWidth={1.2} className="text-[#b9c3ba]" />

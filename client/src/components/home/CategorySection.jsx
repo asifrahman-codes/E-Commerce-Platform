@@ -10,6 +10,7 @@ import categoryService from "../../services/category.service";
 import SectionHeading from "../common/SectionHeading";
 import ErrorMessage from "../common/ErrorMessage";
 import { getResponsiveImageProps } from "../../utils/product.utils";
+import SafeImage from "../common/SafeImage";
 
 const CategorySection = () => {
   const [categories, setCategories] = useState([]);
@@ -100,7 +101,7 @@ const CategorySection = () => {
                 <div className="flex aspect-[5/4] items-center justify-center overflow-hidden bg-[#f0f3ed]">
 
                   {image ? (
-                    <img
+                    <SafeImage
                       {...getResponsiveImageProps(image, {
                         sizes: "(min-width: 1024px) 25vw, (min-width: 640px) 33vw, 50vw",
                       })}
@@ -108,6 +109,7 @@ const CategorySection = () => {
                       loading="lazy"
                       decoding="async"
                       className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+                      fallbackSize={45}
                     />
                   ) : (
                     <Layers3

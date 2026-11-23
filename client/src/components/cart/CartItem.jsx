@@ -6,6 +6,7 @@ import {
   formatPrice,
   getResponsiveImageProps,
 } from "../../utils/product.utils";
+import SafeImage from "../common/SafeImage";
 
 export default function CartItem({
   item,
@@ -66,7 +67,7 @@ export default function CartItem({
     <div className="flex flex-col gap-4 py-6 first:pt-0 last:pb-0 sm:flex-row sm:items-center">
       <div className="flex h-28 w-full shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-[#f2f4ef] sm:w-28">
         {getImageUrl(item.primary_image_url) ? (
-          <img
+          <SafeImage
             {...getResponsiveImageProps(item.primary_image_url, {
               sizes: "(min-width: 640px) 112px, 100vw",
               widths: [128, 256, 384],
@@ -76,6 +77,7 @@ export default function CartItem({
             loading="lazy"
             decoding="async"
             className="h-full w-full object-contain p-2"
+            fallbackSize={32}
           />
         ) : (
           <Package size={32} strokeWidth={1.2} className="text-[#b9c3ba]" aria-hidden="true" />

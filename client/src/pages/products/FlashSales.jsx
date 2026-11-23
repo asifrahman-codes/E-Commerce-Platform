@@ -5,6 +5,7 @@ import { getFlashSales } from "../../services/flash-sale.service";
 import { formatPrice, getResponsiveImageProps } from "../../utils/product.utils";
 import { getErrorMessage } from "../../utils/error.utils";
 import LoadingSpinner from "../../components/common/LoadingSpinner";
+import SafeImage from "../../components/common/SafeImage";
 
 function utcTimestamp(value) {
   if (value instanceof Date) return value.getTime();
@@ -89,7 +90,7 @@ export default function FlashSales() {
                 <article key={`${campaign.flash_sale_id}-${product.variant_id}`} className="overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm">
                   <Link to={`/products/${product.product_id}?variant_id=${product.variant_id}`} className="block aspect-[4/3] bg-zinc-100">
                     {product.image_url && (
-                      <img
+                      <SafeImage
                         {...getResponsiveImageProps(product.image_url, {
                           sizes: "(min-width: 1280px) 25vw, (min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw",
                         })}
@@ -97,6 +98,7 @@ export default function FlashSales() {
                         className="h-full w-full object-cover"
                         loading="lazy"
                         decoding="async"
+                        fallbackSize={44}
                       />
                     )}
                   </Link>

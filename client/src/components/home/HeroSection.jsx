@@ -4,6 +4,7 @@ import { ArrowDownRight, ArrowRight, Package, ShieldCheck, Truck } from "lucide-
 
 import productService from "../../services/product.service";
 import { formatPrice, getImageUrl, getProductId, getProductName, getResponsiveImageProps } from "../../utils/product.utils";
+import SafeImage from "../common/SafeImage";
 
 const HeroSection = () => {
   const [spotlight, setSpotlight] = useState(null);
@@ -85,12 +86,13 @@ const HeroSection = () => {
                 className="group relative z-10 flex h-full w-full max-w-[500px] flex-col overflow-hidden rounded-[1.6rem] border border-white/80 bg-white/80 p-3 shadow-[0_24px_70px_rgba(29,48,38,0.12)] backdrop-blur transition hover:-translate-y-1"
               >
                 <div className="relative min-h-[250px] flex-1 overflow-hidden rounded-[1.2rem] bg-[#f7f8f5] sm:min-h-[320px]">
-                  <img
+                  <SafeImage
                     {...imageProps}
                     alt={getProductName(spotlight)}
                     fetchPriority="high"
                     decoding="async"
                     className="h-full w-full object-contain p-8 transition duration-500 group-hover:scale-[1.03] sm:p-12"
+                    fallbackSize={80}
                   />
                   <span className="absolute left-4 top-4 rounded-full bg-white/90 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-indigo-800 shadow-sm">
                     Customer favorite

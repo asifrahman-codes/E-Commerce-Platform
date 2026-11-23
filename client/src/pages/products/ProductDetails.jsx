@@ -38,6 +38,7 @@ import WishlistButton from "../../components/wishlist/WishlistButton";
 import StorefrontSkeleton from "../../components/common/StorefrontSkeleton";
 import { subscribeBackInStock } from "../../services/platform.service";
 import AIReviewSummary from "../../components/reviews/AIReviewSummary";
+import SafeImage from "../../components/common/SafeImage";
 
 export default function ProductDetails() {
   const { id } = useParams();
@@ -425,7 +426,7 @@ export default function ProductDetails() {
           <div>
             <div className="flex aspect-square items-center justify-center overflow-hidden rounded-[1.75rem] border border-line bg-[#f0f3ed]">
               {selectedImage ? (
-                <img
+                <SafeImage
                   {...getResponsiveImageProps(selectedImage, {
                     sizes: "(min-width: 1024px) 50vw, 100vw",
                     widths: [640, 960, 1280, 1600],
@@ -436,6 +437,8 @@ export default function ProductDetails() {
                   fetchPriority="high"
                   decoding="async"
                   className="h-full w-full object-contain p-6"
+                  fallbackClassName="bg-[#f0f3ed]"
+                  fallbackSize={80}
                 />
               ) : (
                 <Package
@@ -459,7 +462,7 @@ export default function ProductDetails() {
                         : "border-transparent hover:border-zinc-300"
                     }`}
                   >
-                    <img
+                    <SafeImage
                       {...getResponsiveImageProps(image, {
                         sizes: "96px",
                         widths: [128, 256, 384],
@@ -469,6 +472,7 @@ export default function ProductDetails() {
                       loading="lazy"
                       decoding="async"
                       className="h-full w-full object-contain p-2"
+                      fallbackSize={32}
                     />
                   </button>
                 ))}

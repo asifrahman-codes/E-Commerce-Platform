@@ -13,6 +13,7 @@ import {
   getProductPrice,
   getProductStock,
 } from "../../utils/product.utils";
+import SafeImage from "../common/SafeImage";
 
 export default function AIProductCard({ product }) {
   const id = getProductId(product);
@@ -35,11 +36,12 @@ export default function AIProductCard({ product }) {
       >
         <div className="flex h-32 items-center justify-center bg-gray-50 p-3">
           {image ? (
-            <img
+            <SafeImage
               src={image}
               alt={name}
               loading="lazy"
               className="h-full w-full object-contain"
+              fallbackSize={36}
             />
           ) : (
             <Package
