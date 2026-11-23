@@ -15,6 +15,12 @@ export const getProductReviews = async (
   );
 };
 
+export const getAIReviewSummary = async (productId) => {
+  return payload(
+    await api.get(API_ENDPOINTS.AI.REVIEW_SUMMARY(productId))
+  );
+};
+
 export const createReview = async (data) => {
   return payload(
     await api.post(API_ENDPOINTS.REVIEWS.BASE, data)

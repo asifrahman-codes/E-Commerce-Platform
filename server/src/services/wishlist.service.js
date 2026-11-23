@@ -1,5 +1,6 @@
 
 import * as wishlistRepository from "../repositories/wishlist.repository.js";
+import { invalidatePersonalizedRecommendationCache } from "./recommendation.service.js";
 
 function createError(statusCode, message) {
   const error = new Error(message);
@@ -42,10 +43,12 @@ export async function addToWishlist(userId, productId) {
   }
 
   try {
-    return await wishlistRepository.addWishlistItem(
+    const result = await wishlistRepository.addWishlistItem(
       customerId,
       product
     );
+    invalidatePersonalizedRecommendationCache(customerId);
+    return result;
   } catch (error) {
     // Handles concurrent requests that attempt to add
     // the same product at nearly the same time.
@@ -94,6 +97,7 @@ export async function removeFromWishlist(userId, productId) {
       "This product is not in your wishlist."
     );
   }
+  invalidatePersonalizedRecommendationCache(customerId);
 
   return {
     message: "Product removed from wishlist successfully.",
@@ -105,6 +109,7 @@ export async function clearMyWishlist(userId) {
 
   const deletedCount =
     await wishlistRepository.clearWishlist(customerId);
+  invalidatePersonalizedRecommendationCache(customerId);
 
   return {
     message: "Wishlist cleared successfully.",

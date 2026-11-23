@@ -11,6 +11,7 @@ import {
 import { sendNotificationEmail } from "./email.service.js";
 import { notificationConfig } from "../config/notification.config.js";
 import { logger } from "../utils/logger.js";
+import { findRestockedSubscriptions, markBackInStockNotified } from "../repositories/platform.repository.js";
 
 const MAX_ATTEMPTS = 8;
 
@@ -52,6 +53,24 @@ async function processNotification(event) {
 
 export async function processNotificationBatch() {
   if (!notificationConfig.enabled) return 0;
+
+  const restocked = await findRestockedSubscriptions();
+  for (const subscription of restocked) {
+    try {
+      await sendNotificationEmail({
+        to: subscription.email,
+        subject: `${subscription.product_name} is back in stock`,
+        title: `${subscription.product_name} is back in stock`,
+        message: "The product you subscribed to is available again. Visit ShopSphere to place your order.",
+      });
+      await markBackInStockNotified(subscription.subscription_id);
+    } catch (error) {
+      logger.error("Back-in-stock notification failed", {
+        subscriptionId: subscription.subscription_id,
+        message: error.message,
+      });
+    }
+  }
 
   const events = await claimNotificationBatch(10);
 

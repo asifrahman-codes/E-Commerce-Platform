@@ -15,6 +15,7 @@ import {
 import {
     findVariantById
 } from "../repositories/variant.repository.js";
+import { invalidatePersonalizedRecommendationCache } from "./recommendation.service.js";
 
 
 /*
@@ -161,7 +162,7 @@ export const addItemToCartService = async (
 
     }
 
-
+    invalidatePersonalizedRecommendationCache(userId);
     return await getCartService(userId);
 
 };
@@ -411,7 +412,7 @@ export const updateCartItemService = async (
         cartItemId,
         quantity
     );
-
+    invalidatePersonalizedRecommendationCache(userId);
 
     return await getCartService(userId);
 
@@ -470,7 +471,7 @@ export const removeCartItemService = async (
     await deleteCartItem(
         cartItemId
     );
-
+    invalidatePersonalizedRecommendationCache(userId);
 
     return await getCartService(userId);
 
@@ -493,7 +494,7 @@ export const clearCartService = async (
     await clearCart(
         cart.cart_id
     );
-
+    invalidatePersonalizedRecommendationCache(userId);
 
     return {
 

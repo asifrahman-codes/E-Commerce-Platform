@@ -1,5 +1,6 @@
 import ApiError from "../utils/ApiError.js";
 import withTransaction from "../utils/transaction.js";
+import { invalidatePersonalizedRecommendationCache } from "./recommendation.service.js";
 
 import {
     createOrder,
@@ -538,6 +539,8 @@ export const createOrderService = async (
 
             }
         );
+
+    invalidatePersonalizedRecommendationCache(userId);
 
     return await findOrderWithItems(
         orderId
