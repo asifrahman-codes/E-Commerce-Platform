@@ -1,6 +1,4 @@
 
-import ApiError from "../utils/ApiError.js";
-
 import { generateAIResponse } from "./ai.service.js";
 
 import * as productDiscoveryService from "./product-discovery.service.js";
@@ -132,7 +130,7 @@ function normalizeAIPlan(plan, originalMessage) {
 function buildFallbackPlan(message) {
   // Basic fallback if the free model returns invalid JSON.
   const budgetMatch = message.match(
-    /(?:under|below|less than|maximum|max|within)\s*(?:rs\.?|pkr)?\s*([\d,]+)/i
+    /(?:under|below|less than|maximum|max|within)\s*(?:rs\.?|pkr\.?|₹)?\s*([\d,]+)/i
   );
 
   const maxPrice = budgetMatch
@@ -158,7 +156,21 @@ function buildFallbackPlan(message) {
   };
 }
 
+function isBroadDiscoveryRequest(message) {
+  return /\b(?:find (?:me )?(?:some |any )?(?:products?|items?|something)|show (?:me )?(?:some |any )?(?:products?|items?)?|what should i buy|recommend (?:a|an|me)? ?(?:product|item|something)?|suggest (?:a|an|me)? ?(?:product|item|something)?|popular products?|best products?|discover products?)\b/i
+    .test(message);
+}
+
 function normalizeProduct(product) {
+  const priceCandidates = [
+    product.display_price,
+    product.price,
+    product.base_price,
+  ];
+  const resolvedPrice = priceCandidates
+    .map(Number)
+    .find((value) => Number.isFinite(value) && value > 0) ?? 0;
+
   return {
     product_id: Number(product.product_id),
     name: product.name,
@@ -166,8 +178,11 @@ function normalizeProduct(product) {
     description: product.description,
     category_name: product.category_name,
     brand_name: product.brand_name,
-    price: Number(product.display_price),
-    image: product.primary_image,
+    display_price: resolvedPrice,
+    base_price: Number(product.base_price || resolvedPrice || 0),
+    price: resolvedPrice,
+    image: product.primary_image || product.image || null,
+    primary_image: product.primary_image || product.image || null,
     average_rating: Number(product.average_rating || 0),
     review_count: Number(product.review_count || 0),
     total_stock: Number(product.total_stock || 0),
@@ -181,6 +196,69 @@ export async function processShoppingMessage({
   history = [],
   productIds = [],
 }) {
+  const detailRequest = /\b(details?|information|tell me more|more about|specifications?|give me.*details?|what is this)\b/i.test(message);
+
+  if (detailRequest) {
+    const recentAssistantText = [...history]
+      .reverse()
+      .find((item) => item.role === "assistant" && item.content)
+      ?.content || "";
+
+    const aboutMatch = recentAssistantText.match(
+      /(?:details?|information)\s+(?:about|for)(?:\s+the)?\s+(.+?)(?:[.!]|$)/i
+    );
+    const contextName = aboutMatch?.[1]?.trim()
+      || [...history]
+        .reverse()
+        .find((item) => item.role === "user" && item.content)
+        ?.content?.trim()
+      || "";
+
+    if (contextName) {
+      const detailResult = await productDiscoveryService.searchProducts({
+        q: contextName.slice(0, 100),
+        in_stock: false,
+        sort: "newest",
+        page: 1,
+        limit: 5,
+      });
+
+      if (detailResult.products.length) {
+        const product = normalizeProduct(detailResult.products[0]);
+        const priceText = product.price > 0
+          ? `Price: ${new Intl.NumberFormat("en-PK", {
+              style: "currency",
+              currency: "PKR",
+              maximumFractionDigits: 0,
+            }).format(product.price)}.`
+          : "Price: currently unavailable.";
+        const stockText = product.total_stock > 0
+          ? `${product.total_stock} unit(s) in stock.`
+          : "Currently out of stock.";
+
+        return {
+          intent: "product_details",
+          reply: [
+            `${product.name}.`,
+            product.brand_name ? `Brand: ${product.brand_name}.` : "",
+            product.category_name ? `Category: ${product.category_name}.` : "",
+            priceText,
+            stockText,
+            product.description ? `Details: ${product.description}` : "",
+          ].filter(Boolean).join("\n"),
+          products: [product],
+          comparison: null,
+          search: {
+            query: contextName,
+            min_price: null,
+            max_price: null,
+            total: 1,
+          },
+        };
+      }
+    }
+  }
+
   let plan;
 
   try {
@@ -207,18 +285,8 @@ Return the required JSON only.
       message
     );
   } catch (error) {
-    if (
-      error.message === "AI_FEATURE_DISABLED" ||
-      error.message === "AI_PROVIDER_REQUEST_FAILED" ||
-      error.message === "AI_CONFIGURATION_MISSING"
-    ) {
-      throw new ApiError(
-        503,
-        "The AI shopping assistant is temporarily unavailable."
-      );
-    }
-
-    // A model may occasionally return malformed JSON.
+    // Provider failures and malformed model output both fall back to
+    // deterministic, database-backed keyword discovery.
     plan = buildFallbackPlan(message);
   }
 
@@ -242,22 +310,38 @@ Return the required JSON only.
       intent: "compare",
       reply: "Please select at least two products to compare.",
       products: [],
-      comparison: [],
+      comparison: null,
     };
   }
 
-  if (plan.intent === "general") {
+  const isGreeting = /^(?:hi|hello|hey|thanks?|thank you|good (?:morning|afternoon|evening))\b/i.test(message);
+
+  if (plan.intent === "general" && isGreeting) {
     return {
       intent: "general",
       reply: plan.reply || "Hello! I'm ShopSphere AI. I can help you find and compare products. What are you looking for?",
       products: [],
-      comparison: [],
+      comparison: null,
+    };
+  }
+
+  if (plan.intent === "general") {
+    plan = {
+      ...plan,
+      intent: "product_search",
+      searchQuery:
+        typeof plan.searchQuery === "string" && plan.searchQuery.trim()
+          ? plan.searchQuery
+          : message.slice(0, 100),
     };
   }
 
   // Retrieve actual products through the existing discovery service.
+  const broadRecommendationRequest =
+    isBroadDiscoveryRequest(message);
+
   const result = await productDiscoveryService.searchProducts({
-    q: plan.searchQuery,
+    q: broadRecommendationRequest ? "" : plan.searchQuery,
     min_price: plan.minPrice,
     max_price: plan.maxPrice,
     in_stock: true,
@@ -271,10 +355,16 @@ Return the required JSON only.
   return {
     intent: plan.intent,
     reply: products.length
-      ? plan.reply || `I found ${products.length} products that may suit your requirements.`
-      : "I couldn't find matching in-stock products. Try changing your budget or search terms.",
+      ? broadRecommendationRequest
+        ? `Here are ${products.length} popular in-stock products you may want to consider.`
+        : plan.reply || `I found ${products.length} products that may suit your requirements.`
+      : broadRecommendationRequest
+        ? "No in-stock products are currently available."
+        : plan.maxPrice !== undefined
+          ? `I couldn't find in-stock products matching "${plan.searchQuery}" under Rs ${plan.maxPrice.toLocaleString("en-PK")}. Try a higher budget or different search terms.`
+          : `I couldn't find in-stock products matching "${plan.searchQuery}". Try different search terms or a broader category.`,
     products,
-    comparison: [],
+    comparison: null,
     search: {
       query: plan.searchQuery,
       min_price: plan.minPrice ?? null,

@@ -59,6 +59,12 @@ export async function listApprovedQuestions(
     { limit, offset },
     connection = pool
 ) {
+    const safeLimit = Number.isSafeInteger(Number(limit))
+        ? Math.min(Math.max(Number(limit), 1), 50)
+        : 10;
+    const safeOffset = Number.isSafeInteger(Number(offset))
+        ? Math.max(Number(offset), 0)
+        : 0;
     const [rows] = await connection.execute(
         `SELECT q.question_id, q.question_text, q.created_at,
                 a.answer_id, a.answer_text, a.created_at AS answered_at,
@@ -71,8 +77,8 @@ export async function listApprovedQuestions(
          WHERE q.product_id = ?
            AND q.status = 'APPROVED'
          ORDER BY q.created_at DESC, q.question_id DESC
-         LIMIT ? OFFSET ?`,
-        [productId, limit, offset]
+         LIMIT ${safeLimit} OFFSET ${safeOffset}`,
+        [productId]
     );
     return rows;
 }
@@ -95,6 +101,12 @@ export async function listAdminQuestions({
         params.push(pattern, pattern, pattern);
     }
     const where = conditions.length ? `WHERE ${conditions.join(" AND ")}` : "";
+    const safeLimit = Number.isSafeInteger(Number(limit))
+        ? Math.min(Math.max(Number(limit), 1), 100)
+        : 10;
+    const safeOffset = Number.isSafeInteger(Number(offset))
+        ? Math.max(Number(offset), 0)
+        : 0;
     const [rows] = await connection.execute(
         `SELECT q.question_id, q.product_id, q.user_id, q.question_text,
                 q.status, q.created_at, q.moderation_reason,
@@ -106,8 +118,8 @@ export async function listAdminQuestions({
          LEFT JOIN product_answers a ON a.question_id = q.question_id
          ${where}
          ORDER BY q.created_at DESC, q.question_id DESC
-         LIMIT ? OFFSET ?`,
-        [...params, limit, offset]
+         LIMIT ${safeLimit} OFFSET ${safeOffset}`,
+        params
     );
     return rows;
 }

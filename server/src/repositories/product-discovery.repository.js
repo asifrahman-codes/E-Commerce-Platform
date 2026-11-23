@@ -33,10 +33,6 @@ const LITERAL_SEARCH_CONDITION = `(
   )
 )`;
 
-function makeBooleanSearchTerm(value) {
-  return `+${value}*`;
-}
-
 function escapeLikeValue(value) {
   return value.replace(/[!%_]/g, "!$&");
 }
@@ -54,28 +50,8 @@ function buildFilters(filters = {}) {
     } else {
       const searchConditions = words.map((word) => {
         const likeTerm = `%${escapeLikeValue(word)}%`;
-
-        if (word.length <= 3) {
-          params.push(likeTerm, likeTerm, likeTerm, likeTerm, likeTerm);
-          return LITERAL_SEARCH_CONDITION;
-        }
-
-        const searchTerm = makeBooleanSearchTerm(word);
-        params.push(searchTerm, searchTerm, likeTerm, searchTerm, likeTerm);
-        return `(
-          MATCH(p.name, p.description, p.slug) AGAINST (? IN BOOLEAN MODE)
-          OR MATCH(b.name) AGAINST (? IN BOOLEAN MODE)
-          OR b.name LIKE ? ESCAPE '!'
-          OR EXISTS (
-            SELECT 1
-            FROM product_variants search_variant
-            WHERE search_variant.product_id = p.product_id
-              AND (
-                MATCH(search_variant.sku) AGAINST (? IN BOOLEAN MODE)
-                OR search_variant.sku LIKE ? ESCAPE '!'
-              )
-          )
-        )`;
+        params.push(likeTerm, likeTerm, likeTerm, likeTerm, likeTerm);
+        return LITERAL_SEARCH_CONDITION;
       });
 
       conditions.push(`(${searchConditions.join(" AND ")})`);
