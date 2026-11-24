@@ -49,7 +49,8 @@ async function shutdown(signal) {
     clearTimeout(timeout);
     process.exit(0);
   } catch (error) {
-    logger.error("Shutdown failed", { message: error.message });
+    console.error("STARTUP ERROR DETAILS:", error);
+    logger.error("Server startup failed");
     process.exit(1);
   }
 }
