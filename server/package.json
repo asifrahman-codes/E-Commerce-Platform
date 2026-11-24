@@ -40,7 +40,7 @@
     "jsonwebtoken": "^9.0.3",
     "morgan": "^1.11.0",
     "multer": "^2.2.0",
-    "mysql2": "^3.23.2",
+    "mysql2": "^3.24.6",
     "nodemailer": "^9.1.1",
     "slugify": "^1.6.9",
     "stripe": "^22.4.0",
