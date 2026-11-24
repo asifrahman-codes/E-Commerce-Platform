@@ -1,5 +1,8 @@
+
 import mysql from "mysql2/promise";
 import dbConfig from "../config/database.js";
+
+const sslEnabled = process.env.DB_SSL !== "true";
 
 const pool = mysql.createPool({
   host: dbConfig.host,
@@ -7,12 +10,18 @@ const pool = mysql.createPool({
   user: dbConfig.user,
   password: dbConfig.password,
   database: dbConfig.database,
+
+  ssl: sslEnabled
+    ? {
+        minVersion: "TLSv1.2",
+        rejectUnauthorized: true,
+      }
+    : undefined,
+
   timezone: "Z",
-
   waitForConnections: true,
-  connectionLimit: 10,
+  connectionLimit: 5,
   queueLimit: 0,
-
   charset: "utf8mb4",
 });
 
