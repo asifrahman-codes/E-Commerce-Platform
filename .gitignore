@@ -20,3 +20,7 @@ coverage/
 # OS files
 .DS_Store
 Thumbs.db
+
+# Database backups
+ecommerce_db_backup*.sql
+ecommerce_db_backup*.sql~
