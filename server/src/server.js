@@ -59,6 +59,15 @@ process.on("SIGTERM", () => void shutdown("SIGTERM"));
 process.on("SIGINT", () => void shutdown("SIGINT"));
 
 startServer().catch((error) => {
-  logger.error("Server startup failed", { message: error.message });
+  console.error("========== SERVER STARTUP ERROR ==========");
+  console.error(error);
+  console.error("===========================================");
+
+  logger.error("Server startup failed", {
+    message: error.message,
+    stack: error.stack,
+    code: error.code,
+  });
+
   process.exit(1);
 });
