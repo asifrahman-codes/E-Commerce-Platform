@@ -23,21 +23,21 @@ const cloud = await mysql.createConnection({
 });
 
 try {
-  const [tables] = await local.query(`
-    SELECT table_name
-    FROM information_schema.tables
-    WHERE table_schema = 'ecommerce_db'
-      AND table_type = 'BASE TABLE'
-    ORDER BY table_name
-  `);
+    const [tables] = await local.query(`
+      SELECT TABLE_NAME AS table_name
+      FROM information_schema.tables
+      WHERE TABLE_SCHEMA = 'ecommerce_db'
+        AND TABLE_TYPE = 'BASE TABLE'
+      ORDER BY TABLE_NAME
+    `);
 
-  const [cloudTables] = await cloud.query(`
-    SELECT table_name
-    FROM information_schema.tables
-    WHERE table_schema = 'ecommerce_db'
-      AND table_type = 'BASE TABLE'
-    ORDER BY table_name
-  `);
+    const [cloudTables] = await cloud.query(`
+      SELECT TABLE_NAME AS table_name
+      FROM information_schema.tables
+      WHERE TABLE_SCHEMA = 'ecommerce_db'
+        AND TABLE_TYPE = 'BASE TABLE'
+      ORDER BY TABLE_NAME
+    `);
 
   const cloudNames = new Set(
     cloudTables.map((table) => table.table_name)
