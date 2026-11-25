@@ -27,6 +27,25 @@ const adminCatalogService = {
     clearCachedRequests("catalog:categories");
     return result;
   },
+  uploadCategoryImage: async (id, file, onUploadProgress) => {
+    const formData = new FormData();
+    formData.append("image", file);
+    const result = unwrap(await api.post(
+      API_ENDPOINTS.CATEGORIES.IMAGE(id),
+      formData,
+      {
+        headers: { "Content-Type": "multipart/form-data" },
+        onUploadProgress,
+      }
+    ));
+    clearCachedRequests("catalog:categories");
+    return result;
+  },
+  deleteCategoryImage: async (id) => {
+    const result = unwrap(await api.delete(API_ENDPOINTS.CATEGORIES.IMAGE(id)));
+    clearCachedRequests("catalog:categories");
+    return result;
+  },
   deleteCategory: async (id) => {
     const result = unwrap(await api.delete(API_ENDPOINTS.CATEGORIES.DETAILS(id)));
     clearCachedRequests("catalog:categories");

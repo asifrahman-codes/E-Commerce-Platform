@@ -81,7 +81,7 @@ export async function getWishlistShare(token) {
   if (!shares[0]) return null;
   const [items] = await pool.execute(
     `SELECT p.product_id, p.name, p.slug, p.base_price,
-      (SELECT pi.image_url FROM product_images pi WHERE pi.product_id=p.product_id ORDER BY pi.is_primary DESC, pi.image_id LIMIT 1) AS primary_image_url
+      (SELECT pi.image_url FROM product_images pi WHERE pi.product_id=p.product_id ORDER BY pi.is_primary DESC, pi.image_id ASC LIMIT 1) AS primary_image_url
      FROM wishlist_share_items wsi
      JOIN products p ON p.product_id=wsi.product_id
      WHERE wsi.share_id=?`,

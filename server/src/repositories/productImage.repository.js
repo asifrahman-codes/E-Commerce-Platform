@@ -1,128 +1,126 @@
 import { query } from "../database/index.js";
+import pool from "../database/connection.js";
 
-/*
-|--------------------------------------------------------------------------
-| Save Image
-|--------------------------------------------------------------------------
-*/
+export const createProductImages = async (images) => {
+    if (!images.length) return [];
 
-export const createProductImage = async ({
-    product_id,
-    image_url,
-    public_id,
-    is_primary
-}) => {
+    const values = [];
+    const placeholders = images.map((image) => {
+        values.push(
+            image.product_id,
+            image.image_url,
+            image.public_id,
+            image.is_primary ? 1 : 0
+        );
+        return "(?, ?, ?, ?)";
+    });
 
-    const sql = `
+    await query(
+        `
         INSERT INTO product_images
-        (
-            product_id,
-            image_url,
-            public_id,
-            is_primary
-        )
-        VALUES
-        (?, ?, ?, ?)
-    `;
+            (product_id, image_url, public_id, is_primary)
+        VALUES ${placeholders.join(", ")}
+        `,
+        values
+    );
 
-    const result = await query(sql, [
-        product_id,
-        image_url,
-        public_id,
-        is_primary
-    ]);
-
-    return result.insertId;
-};
-
-/*
-|--------------------------------------------------------------------------
-| Get Images
-|--------------------------------------------------------------------------
-*/
-
-export const getProductImages = async (productId) => {
-
-    const sql = `
+    return query(
+        `
         SELECT *
         FROM product_images
-        WHERE product_id=?
-        ORDER BY is_primary DESC,image_id ASC
-    `;
-
-    return await query(sql,[productId]);
+        WHERE public_id IN (${images.map(() => "?").join(", ")})
+        ORDER BY is_primary DESC, image_id ASC
+        `,
+        images.map((image) => image.public_id)
+    );
 };
 
-/*
-|--------------------------------------------------------------------------
-| Find Image
-|--------------------------------------------------------------------------
-*/
+export const createProductImage = async (image) => {
+    const [created] = await createProductImages([image]);
+    return created.image_id;
+};
 
-export const findImageById = async(imageId)=>{
+export const getProductImages = async (productId) => query(
+    `
+    SELECT *
+    FROM product_images
+    WHERE product_id = ?
+    ORDER BY is_primary DESC, image_id ASC
+    `,
+    [productId]
+);
 
-    const sql=`
+export const findImageById = async (imageId) => {
+    const rows = await query(
+        `
         SELECT *
         FROM product_images
-        WHERE image_id=?
+        WHERE image_id = ?
         LIMIT 1
-    `;
-
-    const rows=await query(sql,[imageId]);
+        `,
+        [imageId]
+    );
 
     return rows[0] || null;
-
 };
 
-/*
-|--------------------------------------------------------------------------
-| Delete Image
-|--------------------------------------------------------------------------
-*/
-
-export const deleteImage = async(imageId)=>{
-
-    const sql=`
-        DELETE FROM product_images
-        WHERE image_id=?
-    `;
-
-    return await query(sql,[imageId]);
-
-};
-
-/*
-|--------------------------------------------------------------------------
-| Remove Primary
-|--------------------------------------------------------------------------
-*/
-
-export const clearPrimaryImage = async(productId)=>{
-
-    const sql=`
+export const replaceImageAsset = async (imageId, imageUrl, publicId) => {
+    const result = await query(
+        `
         UPDATE product_images
-        SET is_primary=0
-        WHERE product_id=?
-    `;
+        SET image_url = ?, public_id = ?
+        WHERE image_id = ?
+        `,
+        [imageUrl, publicId, imageId]
+    );
 
-    return await query(sql,[productId]);
-
+    return result.affectedRows;
 };
 
-/*
-|--------------------------------------------------------------------------
-| Set Primary
-|--------------------------------------------------------------------------
-*/
+export const deleteImageAndPromote = async (image) => {
+    const connection = await pool.getConnection();
 
-export const setPrimaryImage = async(imageId)=>{
+    try {
+        await connection.beginTransaction();
 
-    const sql=`
-        UPDATE product_images
-        SET is_primary=1
-        WHERE image_id=?
-    `;
+        const [result] = await connection.execute(
+            "DELETE FROM product_images WHERE image_id = ? AND product_id = ?",
+            [image.image_id, image.product_id]
+        );
 
-    return await query(sql,[imageId]);
+        if (result.affectedRows && Number(image.is_primary) === 1) {
+            await connection.execute(
+                "UPDATE product_images SET is_primary = 0 WHERE product_id = ?",
+                [image.product_id]
+            );
 
+            await connection.execute(
+                `
+                UPDATE product_images
+                SET is_primary = 1
+                WHERE product_id = ?
+                ORDER BY image_id ASC
+                LIMIT 1
+                `,
+                [image.product_id]
+            );
+        }
+
+        await connection.commit();
+        return result.affectedRows;
+    } catch (error) {
+        await connection.rollback();
+        throw error;
+    } finally {
+        connection.release();
+    }
 };
+
+export const setPrimaryImage = async (image) => query(
+    `
+    UPDATE product_images
+    SET is_primary = CASE WHEN image_id = ? THEN 1 ELSE 0 END
+    WHERE product_id = ?
+    `,
+    [image.image_id, image.product_id]
+);

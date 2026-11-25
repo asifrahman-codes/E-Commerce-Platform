@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Edit3, Plus, Search, Trash2 } from "lucide-react";
+import { Edit3, ImagePlus, Layers3, Plus, Search, Trash2, X } from "lucide-react";
 
 import {
   AdminCard,
@@ -13,6 +13,7 @@ import {
 import { useAdminToast } from "./AdminToastContext";
 import adminCatalogService from "../../services/admin-catalog.service";
 import useDialogFocus from "../../hooks/useDialogFocus";
+import SafeImage from "../common/SafeImage";
 
 const PAGE_SIZE = 10;
 
@@ -23,7 +24,7 @@ const config = {
     description: "Organize the catalog with clear, customer-facing category names.",
     idKey: "category_id",
     fields: ["name", "description", "status"],
-    columns: ["Category", "Description", "Status"],
+    columns: ["Category", "Image", "Description", "Status"],
     load: adminCatalogService.getCategories,
     create: adminCatalogService.createCategory,
     update: adminCatalogService.updateCategory,
@@ -62,6 +63,23 @@ export default function AdminCatalogManager({ resource }) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [dialogError, setDialogError] = useState("");
+  const [categoryImage, setCategoryImage] = useState(null);
+  const [categoryImageError, setCategoryImageError] = useState("");
+  const [uploadProgress, setUploadProgress] = useState(null);
+  const imageInputRef = useRef(null);
+
+  const [imagePreviewUrl, setImagePreviewUrl] = useState("");
+
+  useEffect(() => {
+    if (!categoryImage) {
+      setImagePreviewUrl("");
+      return undefined;
+    }
+
+    const previewUrl = URL.createObjectURL(categoryImage);
+    setImagePreviewUrl(previewUrl);
+    return () => URL.revokeObjectURL(previewUrl);
+  }, [categoryImage]);
 
   useDialogFocus(dialogRef, dialogOpen, () => {
     if (saving) return;
@@ -69,6 +87,9 @@ export default function AdminCatalogManager({ resource }) {
     setDialogOpen(false);
     setForm(settings.initial);
     setDialogError("");
+    setCategoryImage(null);
+    setCategoryImageError("");
+    setUploadProgress(null);
   });
 
   const loadRecords = useCallback(async () => {
@@ -76,9 +97,12 @@ export default function AdminCatalogManager({ resource }) {
     setError("");
     try {
       const data = await settings.load();
-      setRecords(Array.isArray(data) ? data : []);
+      const loaded = Array.isArray(data) ? data : [];
+      setRecords(loaded);
+      return loaded;
     } catch (loadError) {
       setError(loadError.message || loadError.response?.data?.message || `Unable to load ${settings.title.toLowerCase()}.`);
+      return [];
     } finally {
       setLoading(false);
     }
@@ -108,6 +132,9 @@ export default function AdminCatalogManager({ resource }) {
     setEditing(null);
     setForm(settings.initial);
     setDialogError("");
+    setCategoryImage(null);
+    setCategoryImageError("");
+    setUploadProgress(null);
     setDialogOpen(true);
   };
 
@@ -115,7 +142,26 @@ export default function AdminCatalogManager({ resource }) {
     setEditing(record);
     setForm(Object.fromEntries(settings.fields.map((field) => [field, record[field] ?? ""])));
     setDialogError("");
+    setCategoryImage(null);
+    setCategoryImageError("");
+    setUploadProgress(null);
     setDialogOpen(true);
+  };
+
+  const selectCategoryImage = (event) => {
+    const file = event.target.files?.[0] ?? null;
+    event.target.value = "";
+    setCategoryImageError("");
+    if (!file) return;
+    if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
+      setCategoryImageError("Choose a JPEG, PNG or WebP image.");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setCategoryImageError("Category images must be 5 MB or smaller.");
+      return;
+    }
+    setCategoryImage(file);
   };
 
   const save = async (event) => {
@@ -126,16 +172,51 @@ export default function AdminCatalogManager({ resource }) {
     setSaving(true);
     setDialogError("");
     try {
+      let savedRecord;
       if (editing) {
-        await settings.update(editing[settings.idKey], payload);
-        notify(`${settings.singular} updated.`);
+        savedRecord = await settings.update(editing[settings.idKey], payload);
       } else {
-        await settings.create(payload);
-        notify(`${settings.singular} created.`);
+        savedRecord = await settings.create(payload);
       }
+
+      if (resource === "categories" && categoryImage) {
+        const categoryId = editing?.[settings.idKey] ?? savedRecord?.[settings.idKey];
+        if (!categoryId) {
+          throw new Error("Category was saved, but its ID was not returned for image upload.");
+        }
+        try {
+          setUploadProgress(0);
+          await adminCatalogService.uploadCategoryImage(
+            categoryId,
+            categoryImage,
+            (progressEvent) => {
+              if (progressEvent.total) {
+                setUploadProgress(Math.round((progressEvent.loaded / progressEvent.total) * 100));
+              }
+            }
+          );
+        } catch (uploadError) {
+          if (!editing) {
+            setEditing({ ...savedRecord, [settings.idKey]: categoryId });
+          }
+          const currentRecords = await loadRecords();
+          const currentCategory = currentRecords.find(
+            (record) => record[settings.idKey] === categoryId
+          );
+          if (currentCategory) setEditing(currentCategory);
+          setDialogError(
+            `Category saved, but its image could not be uploaded: ${uploadError.response?.data?.message || uploadError.message || "Upload failed."}`
+          );
+          return;
+        }
+      }
+
+      notify(`${settings.singular} ${editing ? "updated" : "created"}.`);
       setEditing(null);
       setDialogOpen(false);
       setForm(settings.initial);
+      setCategoryImage(null);
+      setUploadProgress(null);
       await loadRecords();
     } catch (saveError) {
       setDialogError(saveError.message || saveError.response?.data?.message || `Unable to save ${settings.title.toLowerCase()}.`);
@@ -208,7 +289,7 @@ export default function AdminCatalogManager({ resource }) {
         ) : (
           <>
             <div className="overflow-x-auto overscroll-x-contain touch-pan-x">
-              <table className="w-full min-w-[680px] text-left text-sm">
+              <table className="w-full min-w-[760px] text-left text-sm">
                 <thead className="bg-slate-50 text-[10px] font-bold uppercase tracking-[0.12em] text-slate-500">
                   <tr>{settings.columns.map((column) => <th key={column} className="px-5 py-3.5">{column}</th>)}<th className="px-5 py-3.5 text-right">Actions</th></tr>
                 </thead>
@@ -225,6 +306,26 @@ export default function AdminCatalogManager({ resource }) {
                           <span className="font-semibold text-slate-800">{record.name}</span>
                         </div>
                       </td>
+                      {resource === "categories" && (
+                        <td className="px-5 py-3">
+                          <div className="h-12 w-16 overflow-hidden rounded-lg border border-slate-100 bg-slate-50">
+                            {record.image_url ? (
+                              <SafeImage
+                                src={record.image_url}
+                                alt={`${record.name} category`}
+                                loading="lazy"
+                                className="h-full w-full object-cover"
+                                fallbackClassName="bg-slate-50"
+                                fallbackSize={20}
+                              />
+                            ) : (
+                              <div className="flex h-full items-center justify-center text-slate-400">
+                                <Layers3 size={20} strokeWidth={1.3} />
+                              </div>
+                            )}
+                          </div>
+                        </td>
+                      )}
                       {resource === "categories" ? (
                         <td className="max-w-sm truncate px-5 py-4 text-slate-500">{record.description || "—"}</td>
                       ) : (
@@ -276,9 +377,87 @@ export default function AdminCatalogManager({ resource }) {
                   </label>
                 )
               ))}
+              {resource === "categories" && (
+                <div className="space-y-3">
+                  <span className="block text-sm font-medium text-slate-700">Category image</span>
+                  {imagePreviewUrl || editing?.image_url ? (
+                    <SafeImage
+                      src={imagePreviewUrl || editing.image_url}
+                      alt={`${form.name || "Category"} preview`}
+                      className="h-36 w-full rounded-xl border border-slate-200 bg-slate-50 object-cover"
+                      fallbackClassName="h-36 rounded-xl bg-slate-50"
+                      fallbackSize={36}
+                    />
+                  ) : (
+                    <div className="flex h-36 items-center justify-center rounded-xl border border-dashed border-slate-200 bg-slate-50 text-slate-400">
+                      <Layers3 size={36} strokeWidth={1.3} />
+                    </div>
+                  )}
+                  <input
+                    ref={imageInputRef}
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    onChange={selectCategoryImage}
+                    className="hidden"
+                  />
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={() => imageInputRef.current?.click()}
+                      disabled={saving}
+                      className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-slate-200 px-3 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+                    >
+                      <ImagePlus size={16} />
+                      {editing?.image_url || categoryImage ? "Change image" : "Upload image"}
+                    </button>
+                    {categoryImage ? (
+                      <button
+                        type="button"
+                        onClick={() => { setCategoryImage(null); setCategoryImageError(""); }}
+                        disabled={saving}
+                        className="inline-flex min-h-11 items-center gap-2 rounded-xl px-3 text-sm font-semibold text-rose-600 hover:bg-rose-50 disabled:opacity-50"
+                      >
+                        <X size={16} /> Remove selection
+                      </button>
+                    ) : editing?.image_url ? (
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          setSaving(true);
+                          setCategoryImageError("");
+                          try {
+                            const updated = await adminCatalogService.deleteCategoryImage(editing[settings.idKey]);
+                            setEditing(updated);
+                            notify("Category image removed.");
+                            await loadRecords();
+                          } catch (removeError) {
+                            setCategoryImageError(removeError.response?.data?.message || "Unable to remove the category image.");
+                          } finally {
+                            setSaving(false);
+                          }
+                        }}
+                        disabled={saving}
+                        className="inline-flex min-h-11 items-center gap-2 rounded-xl px-3 text-sm font-semibold text-rose-600 hover:bg-rose-50 disabled:opacity-50"
+                      >
+                        <X size={16} /> Remove image
+                      </button>
+                    ) : null}
+                  </div>
+                  <p className="text-xs text-slate-500">JPEG, PNG or WebP · maximum 5 MB</p>
+                  {categoryImageError && <p role="alert" className="text-sm text-rose-700">{categoryImageError}</p>}
+                  {uploadProgress !== null && saving && (
+                    <div className="space-y-1" role="status" aria-live="polite">
+                      <div className="h-2 overflow-hidden rounded-full bg-slate-100">
+                        <div className="h-full bg-[#315d47] transition-all" style={{ width: `${uploadProgress}%` }} />
+                      </div>
+                      <p className="text-xs text-slate-500">Uploading image… {uploadProgress}%</p>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
             <div className="mt-6 flex justify-end gap-2">
-              <button type="button" onClick={() => { setEditing(null); setDialogOpen(false); setForm(settings.initial); setDialogError(""); }} disabled={saving} className="rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-50">Cancel</button>
+              <button type="button" onClick={() => { setEditing(null); setDialogOpen(false); setForm(settings.initial); setDialogError(""); setCategoryImage(null); setUploadProgress(null); }} disabled={saving} className="rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-50">Cancel</button>
               <button type="submit" disabled={saving} className="rounded-xl bg-[#315d47] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#244b39] disabled:opacity-50">{saving ? "Saving…" : editing ? "Save changes" : "Create"}</button>
             </div>
           </form>

@@ -19,7 +19,7 @@ export async function listPublicFlashSaleTargets(connection = pool) {
             (SELECT pi.image_url
              FROM product_images pi
              WHERE pi.product_id = p.product_id
-             ORDER BY pi.is_primary DESC, pi.image_id
+             ORDER BY pi.is_primary DESC, pi.image_id ASC
              LIMIT 1) AS image_url
          FROM flash_sales s
          JOIN flash_sale_targets t ON t.flash_sale_id = s.flash_sale_id

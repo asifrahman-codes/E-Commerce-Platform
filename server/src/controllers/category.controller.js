@@ -11,7 +11,9 @@ import {
 
     updateCategoryService,
 
-    deleteCategoryService
+    deleteCategoryService,
+    uploadCategoryImageService,
+    deleteCategoryImageService
 
 } from "../services/category.service.js";
 
@@ -159,32 +161,26 @@ export const updateCategory = asyncHandler(
 |--------------------------------------------------------------------------
 */
 
-export const deleteCategory = asyncHandler(
+export const deleteCategory = asyncHandler(async (req, res) => {
+    await deleteCategoryService(req.params.id);
 
-    async (req, res) => {
+    return res.status(200).json(
+        new ApiResponse(200, "Category deleted successfully", null)
+    );
+});
 
-        await deleteCategoryService(
+export const uploadCategoryImage = asyncHandler(async (req, res) => {
+    const category = await uploadCategoryImageService(req.params.id, req.file);
 
-            req.params.id
+    return res.status(200).json(
+        new ApiResponse(200, "Category image updated successfully", category)
+    );
+});
 
-        );
+export const deleteCategoryImage = asyncHandler(async (req, res) => {
+    const category = await deleteCategoryImageService(req.params.id);
 
-        return res
-            .status(200)
-            .json(
-
-                new ApiResponse(
-
-                    200,
-
-                    "Category deleted successfully",
-
-                    null
-
-                )
-
-            );
-
-    }
-
-);
+    return res.status(200).json(
+        new ApiResponse(200, "Category image removed successfully", category)
+    );
+});

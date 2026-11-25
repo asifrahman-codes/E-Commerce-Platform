@@ -38,6 +38,7 @@ export default function ProductForm({
     const [newImages, setNewImages] = useState([]);
 
     const [loading, setLoading] = useState(false);
+    const [uploadProgress, setUploadProgress] = useState(null);
 
     const [error, setError] = useState("");
 
@@ -171,9 +172,15 @@ export default function ProductForm({
 
                 try {
 
+                    setUploadProgress(0);
                     await adminProductService.uploadProductImages(
                         productId,
-                        newImages
+                        newImages,
+                        (progressEvent) => {
+                            if (progressEvent.total) {
+                                setUploadProgress(Math.round((progressEvent.loaded / progressEvent.total) * 100));
+                            }
+                        }
                     );
 
                 } catch (uploadError) {
@@ -222,6 +229,7 @@ export default function ProductForm({
         } finally {
 
             setLoading(false);
+            setUploadProgress(null);
 
         }
 
@@ -403,7 +411,7 @@ export default function ProductForm({
 
             {/* Images */}
 
-            <div className="space-y-4 border-t border-zinc-100 pt-6">
+            <div id="product-images" className="scroll-mt-24 space-y-4 border-t border-zinc-100 pt-6">
 
                 <div>
 
@@ -455,6 +463,15 @@ export default function ProductForm({
                         This product already has the maximum of {MAX_IMAGES_PER_PRODUCT} images. Delete one to add another.
                     </p>
 
+                )}
+
+                {loading && uploadProgress !== null && (
+                    <div className="space-y-1" role="status" aria-live="polite">
+                        <div className="h-2 overflow-hidden rounded-full bg-zinc-100">
+                            <div className="h-full bg-indigo-600 transition-all" style={{ width: `${uploadProgress}%` }} />
+                        </div>
+                        <p className="text-xs text-zinc-500">Uploading images… {uploadProgress}%</p>
+                    </div>
                 )}
 
             </div>

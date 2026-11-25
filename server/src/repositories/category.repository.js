@@ -94,6 +94,7 @@ export const getAllCategories = async () => {
             name,
             slug,
             description,
+            image_url,
             status,
             created_at
         FROM categories

@@ -1,4 +1,11 @@
 import ApiError from "../utils/ApiError.js";
+import {
+    cleanupReplacedImage,
+    cleanupUploadedImages,
+    deleteCloudinaryImage,
+    uploadImageBuffer,
+    validateImageFile
+} from "../utils/cloudinary-image.js";
 
 import generateSlug from "../utils/generateSlug.js";
 
@@ -179,4 +186,64 @@ export const deleteCategoryService = async (categoryId) => {
 
     await deleteCategory(categoryId);
 
+    await deleteCloudinaryImage(category.image_public_id);
+
+};
+
+export const uploadCategoryImageService = async (categoryId, file) => {
+    const category = await findCategoryById(categoryId);
+
+    if (!category) {
+        throw new ApiError(404, "Category not found");
+    }
+
+    validateImageFile(file);
+
+    const uploaded = await uploadImageBuffer(
+        file.buffer,
+        "shopsphere/categories"
+    );
+
+    try {
+        await updateCategory(categoryId, {
+            image_url: uploaded.secure_url,
+            image_public_id: uploaded.public_id
+        });
+    } catch (error) {
+        await cleanupUploadedImages(
+            [uploaded],
+            `category:${categoryId}`
+        );
+        throw error;
+    }
+
+    if (category.image_public_id) {
+        await cleanupReplacedImage(
+            category.image_public_id,
+            `category:${categoryId}`
+        );
+    }
+
+    return findCategoryById(categoryId);
+};
+
+export const deleteCategoryImageService = async (categoryId) => {
+    const category = await findCategoryById(categoryId);
+
+    if (!category) {
+        throw new ApiError(404, "Category not found");
+    }
+
+    if (!category.image_public_id && !category.image_url) {
+        return category;
+    }
+
+    await updateCategory(categoryId, {
+        image_url: null,
+        image_public_id: null
+    });
+
+    await deleteCloudinaryImage(category.image_public_id);
+
+    return findCategoryById(categoryId);
 };

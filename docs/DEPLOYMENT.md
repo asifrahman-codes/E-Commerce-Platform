@@ -17,6 +17,7 @@ This document describes a deployment checklist for a real environment. It does n
 
 1. Create the database and run `server/src/database/schema/run_schema.sql`.
 2. Apply migrations in ascending V-number order.
+   For catalog image management, apply `server/src/database/migrations/V20__Catalog_Image_Management.sql` after V19 and before deploying the updated API.
 3. Run seed scripts only for intentional initial data.
 4. Test migrations against a restored copy of production before release.
 5. Schedule encrypted backups and periodic restore drills using the scripts under `server/src/database/backups`.

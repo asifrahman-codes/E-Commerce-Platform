@@ -9,7 +9,8 @@ import {
 
     deleteProductImageService,
 
-    setPrimaryImageService
+    setPrimaryImageService,
+    replaceProductImageService
 
 } from "../services/productImage.service.js";
 
@@ -123,30 +124,21 @@ export const deleteProductImage = asyncHandler(
 |--------------------------------------------------------------------------
 */
 
-export const setPrimaryImage = asyncHandler(
+export const setPrimaryImage = asyncHandler(async (req, res) => {
+    await setPrimaryImageService(req.params.imageId);
 
-    async (req, res) => {
+    return res.status(200).json(
+        new ApiResponse(200, "Primary image updated successfully", null)
+    );
+});
 
-        await setPrimaryImageService(
+export const replaceProductImage = asyncHandler(async (req, res) => {
+    const image = await replaceProductImageService(
+        req.params.imageId,
+        req.file
+    );
 
-            req.params.imageId
-
-        );
-
-        return res.status(200).json(
-
-            new ApiResponse(
-
-                200,
-
-                "Primary image updated successfully",
-
-                null
-
-            )
-
-        );
-
-    }
-
-);
+    return res.status(200).json(
+        new ApiResponse(200, "Product image replaced successfully", image)
+    );
+});

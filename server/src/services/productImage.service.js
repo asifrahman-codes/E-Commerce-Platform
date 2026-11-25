@@ -1,179 +1,155 @@
-import { Readable } from "stream";
-
-import cloudinary from "../config/cloudinary.js";
-
 import ApiError from "../utils/ApiError.js";
-
-import { findProductById } from "../repositories/product.repository.js";
-
 import {
-
-    createProductImage,
-
-    getProductImages,
-
+    cleanupReplacedImage,
+    cleanupUploadedImages,
+    deleteCloudinaryImage,
+    uploadImageBuffer,
+    validateImageFile
+} from "../utils/cloudinary-image.js";
+import { deleteProduct } from "../repositories/product.repository.js";
+import { findAdminProductById } from "../repositories/admin-product.repository.js";
+import {
+    createProductImages,
+    deleteImageAndPromote,
     findImageById,
-
-    deleteImage,
-
-    clearPrimaryImage,
-
+    getProductImages,
+    replaceImageAsset,
     setPrimaryImage
-
 } from "../repositories/productImage.repository.js";
 
-/*
-|--------------------------------------------------------------------------
-| Upload Stream Helper
-|--------------------------------------------------------------------------
-*/
+const MAX_IMAGES_PER_PRODUCT = 10;
 
-const uploadToCloudinary = (buffer) => {
+const validateId = (value, label) => {
+    const id = Number(value);
+    if (!Number.isSafeInteger(id) || id < 1) {
+        throw new ApiError(400, `Invalid ${label}.`);
+    }
+    return id;
+};
 
-    return new Promise((resolve,reject)=>{
+export const uploadProductImagesService = async (productId, files = []) => {
+    const id = validateId(productId, "product ID");
+    const product = await findAdminProductById(id);
 
-        const stream=cloudinary.uploader.upload_stream(
+    if (!product) {
+        throw new ApiError(404, "Product not found");
+    }
+    if (!files.length) {
+        throw new ApiError(400, "Select at least one product image.");
+    }
 
-            {
-                folder:"ecommerce/products"
-            },
+    files.forEach(validateImageFile);
 
-            (error,result)=>{
-
-                if(error) return reject(error);
-
-                resolve(result);
-
-            }
-
+    const existingImages = await getProductImages(id);
+    if (existingImages.length + files.length > MAX_IMAGES_PER_PRODUCT) {
+        throw new ApiError(
+            400,
+            `A product can have at most ${MAX_IMAGES_PER_PRODUCT} images.`
         );
-
-        Readable.from(buffer).pipe(stream);
-
-    });
-
-};
-
-/*
-|--------------------------------------------------------------------------
-| Upload Images
-|--------------------------------------------------------------------------
-*/
-
-export const uploadProductImagesService = async(productId,files)=>{
-
-    const product=await findProductById(productId);
-
-    if(!product){
-
-        throw new ApiError(404,"Product not found");
-
     }
 
-    const existingImages=await getProductImages(productId);
+    const uploaded = [];
+    try {
+        for (const file of files) {
+            const result = await uploadImageBuffer(
+                file.buffer,
+                "shopsphere/products"
+            );
+            uploaded.push({
+                product_id: id,
+                image_url: result.secure_url,
+                public_id: result.public_id
+            });
+        }
 
-    const uploaded=[];
+        const imagesToCreate = uploaded.map((image, index) => ({
+            ...image,
+            is_primary: existingImages.length === 0 && index === 0
+        }));
 
-    for(const file of files){
-
-        const result=await uploadToCloudinary(file.buffer);
-
-        const imageId=await createProductImage({
-
-            product_id:productId,
-
-            image_url:result.secure_url,
-
-            public_id:result.public_id,
-
-            is_primary:existingImages.length===0 && uploaded.length===0
-
-        });
-
-        uploaded.push({
-
-            image_id:imageId,
-
-            image_url:result.secure_url,
-
-            public_id:result.public_id
-
-        });
-
+        return await createProductImages(imagesToCreate);
+    } catch (error) {
+        await cleanupUploadedImages(uploaded, `product:${id}`);
+        throw error;
     }
-
-    return uploaded;
-
 };
 
-/*
-|--------------------------------------------------------------------------
-| Get Images
-|--------------------------------------------------------------------------
-*/
-
-export const getProductImagesService=async(productId)=>{
-
-    return await getProductImages(productId);
-
+export const getProductImagesService = async (productId) => {
+    const id = validateId(productId, "product ID");
+    return getProductImages(id);
 };
 
-/*
-|--------------------------------------------------------------------------
-| Delete Image
-|--------------------------------------------------------------------------
-*/
-
-export const deleteProductImageService = async (imageId) => {
-
-    const image = await findImageById(imageId);
+export const replaceProductImageService = async (imageId, file) => {
+    const id = validateId(imageId, "image ID");
+    const image = await findImageById(id);
 
     if (!image) {
         throw new ApiError(404, "Image not found");
     }
 
-    const wasPrimary = Number(image.is_primary) === 1;
+    validateImageFile(file);
+    const uploaded = await uploadImageBuffer(
+        file.buffer,
+        "shopsphere/products"
+    );
 
-    await cloudinary.uploader.destroy(image.public_id);
+    try {
+        const affectedRows = await replaceImageAsset(
+            id,
+            uploaded.secure_url,
+            uploaded.public_id
+        );
 
-    await deleteImage(imageId);
-
-    if (wasPrimary) {
-
-        const remainingImages =
-            await getProductImages(image.product_id);
-
-        if (remainingImages.length > 0) {
-
-            const nextPrimaryImage = remainingImages[0];
-
-            await clearPrimaryImage(image.product_id);
-
-            await setPrimaryImage(
-                nextPrimaryImage.image_id
-            );
+        if (!affectedRows) {
+            throw new ApiError(404, "Image not found");
         }
+    } catch (error) {
+        await cleanupUploadedImages([uploaded], `product-image:${id}`);
+        throw error;
     }
+
+    await cleanupReplacedImage(image.public_id, `product-image:${id}`);
+    return findImageById(id);
 };
 
-/*
-|--------------------------------------------------------------------------
-| Set Primary Image
-|--------------------------------------------------------------------------
-*/
+export const deleteProductImageService = async (imageId) => {
+    const id = validateId(imageId, "image ID");
+    const image = await findImageById(id);
 
-export const setPrimaryImageService=async(imageId)=>{
-
-    const image=await findImageById(imageId);
-
-    if(!image){
-
-        throw new ApiError(404,"Image not found");
-
+    if (!image) {
+        throw new ApiError(404, "Image not found");
     }
 
-    await clearPrimaryImage(image.product_id);
+    await deleteImageAndPromote(image);
+    await deleteCloudinaryImage(image.public_id);
+};
 
-    await setPrimaryImage(imageId);
+export const setPrimaryImageService = async (imageId) => {
+    const id = validateId(imageId, "image ID");
+    const image = await findImageById(id);
 
+    if (!image) {
+        throw new ApiError(404, "Image not found");
+    }
+
+    await setPrimaryImage(image);
+};
+
+export const deleteProductImagesForDeletedProduct = async (productId) => {
+    const id = validateId(productId, "product ID");
+    const images = await getProductImages(id);
+
+    await deleteProduct(id);
+
+    const results = await Promise.allSettled(
+        images.map((image) => deleteCloudinaryImage(image.public_id))
+    );
+    const failed = results.filter((result) => result.status === "rejected");
+
+    if (failed.length) {
+        throw new ApiError(
+            502,
+            "Product was deleted, but one or more Cloudinary images could not be removed."
+        );
+    }
 };

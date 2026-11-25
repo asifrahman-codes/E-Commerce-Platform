@@ -1,6 +1,7 @@
 import api from "./api";
 
 import API_ENDPOINTS from "./endpoints";
+import { clearCachedRequests } from "./request-cache";
 
 const getData = (response) => {
     return response?.data?.data ?? response?.data ?? response;
@@ -52,7 +53,7 @@ const adminProductService = {
         return getData(response);
     },
 
-    uploadProductImages: async (id, files) => {
+    uploadProductImages: async (id, files, onUploadProgress) => {
         const formData = new FormData();
 
         files.forEach((file) => formData.append("images", file));
@@ -63,10 +64,27 @@ const adminProductService = {
             {
                 headers: {
                     "Content-Type": "multipart/form-data"
-                }
+                },
+                onUploadProgress
             }
         );
 
+        clearCachedRequests("products:");
+        return getData(response);
+    },
+
+    replaceProductImage: async (imageId, file, onUploadProgress) => {
+        const formData = new FormData();
+        formData.append("image", file);
+        const response = await api.put(
+            API_ENDPOINTS.ADMIN_PRODUCTS.IMAGE(imageId),
+            formData,
+            {
+                headers: { "Content-Type": "multipart/form-data" },
+                onUploadProgress
+            }
+        );
+        clearCachedRequests("products:");
         return getData(response);
     },
 
@@ -76,6 +94,7 @@ const adminProductService = {
             API_ENDPOINTS.ADMIN_PRODUCTS.IMAGE_PRIMARY(imageId)
         );
 
+        clearCachedRequests("products:");
         return getData(response);
     },
 
@@ -84,6 +103,7 @@ const adminProductService = {
             API_ENDPOINTS.ADMIN_PRODUCTS.IMAGE(imageId)
         );
 
+        clearCachedRequests("products:");
         return getData(response);
     },
 

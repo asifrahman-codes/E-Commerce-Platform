@@ -24,9 +24,7 @@ const fileFilter = (req, file, cb) => {
 
         "image/png",
 
-        "image/webp",
-
-        "image/jpg"
+        "image/webp"
 
     ];
 

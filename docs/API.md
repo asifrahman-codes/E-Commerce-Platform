@@ -38,6 +38,18 @@ they are not machine-learning predictions.
 
 All endpoints use the configured API prefix (default `/api/v1`). Admin endpoints require an `Authorization: Bearer <access-token>` with the `ADMIN` role.
 
+## Catalog image management
+
+- `POST /categories/:id/image` - upload or replace a category image (admin, multipart field `image`; JPEG, PNG or WebP, max 5 MB).
+- `DELETE /categories/:id/image` - remove the category image (admin).
+- `GET /products/:id/images` - list product image records, primary image first.
+- `POST /products/:id/images` - add one or more product images (admin, multipart field `images`; max 5 files per request and 10 images per product, 5 MB each).
+- `PUT /products/images/:imageId` - replace one product image (admin, multipart field `image`).
+- `DELETE /products/images/:imageId` - remove one product image (admin; the next image becomes primary when needed).
+- `PATCH /products/images/:imageId/primary` - select the primary product image (admin).
+
+Uploaded assets are stored in the `shopsphere/categories/` and `shopsphere/products/` Cloudinary folders. Category responses include `image_url` and `image_public_id`; product image records retain `image_url`, `public_id`, and `is_primary`. Product image order follows upload order (`image_id`).
+
 - `GET /platform/bundles` - active, scheduled database-backed product bundles.
 - `POST /platform/bundles` - create a bundle (admin).
 - `POST /platform/back-in-stock` - subscribe an email to a product or variant restock notification.

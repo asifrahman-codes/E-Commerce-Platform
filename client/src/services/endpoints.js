@@ -43,6 +43,7 @@ const API_ENDPOINTS = {
   CATEGORIES: {
     BASE: "/categories",
     DETAILS: (id) => `/categories/${id}`,
+    IMAGE: (id) => `/categories/${id}/image`,
   },
 
   BRANDS: {

@@ -10,7 +10,9 @@ import {
 
     updateCategory,
 
-    deleteCategory
+    deleteCategory,
+    uploadCategoryImage,
+    deleteCategoryImage
 
 } from "../controllers/category.controller.js";
 
@@ -19,6 +21,7 @@ import validate from "../middleware/validation.middleware.js";
 import authMiddleware from "../middleware/auth.middleware.js";
 
 import authorize from "../middleware/role.middleware.js";
+import upload from "../middleware/upload.middleware.js";
 
 import {
 
@@ -42,6 +45,21 @@ router.get(
 
     getAllCategories
 
+);
+
+router.post(
+    "/:id/image",
+    authMiddleware,
+    authorize("Admin"),
+    upload.single("image"),
+    uploadCategoryImage
+);
+
+router.delete(
+    "/:id/image",
+    authMiddleware,
+    authorize("Admin"),
+    deleteCategoryImage
 );
 
 router.get(

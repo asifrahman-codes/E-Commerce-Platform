@@ -12,7 +12,8 @@ import {
 
     deleteProductImage,
 
-    setPrimaryImage
+    setPrimaryImage,
+    replaceProductImage
 
 } from "../controllers/productImage.controller.js";
 
@@ -61,6 +62,20 @@ router.delete(
     authorize("Admin"),
 
     deleteProductImage
+
+);
+
+router.put(
+
+    "/products/images/:imageId",
+
+    authMiddleware,
+
+    authorize("Admin"),
+
+    upload.single("image"),
+
+    replaceProductImage
 
 );
 

@@ -54,10 +54,11 @@ export const getResponsiveImageProps = (
 
   try {
     const url = new URL(src, window.location.origin);
-    const isProductUpload =
+    const isShopSphereUpload =
       url.hostname === "res.cloudinary.com" &&
       url.pathname.includes("/image/upload/") &&
-      url.pathname.includes("/ecommerce/products/");
+      (/\/shopsphere\/(?:products|categories)\//.test(url.pathname) ||
+        url.pathname.includes("/ecommerce/products/"));
     const uploadMarker = "/image/upload/";
     const uploadIndex = url.pathname.indexOf(uploadMarker);
     const pathAfterUpload = uploadIndex < 0
@@ -66,7 +67,7 @@ export const getResponsiveImageProps = (
     const firstSegment = pathAfterUpload.split("/")[0];
     const alreadyTransformed = /,|^(?:c_|e_|f_|g_|h_|q_|r_|w_|x_|y_|z_)/.test(firstSegment);
 
-    if (!isProductUpload || alreadyTransformed) {
+    if (!isShopSphereUpload || alreadyTransformed) {
       return { src, sizes };
     }
 

@@ -6,12 +6,12 @@ import {
     findProductById,
     findProductBySlug,
     getAllProducts,
-    updateProduct,
-    deleteProduct
+    updateProduct
 } from "../repositories/product.repository.js";
 
 import { findCategoryById } from "../repositories/category.repository.js";
 import { findBrandById } from "../repositories/brand.repository.js";
+import { deleteProductImagesForDeletedProduct } from "./productImage.service.js";
 
 /*
 |--------------------------------------------------------------------------
@@ -202,6 +202,6 @@ export const deleteProductService = async (productId) => {
 
     }
 
-    await deleteProduct(productId);
+    await deleteProductImagesForDeletedProduct(productId);
 
 };
