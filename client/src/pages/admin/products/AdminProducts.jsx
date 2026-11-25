@@ -6,6 +6,7 @@ import {
     Plus,
     Search,
     Edit,
+    ImagePlus,
     Package,
     RefreshCw
 } from "lucide-react";
@@ -368,8 +369,18 @@ export default function AdminProducts() {
                                                     to={`/admin/products/${product.product_id}/edit`}
                                                     className="rounded-lg border border-zinc-200 p-2 hover:bg-zinc-50"
                                                     title="Edit product"
+                                                    aria-label={`Edit ${product.name}`}
                                                 >
                                                     <Edit size={16} />
+                                                </Link>
+
+                                                <Link
+                                                    to={`/admin/products/${product.product_id}/edit#product-images`}
+                                                    className="inline-flex min-h-11 items-center gap-1.5 rounded-lg border border-indigo-200 px-3 py-2 text-xs font-semibold text-indigo-700 hover:bg-indigo-50"
+                                                    title={`Manage images for ${product.name}`}
+                                                >
+                                                    <ImagePlus size={15} />
+                                                    Images
                                                 </Link>
 
                                                 <Link
