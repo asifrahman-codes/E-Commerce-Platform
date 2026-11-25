@@ -136,7 +136,8 @@ function ProductCard({
           <Link
             to={`/products/${productId}`}
             aria-label={`View ${name}${stock > 0 ? " and choose options" : ""}`}
-            className="inline-flex min-h-11 w-full shrink-0 items-center justify-center gap-2 rounded-full bg-indigo-700 px-3 text-xs font-semibold text-white transition hover:bg-indigo-800 sm:w-auto sm:px-4 sm:text-sm"
+            className="inline-flex min-h-11 w-full shrink-0 items-center justify-center gap-2 rounded-full bg-indigo-600 px-3 text-xs font-semibold !text-white transition 
+            hover:bg-indigo-700 sm:w-auto sm:px-4 sm:text-sm"
           >
             {isList ? <ArrowUpRight size={17} /> : <ShoppingBag size={16} />}
             <span>{stock > 0 ? "Choose options" : "View details"}</span>

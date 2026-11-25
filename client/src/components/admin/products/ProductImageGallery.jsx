@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 
-import { Star, Trash2 } from "lucide-react";
+import { ImagePlus, Star, Trash2 } from "lucide-react";
 
 import adminProductService from "../../../services/admin-product.service";
 import SafeImage from "../../common/SafeImage";
@@ -14,6 +14,9 @@ export default function ProductImageGallery({
     const [busyId, setBusyId] = useState(null);
 
     const [error, setError] = useState("");
+    const [replaceTarget, setReplaceTarget] = useState(null);
+    const [replaceProgress, setReplaceProgress] = useState(null);
+    const replaceInputRef = useRef(null);
 
     const run = async (imageId, action, failureMessage) => {
 
@@ -61,6 +64,42 @@ export default function ProductImageGallery({
 
     };
 
+    const replace = async (event) => {
+        const file = event.target.files?.[0];
+        event.target.value = "";
+        if (!file || !replaceTarget) return;
+
+        setError("");
+        if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
+            setError("Choose a JPEG, PNG or WebP image.");
+            return;
+        }
+        if (file.size > 5 * 1024 * 1024) {
+            setError("Product images must be 5 MB or smaller.");
+            return;
+        }
+
+        const imageId = replaceTarget;
+        await run(
+            imageId,
+            async () => {
+                setReplaceProgress(0);
+                await adminProductService.replaceProductImage(
+                    imageId,
+                    file,
+                    (progressEvent) => {
+                        if (progressEvent.total) {
+                            setReplaceProgress(Math.round((progressEvent.loaded / progressEvent.total) * 100));
+                        }
+                    }
+                );
+            },
+            "Unable to replace the image."
+        );
+        setReplaceTarget(null);
+        setReplaceProgress(null);
+    };
+
     if (!images.length) {
 
         return (
@@ -74,6 +113,13 @@ export default function ProductImageGallery({
     return (
 
         <div>
+            <input
+                ref={replaceInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                onChange={replace}
+                className="hidden"
+            />
 
             {error && (
                 <p className="mb-3 rounded-lg bg-red-50 p-3 text-sm text-red-700">
@@ -112,7 +158,7 @@ export default function ProductImageGallery({
 
                             </div>
 
-                            <div className="flex items-center justify-between gap-2 p-2">
+                            <div className="flex flex-wrap items-center justify-between gap-2 p-2">
 
                                 {!isPrimary ? (
 
@@ -136,6 +182,20 @@ export default function ProductImageGallery({
 
                                 <button
                                     type="button"
+                                    onClick={() => {
+                                        setReplaceTarget(image.image_id);
+                                        replaceInputRef.current?.click();
+                                    }}
+                                    disabled={busyId === image.image_id}
+                                    aria-label="Replace image"
+                                    className="inline-flex min-h-11 items-center gap-1 text-xs font-semibold text-indigo-600 hover:text-indigo-800 disabled:opacity-50"
+                                >
+                                    <ImagePlus size={14} />
+                                    Replace
+                                </button>
+
+                                <button
+                                    type="button"
                                     onClick={() => remove(image.image_id)}
                                     disabled={busyId === image.image_id}
                                     aria-label="Delete image"
@@ -145,6 +205,14 @@ export default function ProductImageGallery({
                                 </button>
 
                             </div>
+                            {busyId === image.image_id && replaceProgress !== null && (
+                                <div className="px-2 pb-2" role="status" aria-live="polite">
+                                    <div className="h-1.5 overflow-hidden rounded-full bg-zinc-100">
+                                        <div className="h-full bg-indigo-600 transition-all" style={{ width: `${replaceProgress}%` }} />
+                                    </div>
+                                    <p className="mt-1 text-[11px] text-zinc-500">Replacing… {replaceProgress}%</p>
+                                </div>
+                            )}
 
                         </div>
 
